@@ -14,7 +14,6 @@ FEEDBACK
 
 5- hints overlay must update when a "which _ are you closest to?" or "are you closer to _" is answered
 
-
 6- relevant overlays must dynamically appear / disappear when related questions are asked (see below)
 
 QUESTIONS
