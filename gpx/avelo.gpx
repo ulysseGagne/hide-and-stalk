@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="claude-code" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>U. Laval campus àVélo stations</name>
+    <desc>6 àVélo bikeshare stations inside the campus loop. Source: àVélo GBFS.</desc>
+  </metadata>
+  <wpt lat="46.7850859" lon="-71.2648726">
+    <name>Myrand / Liénard</name>
+    <cmt>Myrand / Liénard</cmt>
+    <desc>àVélo bikeshare · capacity 20</desc>
+    <sym>Bike Trail</sym>
+    <type>bicycle_rental</type>
+  </wpt>
+  <wpt lat="46.7833190" lon="-71.2760601">
+    <name>ULaval - PEPS</name>
+    <cmt>ULaval - PEPS</cmt>
+    <desc>àVélo bikeshare · capacity 32</desc>
+    <sym>Bike Trail</sym>
+    <type>bicycle_rental</type>
+  </wpt>
+  <wpt lat="46.7805538" lon="-71.2787865">
+    <name>ULaval - Abitibi-Price</name>
+    <cmt>ULaval - Abitibi-Price</cmt>
+    <desc>àVélo bikeshare · capacity 20</desc>
+    <sym>Bike Trail</sym>
+    <type>bicycle_rental</type>
+  </wpt>
+  <wpt lat="46.7802282" lon="-71.2725407">
+    <name>ULaval - Charles-De Koninck</name>
+    <cmt>ULaval - Charles-De Koninck</cmt>
+    <desc>àVélo bikeshare · capacity 24</desc>
+    <sym>Bike Trail</sym>
+    <type>bicycle_rental</type>
+  </wpt>
+  <wpt lat="46.7790100" lon="-71.2765509">
+    <name>ULaval - Adrien-Pouliot</name>
+    <cmt>ULaval - Adrien-Pouliot</cmt>
+    <desc>àVélo bikeshare · capacity 32</desc>
+    <sym>Bike Trail</sym>
+    <type>bicycle_rental</type>
+  </wpt>
+  <wpt lat="46.7787822" lon="-71.2704399">
+    <name>ULaval - Alphonse-Desjardins</name>
+    <cmt>ULaval - Alphonse-Desjardins</cmt>
+    <desc>àVélo bikeshare · capacity 24</desc>
+    <sym>Bike Trail</sym>
+    <type>bicycle_rental</type>
+  </wpt>
+</gpx>

@@ -1,0 +1,245 @@
+{
+ "type": "FeatureCollection",
+ "properties": {
+  "desc": "On-campus cafés inside the loop — coords & pavillons verified against ULaval campus map (plan-du-campus) and OSM.",
+  "source": "Université Laval plan-du-campus + OpenStreetMap",
+  "count": 12
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Café Équilibre",
+    "pavillon": "Éduc. physique et sports",
+    "pav_code": "PEPS",
+    "type": "corporate",
+    "operator": "commercial (Barista)",
+    "coord_source": "ulaval",
+    "suggestion": "your call",
+    "local": "2826"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2777692,
+     46.7856008
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Espace Cosmos (Palasis-Prince)",
+    "pavillon": "Palasis-Prince",
+    "pav_code": "PAP",
+    "type": "corporate",
+    "operator": "Cosmos",
+    "coord_source": "pavillon",
+    "suggestion": "your call"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.274476,
+     46.783187
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Café Labyrinthe",
+    "pavillon": "Louis-Jacques-Casault",
+    "pav_code": "CSL",
+    "type": "student",
+    "operator": "écoresponsable",
+    "coord_source": "ulaval",
+    "suggestion": "keep",
+    "local": "1735-A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2701229,
+     46.7829285
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Chez Pol",
+    "pavillon": "Charles-De Koninck",
+    "pav_code": "DKN",
+    "type": "student",
+    "operator": "assoc. sc. politique (café 0,50 $)",
+    "coord_source": "ulaval",
+    "suggestion": "keep",
+    "local": "0138"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2743985,
+     46.7819341
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "FAS Café",
+    "pavillon": "Félix-Antoine-Savard",
+    "pav_code": "FAS",
+    "type": "student",
+    "operator": "assoc. étudiante",
+    "coord_source": "ulaval",
+    "suggestion": "keep",
+    "local": "118"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.272668,
+     46.781001
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Café L'Interprox",
+    "pavillon": "Médecine dentaire",
+    "pav_code": "MDE",
+    "type": "student",
+    "operator": "Faculté méd. dentaire",
+    "coord_source": "pavillon",
+    "suggestion": "keep"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.28192,
+     46.780768
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Snak",
+    "pavillon": "Alexandre-Vachon",
+    "pav_code": "VCH",
+    "type": "corporate",
+    "operator": "commercial (Barista)",
+    "coord_source": "ulaval",
+    "suggestion": "your call"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.277016,
+     46.780563
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "P'tit CAAF",
+    "pavillon": "Abitibi-Price",
+    "pav_code": "ABP",
+    "type": "student",
+    "operator": "assoc. foresterie/géo",
+    "coord_source": "ulaval",
+    "suggestion": "keep"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.279541,
+     46.780515
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Café Fou AELIÉS",
+    "pavillon": "Alphonse-Desjardins",
+    "pav_code": "ADJ",
+    "type": "student",
+    "operator": "AÉLIÉS (café-bar)",
+    "coord_source": "ulaval",
+    "suggestion": "keep",
+    "local": "1550"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2686253,
+     46.7788178
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Le Vecteur",
+    "pavillon": "Adrien-Pouliot",
+    "pav_code": "PLT",
+    "type": "corporate",
+    "operator": "commercial (Barista)",
+    "coord_source": "pavillon",
+    "suggestion": "your call"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.275009,
+     46.778697
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Exocytose",
+    "pavillon": "Ferdinand-Vandry",
+    "pav_code": "VND",
+    "type": "student",
+    "operator": "100% autogéré",
+    "coord_source": "ulaval",
+    "suggestion": "keep",
+    "local": "1750"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2773067,
+     46.778631
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Toast Café",
+    "pavillon": "Paul-Comtois",
+    "pav_code": "CMT",
+    "type": "student",
+    "operator": "assoc. étudiante",
+    "coord_source": "ulaval",
+    "suggestion": "keep",
+    "local": "0110"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.276785,
+     46.776609
+    ]
+   }
+  }
+ ]
+}

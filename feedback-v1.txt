@@ -1,0 +1,68 @@
+github-repo-link
+
+FEEDBACK
+
+0- share private GitHub repo with ulysseGagne
+
+1- hints overlay always shown for hiders AND seekers
+
+2- original hints overlay boundary should be campus-border.geojson
+
+3- hiders must see the location of seekers at all times
+
+4- “hider has been found” button to end the game and stop the timer.
+
+5- hints overlay must update when a "which _ are you closest to?" or "are you closer to _" is answered
+
+
+6- relevant overlays must dynamically appear / disappear when related questions are asked (see below)
+
+QUESTIONS
+
+are you north or south of me?
+7- horizontal line overlay
+
+are you east or west of me?
+8- vertical line overlay
+
+using google maps, how many minutes do i have to walk to get to you?
+9- "copy seekers location" button should appear
+
+are you within a _ m radius of me? (100, 200, 300, 500)
+10- circle overlay
+
+which uni _ are you closest to?
+
+11- building			pavillons.geojson	
+12- bus stop			bus.geojson
+13- aVélo station		avelo.geojson	
+14- café			cafes.geojson
+
+are you closer to the _ than me?
+
+15- church			church.geojson
+16- twin towers			twin-towers.geojson
+17- ulaval sign			ulaval-sign.geojson
+18- football stadium		football-stadium.geojson
+19- greenhouses			greenhouses.geojson
+20- campus border		campus-border.geojson
+
+are you inside or outside?
+what's your floor number?
+what's the number of the nearest room? (the tree last digits)
+
+send a photo of _
+
+the tallest thing you can see
+what's below you
+what's above you
+the nearest door
+the nearest sign
+a window
+the biggest plant/tree near you
+a car parked near you
+the nearest place to sit
+
+could we see you on google street view?
+do you see a bike lane?
+how many people are around?

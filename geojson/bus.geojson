@@ -1,0 +1,378 @@
+{
+ "type": "FeatureCollection",
+ "properties": {
+  "desc": "RTC bus stops inside the U. Laval campus loop, de-duplicated; names verified against RTC GTFS.",
+  "source": "OpenStreetMap + RTC GTFS",
+  "count": 23
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Myrand",
+    "ref": "1473",
+    "network": "RTC",
+    "osm_id": 340634495
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2709209,
+     46.7887615
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Université Laval",
+    "ref": "1472",
+    "network": "RTC",
+    "osm_id": 3812094647
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2765809,
+     46.7870548
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Ste-Foy/1504",
+    "ref": "1504",
+    "network": "RTC",
+    "osm_id": 301265612
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2766913,
+     46.7863328
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Nérée-Tremblay",
+    "ref": "2709",
+    "network": "RTC",
+    "osm_id": 3740759931
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.280487,
+     46.785894
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Station du PEPS",
+    "ref": "1995",
+    "network": "RTC",
+    "osm_id": 11340692657
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2765617,
+     46.7858115
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "de la Terasse",
+    "ref": "1502",
+    "network": "RTC",
+    "osm_id": 304578615
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2739655,
+     46.7839867
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Quatre Bourgeois/7002",
+    "ref": "7002",
+    "network": "RTC",
+    "osm_id": 4565727602
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2839057,
+     46.7839401
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Cégep-de-Ste-Foy",
+    "ref": "1994",
+    "network": "RTC",
+    "osm_id": 4565727212
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.284346,
+     46.7838372
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Quatre-Bourgeois",
+    "ref": "7006",
+    "network": "RTC",
+    "osm_id": 11783022039
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2836456,
+     46.7836163
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "de la Terrasse",
+    "ref": "1553",
+    "network": "RTC",
+    "osm_id": 304578614
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2733468,
+     46.7832243
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Bibliothèques",
+    "ref": "1542",
+    "network": "RTC",
+    "osm_id": 304580846
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2720363,
+     46.7820926
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Station Stade Telus",
+    "ref": "7001",
+    "network": "RTC",
+    "osm_id": 11781520356
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2812146,
+     46.7820811
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Bibliothèques",
+    "ref": "1501",
+    "network": "RTC",
+    "osm_id": 304580957
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2714842,
+     46.7818458
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "de la Foresterie",
+    "ref": "7000",
+    "network": "RTC",
+    "osm_id": 11754900557
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2785646,
+     46.7801773
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "de la Foresterie",
+    "ref": "7009",
+    "network": "RTC",
+    "osm_id": 11754900562
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2791681,
+     46.7800515
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Médecine/1556",
+    "ref": "1556",
+    "network": "RTC",
+    "osm_id": 11023195290
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2777791,
+     46.7797999
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Université Laval",
+    "ref": "1515",
+    "network": "RTC",
+    "osm_id": 301294155
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2708268,
+     46.7793193
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Université Laval/1561",
+    "ref": "1561",
+    "network": "RTC",
+    "osm_id": 301294165
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.270306,
+     46.7792834
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Médecine/1557",
+    "ref": "1557",
+    "network": "RTC",
+    "osm_id": 11023195289
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2762685,
+     46.7785969
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "P.-De Lotbinière",
+    "ref": "1783",
+    "network": "RTC",
+    "osm_id": 5060560369
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2675712,
+     46.7781283
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Médecine/1558",
+    "ref": "1558",
+    "network": "RTC",
+    "osm_id": 11023195288
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2739583,
+     46.7766617
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Université Laval",
+    "ref": "1830",
+    "network": "RTC",
+    "osm_id": 304581946
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2706534,
+     46.7766274
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Hochelaga",
+    "ref": "3172",
+    "network": "RTC",
+    "osm_id": 11754900556
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2767255,
+     46.775246
+    ]
+   }
+  }
+ ]
+}

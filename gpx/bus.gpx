@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="claude-code" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>U. Laval campus bus stops</name>
+    <desc>23 RTC bus stops inside the campus loop; de-duplicated, GTFS-verified. Source: OpenStreetMap + RTC GTFS.</desc>
+  </metadata>
+  <wpt lat="46.7887615" lon="-71.2709209">
+    <name>Myrand [1473]</name>
+    <cmt>Myrand [1473]</cmt>
+    <desc>ref 1473 · RTC · osm node 340634495</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7870548" lon="-71.2765809">
+    <name>Université Laval [1472]</name>
+    <cmt>Université Laval [1472]</cmt>
+    <desc>ref 1472 · RTC · osm node 3812094647</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7863328" lon="-71.2766913">
+    <name>Ste-Foy/1504</name>
+    <cmt>Ste-Foy/1504</cmt>
+    <desc>ref 1504 · RTC · osm node 301265612</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7858940" lon="-71.2804870">
+    <name>Nérée-Tremblay [2709]</name>
+    <cmt>Nérée-Tremblay [2709]</cmt>
+    <desc>ref 2709 · RTC · osm node 3740759931</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7858115" lon="-71.2765617">
+    <name>Station du PEPS [1995]</name>
+    <cmt>Station du PEPS [1995]</cmt>
+    <desc>ref 1995 · RTC · osm node 11340692657</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7839867" lon="-71.2739655">
+    <name>de la Terasse [1502]</name>
+    <cmt>de la Terasse [1502]</cmt>
+    <desc>ref 1502 · RTC · osm node 304578615</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7839401" lon="-71.2839057">
+    <name>Quatre Bourgeois/7002</name>
+    <cmt>Quatre Bourgeois/7002</cmt>
+    <desc>ref 7002 · RTC · osm node 4565727602</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7838372" lon="-71.2843460">
+    <name>Cégep-de-Ste-Foy [1994]</name>
+    <cmt>Cégep-de-Ste-Foy [1994]</cmt>
+    <desc>ref 1994 · RTC · osm node 4565727212</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7836163" lon="-71.2836456">
+    <name>Quatre-Bourgeois [7006]</name>
+    <cmt>Quatre-Bourgeois [7006]</cmt>
+    <desc>ref 7006 · RTC · osm node 11783022039</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7832243" lon="-71.2733468">
+    <name>de la Terrasse [1553]</name>
+    <cmt>de la Terrasse [1553]</cmt>
+    <desc>ref 1553 · RTC · osm node 304578614</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7820926" lon="-71.2720363">
+    <name>Bibliothèques [1542]</name>
+    <cmt>Bibliothèques [1542]</cmt>
+    <desc>ref 1542 · RTC · osm node 304580846</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7820811" lon="-71.2812146">
+    <name>Station Stade Telus [7001]</name>
+    <cmt>Station Stade Telus [7001]</cmt>
+    <desc>ref 7001 · RTC · osm node 11781520356</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7818458" lon="-71.2714842">
+    <name>Bibliothèques [1501]</name>
+    <cmt>Bibliothèques [1501]</cmt>
+    <desc>ref 1501 · RTC · osm node 304580957</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7801773" lon="-71.2785646">
+    <name>de la Foresterie [7000]</name>
+    <cmt>de la Foresterie [7000]</cmt>
+    <desc>ref 7000 · RTC · osm node 11754900557</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7800515" lon="-71.2791681">
+    <name>de la Foresterie [7009]</name>
+    <cmt>de la Foresterie [7009]</cmt>
+    <desc>ref 7009 · RTC · osm node 11754900562</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7797999" lon="-71.2777791">
+    <name>Médecine/1556</name>
+    <cmt>Médecine/1556</cmt>
+    <desc>ref 1556 · RTC · osm node 11023195290</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7793193" lon="-71.2708268">
+    <name>Université Laval [1515]</name>
+    <cmt>Université Laval [1515]</cmt>
+    <desc>ref 1515 · RTC · osm node 301294155</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7792834" lon="-71.2703060">
+    <name>Université Laval/1561</name>
+    <cmt>Université Laval/1561</cmt>
+    <desc>ref 1561 · RTC · osm node 301294165</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7785969" lon="-71.2762685">
+    <name>Médecine/1557</name>
+    <cmt>Médecine/1557</cmt>
+    <desc>ref 1557 · RTC · osm node 11023195289</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7781283" lon="-71.2675712">
+    <name>P.-De Lotbinière [1783]</name>
+    <cmt>P.-De Lotbinière [1783]</cmt>
+    <desc>ref 1783 · RTC · osm node 5060560369</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7766617" lon="-71.2739583">
+    <name>Médecine/1558</name>
+    <cmt>Médecine/1558</cmt>
+    <desc>ref 1558 · RTC · osm node 11023195288</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7766274" lon="-71.2706534">
+    <name>Université Laval [1830]</name>
+    <cmt>Université Laval [1830]</cmt>
+    <desc>ref 1830 · RTC · osm node 304581946</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+  <wpt lat="46.7752460" lon="-71.2767255">
+    <name>Hochelaga [3172]</name>
+    <cmt>Hochelaga [3172]</cmt>
+    <desc>ref 3172 · RTC · osm node 11754900556</desc>
+    <sym>Bus</sym>
+    <type>bus_stop</type>
+  </wpt>
+</gpx>

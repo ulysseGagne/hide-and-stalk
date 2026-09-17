@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="claude-code" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>U. Laval campus cafés</name>
+    <desc>12 on-campus cafés inside the loop; coords/pavillons verified (ULaval plan-du-campus + OSM).</desc>
+  </metadata>
+  <wpt lat="46.7856008" lon="-71.2777692">
+    <name>Café Équilibre</name>
+    <cmt>corporate</cmt>
+    <desc>corporate · Éduc. physique et sports local 2826 · commercial (Barista) · [ulaval] · your call</desc>
+    <sym>Restaurant</sym>
+    <type>cafe</type>
+  </wpt>
+  <wpt lat="46.7831870" lon="-71.2744760">
+    <name>Espace Cosmos (Palasis-Prince)</name>
+    <cmt>corporate</cmt>
+    <desc>corporate · Palasis-Prince · Cosmos · [pavillon] · your call</desc>
+    <sym>Restaurant</sym>
+    <type>cafe</type>
+  </wpt>
+  <wpt lat="46.7829285" lon="-71.2701229">
+    <name>Café Labyrinthe</name>
+    <cmt>student</cmt>
+    <desc>student · Louis-Jacques-Casault local 1735-A · écoresponsable · [ulaval] · keep</desc>
+    <sym>Restaurant</sym>
+    <type>cafe</type>
+  </wpt>
+  <wpt lat="46.7819341" lon="-71.2743985">
+    <name>Chez Pol</name>
+    <cmt>student</cmt>
+    <desc>student · Charles-De Koninck local 0138 · assoc. sc. politique (café 0,50 $) · [ulaval] · keep</desc>
+    <sym>Restaurant</sym>
+    <type>cafe</type>
+  </wpt>
+  <wpt lat="46.7810010" lon="-71.2726680">
+    <name>FAS Café</name>
+    <cmt>student</cmt>
+    <desc>student · Félix-Antoine-Savard local 118 · assoc. étudiante · [ulaval] · keep</desc>
+    <sym>Restaurant</sym>
+    <type>cafe</type>
+  </wpt>
+  <wpt lat="46.7807680" lon="-71.2819200">
+    <name>Café L'Interprox</name>
+    <cmt>student</cmt>
+    <desc>student · Médecine dentaire · Faculté méd. dentaire · [pavillon] · keep</desc>
+    <sym>Restaurant</sym>
+    <type>cafe</type>
+  </wpt>
+  <wpt lat="46.7805630" lon="-71.2770160">
+    <name>Snak</name>
+    <cmt>corporate</cmt>
+    <desc>corporate · Alexandre-Vachon · commercial (Barista) · [ulaval] · your call</desc>
+    <sym>Restaurant</sym>
+    <type>cafe</type>
+  </wpt>
+  <wpt lat="46.7805150" lon="-71.2795410">
+    <name>P'tit CAAF</name>
+    <cmt>student</cmt>
+    <desc>student · Abitibi-Price · assoc. foresterie/géo · [ulaval] · keep</desc>
+    <sym>Restaurant</sym>
+    <type>cafe</type>
+  </wpt>
+  <wpt lat="46.7788178" lon="-71.2686253">
+    <name>Café Fou AELIÉS</name>
+    <cmt>student</cmt>
+    <desc>student · Alphonse-Desjardins local 1550 · AÉLIÉS (café-bar) · [ulaval] · keep</desc>
+    <sym>Restaurant</sym>
+    <type>cafe</type>
+  </wpt>
+  <wpt lat="46.7786970" lon="-71.2750090">
+    <name>Le Vecteur</name>
+    <cmt>corporate</cmt>
+    <desc>corporate · Adrien-Pouliot · commercial (Barista) · [pavillon] · your call</desc>
+    <sym>Restaurant</sym>
+    <type>cafe</type>
+  </wpt>
+  <wpt lat="46.7786310" lon="-71.2773067">
+    <name>Exocytose</name>
+    <cmt>student</cmt>
+    <desc>student · Ferdinand-Vandry local 1750 · 100% autogéré · [ulaval] · keep</desc>
+    <sym>Restaurant</sym>
+    <type>cafe</type>
+  </wpt>
+  <wpt lat="46.7766090" lon="-71.2767850">
+    <name>Toast Café</name>
+    <cmt>student</cmt>
+    <desc>student · Paul-Comtois local 0110 · assoc. étudiante · [ulaval] · keep</desc>
+    <sym>Restaurant</sym>
+    <type>cafe</type>
+  </wpt>
+</gpx>

@@ -1,0 +1,106 @@
+{
+ "type": "FeatureCollection",
+ "properties": {
+  "desc": "àVélo bikeshare stations inside the campus loop",
+  "source": "àVélo GBFS feed (quebec.publicbikesystem.net)",
+  "count": 6
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Myrand / Liénard",
+    "desc": "àVélo bikeshare · capacity 20",
+    "capacity": 20,
+    "station_id": "59"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2648726,
+     46.7850859
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "ULaval - PEPS",
+    "desc": "àVélo bikeshare · capacity 32",
+    "capacity": 32,
+    "station_id": "62"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2760601,
+     46.783319
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "ULaval - Abitibi-Price",
+    "desc": "àVélo bikeshare · capacity 20",
+    "capacity": 20,
+    "station_id": "90"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2787865,
+     46.7805538
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "ULaval - Charles-De Koninck",
+    "desc": "àVélo bikeshare · capacity 24",
+    "capacity": 24,
+    "station_id": "60"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2725407,
+     46.7802282
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "ULaval - Adrien-Pouliot",
+    "desc": "àVélo bikeshare · capacity 32",
+    "capacity": 32,
+    "station_id": "63"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2765509,
+     46.77901
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "ULaval - Alphonse-Desjardins",
+    "desc": "àVélo bikeshare · capacity 24",
+    "capacity": 24,
+    "station_id": "61"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2704399,
+     46.7787822
+    ]
+   }
+  }
+ ]
+}

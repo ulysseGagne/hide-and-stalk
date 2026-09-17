@@ -1,0 +1,385 @@
+{
+ "type": "FeatureCollection",
+ "properties": {
+  "desc": "Université Laval pavillons (buildings with an official 3-letter code) inside the campus loop",
+  "source": "OpenStreetMap (geometry) + ULaval Légende des pavillons 2026-2027 (codes)",
+  "count": 25
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon de l'éducation physique et des sports",
+    "code": "PEPS",
+    "osm": "way/27437938"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2776533,
+     46.7846704
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Palasis-Prince",
+    "code": "PAP",
+    "osm": "way/27438075"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2744756,
+     46.7831874
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Stade TELUS",
+    "code": "SSI",
+    "osm": "way/148704391"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.280809,
+     46.7831139
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Louis-Jacques-Casault",
+    "code": "CSL",
+    "osm": "way/128523972"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2703801,
+     46.7828145
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon La Laurentienne",
+    "code": "LAU",
+    "osm": "way/27438123"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2735561,
+     46.7826838
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon J.-A.-De Sève",
+    "code": "DES",
+    "osm": "way/27438088"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2740669,
+     46.7823042
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Jeanne-Lapointe",
+    "code": "JLA",
+    "osm": "way/308294330"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2733735,
+     46.7816289
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon d'Optique-photonique",
+    "code": "COP",
+    "osm": "relation/7145131"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2778306,
+     46.7813455
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Charles-De Koninck",
+    "code": "DKN",
+    "osm": "relation/35015"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2749078,
+     46.7812277
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Félix-Antoine-Savard",
+    "code": "FAS",
+    "osm": "way/308294329"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2726575,
+     46.7810216
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon de la Médecine dentaire",
+    "code": "MDE",
+    "osm": "way/128588311"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2819199,
+     46.7807684
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Alphonse-Marie-Parent",
+    "code": "PRN",
+    "osm": "relation/3741236"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.266878,
+     46.7803809
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Abitibi-Price",
+    "code": "ABP",
+    "osm": "relation/3728533"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2796006,
+     46.7803736
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Alexandre-Vachon",
+    "code": "VCH",
+    "osm": "relation/35017"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2768114,
+     46.7803276
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Jean-Charles-Bonenfant",
+    "code": "BNF",
+    "osm": "way/27438173"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2737886,
+     46.7802597
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon H.-Biermans-L.-Moraud",
+    "code": "PBM",
+    "osm": "way/127680668"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2680828,
+     46.7797457
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Gene-H. Kruger",
+    "code": "GHK",
+    "osm": "relation/3728532"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2806975,
+     46.7797263
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Charles-Eugène-Marchand",
+    "code": "CHM",
+    "osm": "way/27438340"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2784541,
+     46.7795642
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Maurice-Pollack",
+    "code": "POL",
+    "osm": "way/195278975"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2692303,
+     46.779163
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Alphonse-Desjardins",
+    "code": "ADJ",
+    "osm": "way/162322156"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2697743,
+     46.7789502
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Adrien-Pouliot",
+    "code": "PLT",
+    "osm": "relation/35018"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2750088,
+     46.7786973
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Ferdinand-Vandry",
+    "code": "VND",
+    "osm": "relation/3728043"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2780649,
+     46.7784847
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Ernest-Lemieux",
+    "code": "LEM",
+    "osm": "way/27438478"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2686135,
+     46.7784331
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Paul-Comtois",
+    "code": "CMT",
+    "osm": "relation/35019"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2768302,
+     46.7764969
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Pavillon Agathe-Lacerte",
+    "code": "LCT",
+    "osm": "relation/35020"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2746072,
+     46.776235
+    ]
+   }
+  }
+ ]
+}

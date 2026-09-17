@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="claude-code" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Greenhouses</name>
+    <desc>Campus reference landmark for the “are you closer to __ than me?” question.</desc>
+  </metadata>
+  <wpt lat="46.7799898" lon="-71.2798912">
+    <name>Greenhouses</name>
+    <cmt>Greenhouses</cmt>
+    <desc>Campus reference landmark for the “are you closer to __ than me?” question.</desc>
+    <sym>Park</sym>
+    <type>landmark</type>
+  </wpt>
+</gpx>

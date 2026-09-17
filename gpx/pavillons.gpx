@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="claude-code" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>U. Laval campus pavillons</name>
+    <desc>25 pavillons (official 3-letter code) inside the campus loop. Source: OpenStreetMap + ULaval.</desc>
+  </metadata>
+  <wpt lat="46.7846704" lon="-71.2776533">
+    <name>Pavillon de l'éducation physique et des sports (PEPS)</name>
+    <cmt>PEPS</cmt>
+    <desc>PEPS · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7831874" lon="-71.2744756">
+    <name>Pavillon Palasis-Prince (PAP)</name>
+    <cmt>PAP</cmt>
+    <desc>PAP · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7831139" lon="-71.2808090">
+    <name>Stade TELUS (SSI)</name>
+    <cmt>SSI</cmt>
+    <desc>SSI · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7828145" lon="-71.2703801">
+    <name>Pavillon Louis-Jacques-Casault (CSL)</name>
+    <cmt>CSL</cmt>
+    <desc>CSL · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7826838" lon="-71.2735561">
+    <name>Pavillon La Laurentienne (LAU)</name>
+    <cmt>LAU</cmt>
+    <desc>LAU · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7823042" lon="-71.2740669">
+    <name>Pavillon J.-A.-De Sève (DES)</name>
+    <cmt>DES</cmt>
+    <desc>DES · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7816289" lon="-71.2733735">
+    <name>Pavillon Jeanne-Lapointe (JLA)</name>
+    <cmt>JLA</cmt>
+    <desc>JLA · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7813455" lon="-71.2778306">
+    <name>Pavillon d'Optique-photonique (COP)</name>
+    <cmt>COP</cmt>
+    <desc>COP · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7812277" lon="-71.2749078">
+    <name>Pavillon Charles-De Koninck (DKN)</name>
+    <cmt>DKN</cmt>
+    <desc>DKN · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7810216" lon="-71.2726575">
+    <name>Pavillon Félix-Antoine-Savard (FAS)</name>
+    <cmt>FAS</cmt>
+    <desc>FAS · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7807684" lon="-71.2819199">
+    <name>Pavillon de la Médecine dentaire (MDE)</name>
+    <cmt>MDE</cmt>
+    <desc>MDE · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7803809" lon="-71.2668780">
+    <name>Pavillon Alphonse-Marie-Parent (PRN)</name>
+    <cmt>PRN</cmt>
+    <desc>PRN · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7803736" lon="-71.2796006">
+    <name>Pavillon Abitibi-Price (ABP)</name>
+    <cmt>ABP</cmt>
+    <desc>ABP · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7803276" lon="-71.2768114">
+    <name>Pavillon Alexandre-Vachon (VCH)</name>
+    <cmt>VCH</cmt>
+    <desc>VCH · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7802597" lon="-71.2737886">
+    <name>Pavillon Jean-Charles-Bonenfant (BNF)</name>
+    <cmt>BNF</cmt>
+    <desc>BNF · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7797457" lon="-71.2680828">
+    <name>Pavillon H.-Biermans-L.-Moraud (PBM)</name>
+    <cmt>PBM</cmt>
+    <desc>PBM · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7797263" lon="-71.2806975">
+    <name>Pavillon Gene-H. Kruger (GHK)</name>
+    <cmt>GHK</cmt>
+    <desc>GHK · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7795642" lon="-71.2784541">
+    <name>Pavillon Charles-Eugène-Marchand (CHM)</name>
+    <cmt>CHM</cmt>
+    <desc>CHM · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7791630" lon="-71.2692303">
+    <name>Pavillon Maurice-Pollack (POL)</name>
+    <cmt>POL</cmt>
+    <desc>POL · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7789502" lon="-71.2697743">
+    <name>Pavillon Alphonse-Desjardins (ADJ)</name>
+    <cmt>ADJ</cmt>
+    <desc>ADJ · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7786973" lon="-71.2750088">
+    <name>Pavillon Adrien-Pouliot (PLT)</name>
+    <cmt>PLT</cmt>
+    <desc>PLT · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7784847" lon="-71.2780649">
+    <name>Pavillon Ferdinand-Vandry (VND)</name>
+    <cmt>VND</cmt>
+    <desc>VND · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7784331" lon="-71.2686135">
+    <name>Pavillon Ernest-Lemieux (LEM)</name>
+    <cmt>LEM</cmt>
+    <desc>LEM · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7764969" lon="-71.2768302">
+    <name>Pavillon Paul-Comtois (CMT)</name>
+    <cmt>CMT</cmt>
+    <desc>CMT · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+  <wpt lat="46.7762350" lon="-71.2746072">
+    <name>Pavillon Agathe-Lacerte (LCT)</name>
+    <cmt>LCT</cmt>
+    <desc>LCT · Université Laval</desc>
+    <sym>Building</sym>
+    <type>pavillon</type>
+  </wpt>
+</gpx>
