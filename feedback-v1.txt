@@ -27,41 +27,77 @@ are you east or west of me?
 using google maps, how many minutes do i have to walk to get to you?
 9- "copy seekers location" button should appear
 
-are you within a _ m radius of me? (100, 200, 300, 500)
+are you within a _ m radius of me? (50, 100, 200, 300, 500)
 10- circle overlay
 
 which uni _ are you closest to?
 
-11- building			pavillons.geojson	
-12- bus stop			bus.geojson
-13- aVélo station		avelo.geojson	
-14- café			cafes.geojson
+11- building		pavillons.geojson
+12- bus stop		bus.geojson
+13- aVélo station	avelo.geojson	
+14- café		cafes.geojson
 
 are you closer to the _ than me?
 
-15- church			church.geojson
-16- twin towers			twin-towers.geojson
-17- ulaval sign			ulaval-sign.geojson
-18- football stadium		football-stadium.geojson
-19- greenhouses			greenhouses.geojson
-20- campus border		campus-border.geojson
+15- church		church.geojson
+16- twin towers		twin-towers.geojson
+17- ulaval sign		ulaval-sign.geojson
+18- football stadium	football-stadium.geojson
+19- greenhouses		greenhouses.geojson
+20- campus border	campus-border.geojson
+21- pub u		pub-u.geojson
 
+TIERS
+
+
+questions 1 and 2
+are you north or south of me?
+are you east or west of me?
+are you closer to the church than me?
+are you closer to the football stadium than me?
+are you closer to the greenhouses than me?
+are you closer to the pub u than me?
+are you within a 500 m radius of me?
+which uni aVélo station are you closest to?
+are you closer to the twin towers than me?
+
+questions 2 and 3 and 4
+using google maps, how many minutes do i have to walk to get to you?
+are you within a 300 m radius of me?
+are you within a 200 m radius of me?
+which uni café are you closest to?
+are you closer to the campus border than me?
+send a photo of the tallest thing you can see
+send a photo of the nearest window
+
+questions 3 and 4 and 5
+which uni building are you closest to?
+which uni bus stop are you closest to?
+are you within a 100 m radius of me?
 are you inside or outside?
-what's your floor number?
-what's the number of the nearest room? (the tree last digits)
-
-send a photo of _
-
-the tallest thing you can see
-what's below you
-what's above you
-the nearest door
-the nearest sign
-a window
-the biggest plant/tree near you
-a car parked near you
-the nearest place to sit
-
 could we see you on google street view?
 do you see a bike lane?
-how many people are around?
+send a photo of what's below you
+send a photo of what's above you
+how many people can you count?
+
+questions 4 and 5 and 6
+what's your floor number?
+send a photo of the nearest plant/tree
+send a photo of the nearest place to sit
+send a photo of the nearest car parked near you
+
+questions 5 and 6 and 7
+what's the number of the nearest room? (the tree last digits)
+are you within a 50 m radius of me?
+send a photo of the nearest sign
+send a photo of the nearest door
+
+question 6
+send me your exact coordinates
+what's the exact id of the nearest room? (ex: PLT-2701)
+
+
+IMPORTANT NOTES:	never suggest the same question twice.
+			if you reach question 7 you lose.
+			do we allow tunnels? is the location tracker good enough?
