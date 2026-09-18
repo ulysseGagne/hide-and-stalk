@@ -1,6 +1,6 @@
 https://github.com/ulysseGagne/hide-and-stalk
 
-FEEDBACK
+22 FEEDBACK ITEMS:
 
 0- share private GitHub repo with ulysseGagne
 
@@ -48,7 +48,7 @@ are you closer to the _ than me?
 21- pub u		pub-u.geojson
 
 TIERS
-
+22- implement the tiers below:
 
 questions 1 and 2
 are you north or south of me?
@@ -97,7 +97,7 @@ question 6
 send me your exact coordinates
 what's the exact id of the nearest room? (ex: PLT-2701)
 
+23- never suggest the same question twice.
+24- if you reach question 7 you lose.
 
-IMPORTANT NOTES:	never suggest the same question twice.
-			if you reach question 7 you lose.
-			do we allow tunnels? is the location tracker good enough?
+note: do we allow tunnels? is the location tracker good enough?
