@@ -5,6 +5,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 import { chromium } from "/opt/node22/lib/node_modules/playwright/index.mjs";
 
 export const ROUND = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -48,9 +49,23 @@ export async function context(b, opts = {}) {
         if (!fs.existsSync(file)) return route.abort();
         route.fulfill({ path: file, contentType: TYPES[path.extname(file)] ?? "text/javascript" });
     });
-    // Tiles are blocked by this environment's network policy for now: fail
-    // fast instead of hanging each screenshot on a dead request.
-    await ctx.route("https://*.openstreetmap.org/**", (route) => route.abort());
+    // OpenStreetMap tiles go through a disk cache (tools/.tiles, gitignored):
+    // each tile is fetched once with curl (which knows this machine's proxy),
+    // so re-shooting never hits the tile servers again.
+    await ctx.route("https://tile.openstreetmap.org/**", (route) => {
+        const rest = route.request().url().replace("https://tile.openstreetmap.org/", "");
+        const file = path.join(ROUND, "tools/.tiles", rest);
+        if (!fs.existsSync(file)) {
+            fs.mkdirSync(path.dirname(file), { recursive: true });
+            try {
+                execFileSync("curl", ["-sfL", "-A", "hide-and-stalk-design/1.0 (campus game mockups)", "-o", file, route.request().url()], { timeout: 20000 });
+            } catch {
+                fs.rmSync(file, { force: true });
+                return route.abort();
+            }
+        }
+        route.fulfill({ path: file, contentType: "image/png" });
+    });
     await ctx.route("https://overpass*/**", (route) => route.abort());
     return ctx;
 }

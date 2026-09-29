@@ -4,9 +4,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="../fonts/fonts.css" />
 <link rel="stylesheet" href="lab.css" />
+<link rel="stylesheet" href="../node_modules/leaflet/dist/leaflet.css" />
 <body>
     <div id="root"></div>
     <script src="../node_modules/@turf/turf/turf.min.js"></script>
+    <script src="../node_modules/leaflet/dist/leaflet.js"></script>
     <script src="/src/locations.js"></script>
     <script src="vendor/perfect-freehand.js"></script>
     <script src="ink.js"></script>
@@ -16,6 +18,7 @@
     <script src="welcome.js"></script>
     <script src="wild.js"></script>
     <script src="wild2.js"></script>
+    <script src="maps.js"></script>
     <script>
         (async () => {
             const q = new URLSearchParams(location.search);
@@ -43,6 +46,8 @@
                 Welcome.draw(root, v, W, H);
             } else if (set === "wild") {
                 Wild.draw(root, v);
+            } else if (set === "map") {
+                await Maps.draw(root, v);
             } else if (set === "hand") {
                 Welcome.hand(root, v, W, H);
             }

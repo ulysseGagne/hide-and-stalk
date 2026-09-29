@@ -30,8 +30,10 @@ node tools/shoot-lab.mjs welcome 1 12 375 812 # W01-W12
 node tools/shoot-lab.mjs hand 1 3 375 560 H   # H01-H03
 node tools/shoot-app.mjs a,b,c,d              # A/01 ... D/13
 node tools/shoot-lab.mjs wild 1 83 375 812 X  # X01-X83, the wild concepts (lab/wild.js, lab/wild2.js)
+node tools/shoot-lab.mjs map 1 26 375 812 M   # M01-M26, maps on real OSM tiles (lab/maps.js)
 ```
 
 The app's libraries are served from `node_modules` (same packages as the
-unpkg links in `src/index.html`). Map tiles are blocked in the cloud
-environment for now, so the map set (M) is still to come.
+unpkg links in `src/index.html`). OpenStreetMap tiles are fetched once with
+curl and cached in `tools/.tiles/` (gitignored), so re-shooting never hits the
+tile servers again.

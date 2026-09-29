@@ -10,7 +10,7 @@ const page = await ctx.newPage();
 page.on("pageerror", (e) => console.error("pageerror:", e.message));
 for (let v = +from; v <= +to; v++) {
     await page.goto(`${base}/design/promo/round-1/lab/view.html?set=${set}&v=${v}&w=${w}&h=${h}`);
-    await page.waitForSelector("body[data-ready='1']", { timeout: 20000 });
+    await page.waitForSelector("body[data-ready='1']", { timeout: 60000 });
     const out = path.join(ROUND, "shots", `${prefix}${String(v).padStart(2, "0")}.png`);
     await page.locator("#root").screenshot({ path: out });
     console.log("wrote", path.basename(out));
