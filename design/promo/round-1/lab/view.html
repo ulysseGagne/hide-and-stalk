@@ -14,6 +14,7 @@
     <script src="campus.js"></script>
     <script src="board.js"></script>
     <script src="welcome.js"></script>
+    <script src="wild.js"></script>
     <script>
         (async () => {
             const q = new URLSearchParams(location.search);
@@ -39,6 +40,8 @@
                 Board.draw(root, v, W, H);
             } else if (set === "welcome") {
                 Welcome.draw(root, v, W, H);
+            } else if (set === "wild") {
+                Wild.draw(root, v);
             } else if (set === "hand") {
                 Welcome.hand(root, v, W, H);
             }
