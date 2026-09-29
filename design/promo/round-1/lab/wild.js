@@ -738,14 +738,21 @@
         }],
     ]);
 
-    // Flatten: one entry per screen.
-    const LIST = [];
-    for (const c of C) for (const [key, label, fn] of c.screens) LIST.push({ code: c.code, name: c.name, pitch: c.pitch, key, label, fn });
+    // Flatten: one entry per screen. Built on demand, so later files
+    // (wild2.js) can add concepts through WildKit first.
+    const flat = () => {
+        const out = [];
+        for (const c of C) for (const [key, label, fn] of c.screens) out.push({ code: c.code, name: c.name, pitch: c.pitch, key, label, fn });
+        return out;
+    };
 
+    window.WildKit = { t, box, hw, note, lockup, campus, photo, mw, concept, QS, HIDER, F, M, S, R, W, H, esc };
     window.Wild = {
-        list: LIST.map(({ code, name, pitch, key, label }) => ({ code, name, pitch, key, label })),
+        get list() {
+            return flat().map(({ code, name, pitch, key, label }) => ({ code, name, pitch, key, label }));
+        },
         draw(root, v) {
-            const s = LIST[v - 1];
+            const s = flat()[v - 1];
             root.style.background = "#fff";
             const { html, ink } = s.fn(root);
             root.innerHTML = html;
