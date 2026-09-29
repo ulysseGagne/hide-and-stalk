@@ -215,7 +215,66 @@
         3: { title: "H3 · DRAWN STROKES, UNHINGED", mess: 1.7 },
     };
 
+    const label = (x, y, txt, o = {}) => `<text x="${x}" y="${y}" font-family="${FONT}" font-weight="${o.wt ?? 700}" font-size="${o.size ?? 10}" letter-spacing="0.08em" fill="#000"${o.anchor ? ` text-anchor="${o.anchor}"` : ""}>${txt}</text>`;
+
+    /** H4: one line across the new band, score 0 (new calm) to 1 (new unhinged), between H1 and H3. */
+    function spectrum(W) {
+        let m = label(20, 34, "H4 · THE BAND: 30–70% FROM H1 TO H3", { size: 11 });
+        const rows = [
+            ["H1 (0%) · FOR REFERENCE, NOT USED", { mess: 0.35 }],
+            ["SCORE 0 · 30% · THE NEW CALM", { score: 0 }],
+            ["SCORE 0.25 · 40%", { score: 0.25 }],
+            ["SCORE 0.5 · 50% · MOST TEXT", { score: 0.5 }],
+            ["SCORE 0.75 · 60%", { score: 0.75 }],
+            ["SCORE 1 · 70% · THE NEW UNHINGED", { score: 1 }],
+            ["H3 (100%) · FOR REFERENCE, NOT USED", { mess: 1.7 }],
+        ];
+        let y = 92;
+        rows.forEach(([txt, o], i) => {
+            m += label(20, y - 38, txt, { wt: i === 0 || i === rows.length - 1 ? 400 : 700 });
+            m += Ink.write("NORTH OF POLLACK", { x: 22, y, size: 25, seed: `h4-${i}`, ...o }).svg;
+            y += 72;
+        });
+        m += `<line x1="248" y1="${y - 30}" x2="248" y2="${y + 56}" stroke="#000" stroke-dasharray="3 4"/>`;
+        m += label(20, y - 36, "OUT OF ROOM, IT CURLS UP · SCORE 0.2 AND 0.8", { wt: 400 });
+        m += Ink.write("CHECK THE GREENHOUSES", { x: 22, y: y + 6, size: 20, seed: "h4c", score: 0.2, maxWidth: 222 }).svg;
+        m += Ink.write("CHECK THE GREENHOUSES", { x: 22, y: y + 52, size: 20, seed: "h4d", score: 0.8, maxWidth: 222 }).svg;
+        return m;
+    }
+
+    /** H5: real app lines, each scored from its size and importance (no hand-tuning). */
+    function scored(W) {
+        let m = label(20, 34, "H5 · SCORED AUTOMATICALLY: SIZE + IMPORTANCE", { size: 11 });
+        const LINES = [
+            ["4:12 LEFT", 34, "key", "the timer"],
+            ["NORTH", 30, "key", "an answer, big"],
+            ["NOAH IS 160 M AWAY", 17, "key", "a warning, small"],
+            ["THIS ONE", 20, "info", "pointing at a card"],
+            ["Q5: EAST OR WEST OF ME?", 18, "info", "question on the map"],
+            ["NO TAKE-BACKS.", 17, "aside", "a side note"],
+            ["SHE WAS HERE", 26, "aside", "a map annotation"],
+            ["GOT HER", 40, "vibe", "the ending"],
+            ["I SEE YOU", 22, "vibe", "decoration"],
+        ];
+        let y = 58;
+        for (const [txt, size, imp, what] of LINES) {
+            const sc = Ink.score(size, imp);
+            y += size + 8;
+            m += Ink.write(txt, { x: 22, y, size, seed: `h5${txt}`, importance: imp }).svg;
+            y += 20;
+            m += label(22, y, `${what.toUpperCase()} · ${size} PX · ${imp.toUpperCase()} → SCORE ${sc.toFixed(2)}`, { wt: 400, size: 9 });
+            y += 14;
+        }
+        return m;
+    }
+
     function hand(root, v, W, H) {
+        if (v === 4 || v === 5) {
+            const svg = svgEl(W, H);
+            svg.innerHTML = v === 4 ? spectrum(W) : scored(W);
+            root.appendChild(svg);
+            return;
+        }
         const spec = HANDS[v];
         const svg = svgEl(W, H);
         let m = `<text x="20" y="34" font-family="${FONT}" font-weight="700" font-size="11" letter-spacing="0.14em">${spec.title}</text>`;

@@ -9,6 +9,12 @@ long lines); string, pins and red fills are drawn, never CSS shapes. In round
 2 this includes the map: the hider-to-stalker tethers, the north/south line,
 radius circles and the Hints border all get drawn the same way.
 
+**Handwriting band:** H1 (calm) is 0% and H3 (unhinged) is 100% of one
+scale; app text lives between 30% and 70% of it. Every line has a score
+from 0 (30%) to 1 (70%): pass `score`, or let `Ink.score(size, importance)`
+work it out (`key` < `info` < `aside` < `vibe`; bigger text leans wilder).
+`write()` and `note()` use it whenever no explicit `mess` is given.
+
 Gallery (all images, with Keep + notes): https://claude.ai/artifact/LdRszjr2qKJ9ckB1ZLNKgJ
 
 | Path | What |

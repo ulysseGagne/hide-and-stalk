@@ -281,11 +281,30 @@
      *   color
      * @returns {{svg: string, width: number, end: [number, number]}}
      */
+    // -----------------------------------------------------------------------
+    // The handwriting spectrum. H1 (calm, mess 0.35) is 0% and H3 (unhinged,
+    // mess 1.7) is 100%. App text lives between 30% and 70% of that, so a
+    // line's score (0..1) maps into that band: 0 is the new calm, 1 the new
+    // unhinged. Unless a line says otherwise, its score comes from how big
+    // it is and how much it matters: small or important leans calm, big or
+    // just-for-the-vibes leans wild.
+    // -----------------------------------------------------------------------
+    const H1_MESS = 0.35;
+    const H3_MESS = 1.7;
+    const clamp01 = (v) => Math.max(0, Math.min(1, v));
+    const messFor = (score) => H1_MESS + (H3_MESS - H1_MESS) * (0.3 + 0.4 * clamp01(score));
+    const IMPORTANCE = { key: 0.2, info: 0.4, aside: 0.6, vibe: 0.85 };
+    /** A line's score from its size (cap height, px) and importance. */
+    function score(size, importance = "info") {
+        const base = IMPORTANCE[importance] ?? IMPORTANCE.info;
+        return clamp01(base + (size - 22) / 90);
+    }
+
     function write(text, o = {}) {
         const r = rng(o.seed ?? text);
         const n = noise1(r);
         const size = o.size ?? 32;
-        const mess = o.mess ?? 0.5;
+        const mess = o.mess ?? messFor(o.score ?? score(size, o.importance));
         const weight = o.weight ?? size * 0.16;
         const color = o.color ?? RED;
         const spacing = (o.spacing ?? 0.2) * size;
@@ -393,6 +412,7 @@
     function note(text, o = {}) {
         const r = rng((o.seed ?? text) + ":note");
         const size = o.size ?? 22;
+        o = { ...o, mess: o.mess ?? messFor(o.score ?? score(size, o.importance)) };
         const lineH = size * (o.leading ?? 1.55);
         const maxWidth = o.maxWidth ?? 240;
         const words = String(text).split(/\s+/);
@@ -829,6 +849,8 @@
         humanize,
         write,
         note,
+        score,
+        messFor,
         scribbleOut,
         pencilScribble,
         pressed,
