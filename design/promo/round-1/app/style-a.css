@@ -125,6 +125,9 @@ button, input { font-family: inherit; }
     border: 3px solid var(--ink); border-radius: 0; background: var(--paper) no-repeat center / 100% 100%; color: var(--ink);
     font-size: 21px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
 }
+/* Button logic: white with a border = not yet; black = the app wants you to
+   press it now; red (drawn) = pressed or picked. */
+.big-btn.cta, #auth-submit.cta { background: var(--ink); color: var(--paper); }
 .discord-btn {
     display: block; margin-top: 16px; padding: 13px; text-align: center; text-decoration: none;
     background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); font-weight: 700; font-size: 15px;

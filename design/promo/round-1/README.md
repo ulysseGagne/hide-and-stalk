@@ -61,3 +61,11 @@ Mocked on top of the current app in `app/decorate.js`; they need real code in `s
 - Hider's radio answers: the ring stays; the pick is ticked by hand.
 - A notification gets a big red arrow at the bell until it's read.
 - Browser-style MENU / MAP tabs.
+
+House rules from the feedback, for every screen:
+
+- Buttons: white + border = not yet; black = press this now; red (drawn) =
+  pressed or picked.
+- At most two red highlights on a screen.
+- No new text for flavour; new wording only replaces existing text.
+- One typeface in the app (the case-file mono is out).

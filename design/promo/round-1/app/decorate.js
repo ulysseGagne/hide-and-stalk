@@ -107,10 +107,10 @@
     // Styles
     // -------------------------------------------------------------------
     const STYLES = {
-        a: { dark: false },
-        b: { timer: "box", dark: false, stampRole: true },
+        a: { dark: false, stampRole: "reveal" },
+        b: { dark: false, stampRole: true },
         c: { timer: "underline", dark: false },
-        d: { dark: true },
+        d: { dark: true, stampRole: "reveal" },
     };
 
     function decorate(styleKey, screen) {
@@ -157,7 +157,7 @@
 
         // Role badge -> stamp (style B).
         const badge = $("#role-badge");
-        if (S.stampRole && visible(badge)) {
+        if (S.stampRole && visible(badge) && (S.stampRole !== "reveal" || screen === "ready" || screen === "hiding")) {
             const b = L.box(badge);
             badge.style.visibility = "hidden";
             const res = Ink.write(badge.textContent, { x: b.x + 10, y: b.y + b.h + 8, size: 17, weight: 3.4, seed: "stamp", tilt: -6 });
@@ -169,7 +169,7 @@
         const title = $("#status-title");
         const timer = $(".timer-value");
         let timerBox = null;
-        if (visible(timer) && screen === "hiding") {
+        if (visible(timer) && screen === "hiding" && S.timer) {
             const range = document.createRange();
             range.selectNodeContents(timer);
             const tr = range.getBoundingClientRect();
@@ -179,7 +179,6 @@
             timerBox = { x: tx, y: ty, w: tr.width, h: tr.height };
             if (S.timer === "box") L.add(Ink.box(tx - 10, ty - 6, tr.width + 20, tr.height + 12, { seed: "tb", weight: 3.5 }));
             else if (S.timer === "underline") L.add(Ink.underline(tx, ty + tr.height + 4, tr.width, { seed: "tl", weight: 9, lines: 1 }));
-            else L.add(Ink.circle(tx + tr.width / 2, ty + tr.height / 2 + 4, tr.width / 2 + 20, tr.height / 2 + 2, { seed: `tm${screen}`, weight: 4.5 }));
         }
         // Underlined only where it helps: waiting for a team.
         if (visible(title) && screen === "lobby") {
@@ -262,14 +261,14 @@
         const tb = visible(title) ? L.box(title) : null;
         if (screen === "login" || screen === "loginfilled") {
             const reg = L.box($$(".auth-switch-btn")[1]);
-            noteAt(L, "NEW? THIS ONE", innerWidth - 236, reg.y + reg.h + 52, { size: 24, tilt: -5, maxWidth: 230, importance: "info" });
+            noteAt(L, "NEW? THIS ONE", innerWidth - 246, reg.y + reg.h + 58, { size: 27, tilt: -5, maxWidth: 240, importance: "info" });
             L.add(Ink.handArrow(reg.x + 70, reg.y + reg.h + 20, reg.x + 88, reg.y + reg.h - 4, { seed: "reg", weight: 4, head: 13 }));
         }
-        if (screen === "loginfilled") {
-            const btn = L.box($("#auth-submit"));
-            L.add(Ink.circle(btn.x + btn.w / 2, btn.y + btn.h / 2, btn.w / 2 + 10, btn.h / 2 + 14, { seed: "login", weight: 5 }));
-        }
-        if (list && visible(list) && (screen === "lobby" || screen === "ready")) {
+        // Black = press me now: only once there's something to log in with.
+        if (screen === "loginfilled") $("#auth-submit").classList.add("cta");
+        for (const id of ["#team-start-btn", "#team-again-btn"]) if (visible($(id))) $(id).classList.add("cta");
+        if (visible($(".send-btn"))) $(".send-btn").classList.add("cta");
+        if (list && visible(list) && screen === "lobby") {
             for (const strong of $$("li strong", list).filter(visible)) {
                 if (!UNDERLINE.some((k) => strong.textContent.trim().startsWith(k))) continue;
                 const b = L.box(strong);
@@ -282,13 +281,9 @@
         }
         if (screen === "ready") {
             if (tb) noteAt(L, "WAIT FOR EVERYONE", tb.x + 160, tb.y - 14, { size: 15, maxWidth: 170 });
-            const btn = $("#team-start-btn");
-            if (visible(btn)) {
-                const b = L.box(btn);
-                L.add(Ink.circle(b.x + b.w / 2, b.y + b.h / 2, b.w / 2 + 12, b.h / 2 + 16, { seed: "start", weight: 5 }));
-            }
+
         }
-        if (screen === "hiding" && timerBox && tb) {
+        if (screen === "hiding" && tb) {
             noteAt(L, "WALK. DON'T RUN.", tb.x + 150, tb.y + 4, { size: 24, maxWidth: 190, tilt: -5, importance: "key" });
         }
         if ((screen === "found" || screen === "win") && tb) {
