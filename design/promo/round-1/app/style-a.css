@@ -28,7 +28,7 @@ button, input { font-family: inherit; }
 #site-header {
     position: relative; flex: 0 0 auto; z-index: 1500;
     background: var(--paper); border-bottom: 3px solid var(--ink);
-    height: 64px;
+    height: 96px;
 }
 #site-title {
     margin: 0; position: absolute; left: 12px; top: 8px;
@@ -36,12 +36,12 @@ button, input { font-family: inherit; }
 }
 #site-title svg { display: block; }
 .bell {
-    position: absolute; top: 11px; left: auto; right: 80px; width: 34px; height: 34px;
+    position: absolute; top: 14px; left: auto; right: 84px; width: 28px; height: 28px;
     display: flex; align-items: center; justify-content: center;
     background: var(--paper); color: var(--ink);
     border: var(--rule) solid var(--ink); border-radius: 50%; padding: 0; cursor: pointer;
 }
-.bell svg { width: 18px; height: 18px; }
+.bell svg { width: 15px; height: 15px; }
 .bell.ringing { color: var(--ink); animation: none; }
 .bell-count {
     position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px;
@@ -50,19 +50,21 @@ button, input { font-family: inherit; }
 }
 .scan-btn { left: auto; right: 120px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-#user-status { position: absolute; top: 15px; right: 12px; display: flex; gap: 8px; align-items: center; font-size: 13px; }
+#user-status { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; align-items: center; font-size: 13px; }
 #user-status-name { display: none; }
 #user-status button {
     background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink);
-    padding: 4px 8px; font-size: 12px; font-weight: 700; cursor: pointer;
+    padding: 7px 10px; font-size: 13px; font-weight: 700; cursor: pointer;
 }
-#view-tabs { position: absolute; left: 14px; bottom: -3px; display: flex; gap: 0; }
+/* Browser tabs: the open one is joined to the page below it (same white,
+   no line between them); the other sits behind, black, a little lower. */
+#view-tabs { position: absolute; left: 12px; bottom: -3px; display: flex; gap: 6px; align-items: flex-end; }
 .view-tab {
-    background: var(--paper); color: var(--ink); border: 3px solid var(--ink); border-bottom: none;
-    margin-right: -3px; padding: 3px 16px 4px; font-size: 12px; font-weight: 700; letter-spacing: .1em;
-    transform: translateY(0);
+    background: var(--ink); color: var(--paper); border: 3px solid var(--ink); border-bottom: none;
+    border-radius: 12px 12px 0 0; min-width: 118px; height: 38px; padding: 0 22px;
+    font-size: 16px; font-weight: 700; letter-spacing: .12em; margin-bottom: 3px;
 }
-.view-tab.active { background: var(--ink); color: var(--paper); }
+.view-tab.active { background: var(--paper); color: var(--ink); height: 44px; margin-bottom: 0; position: relative; z-index: 1; }
 
 /* Notices ---------------------------------------------------------------- */
 #notices { flex: 0 0 auto; }
@@ -122,7 +124,6 @@ button, input { font-family: inherit; }
     position: relative; width: 100%; margin-top: 14px; height: 62px; padding: 0;
     border: 3px solid var(--ink); border-radius: 0; background: var(--paper) no-repeat center / 100% 100%; color: var(--ink);
     font-size: 21px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
-    text-shadow: 0 0 3px var(--paper), 0 0 3px var(--paper), 0 0 5px var(--paper);
 }
 .discord-btn {
     display: block; margin-top: 16px; padding: 13px; text-align: center; text-decoration: none;
@@ -154,7 +155,7 @@ button, input { font-family: inherit; }
 .card-prompt { font-size: 19px; line-height: 1.2; font-weight: 700; letter-spacing: -.01em; }
 .card-foot { display: flex; flex-wrap: wrap; gap: 6px; }
 .card-badge { display: inline-block; padding: 3px 7px; border-radius: 0; background: var(--paper); border: var(--rule) solid var(--ink); font-size: 11px; font-weight: 700; color: var(--ink); white-space: nowrap; }
-.card-badge.hint { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.card-badge.hint { background: var(--paper); color: var(--ink); border-color: var(--ink); }
 .card-note { margin: 12px 0 0; text-align: left; font-size: 14px; }
 .cards-actions { display: flex; justify-content: flex-start; margin-top: 14px; }
 .hint-status { margin: 10px 0 0; text-align: left; font-size: 13px; color: var(--ink); }
@@ -189,7 +190,7 @@ button, input { font-family: inherit; }
 }
 .answer-option input { appearance: none; -webkit-appearance: none; margin: 0; width: 20px; height: 20px; border: var(--rule) solid var(--ink); border-radius: 0; flex: 0 0 auto; background: var(--paper); }
 .answer-option input[type="radio"] { border-radius: 50%; }
-.answer-option input:checked { background: var(--ink); box-shadow: inset 0 0 0 3px var(--paper); }
+.answer-option input:checked { background: var(--paper); box-shadow: none; }
 .answer-distance { margin-left: auto; padding-left: 8px; font-size: 13px; font-weight: 400; color: var(--ink); font-variant-numeric: tabular-nums; }
 .answer-more { padding: 10px; background: var(--paper); border: var(--rule) dashed var(--ink); color: var(--ink); font-size: 14px; font-weight: 700; }
 .answer-input { background: var(--paper); color: var(--ink); border: none; border-bottom: 3px solid var(--ink); border-radius: 0; padding: 10px 2px; font-size: 20px; }

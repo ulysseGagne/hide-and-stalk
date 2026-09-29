@@ -47,3 +47,17 @@ The app's libraries are served from `node_modules` (same packages as the
 unpkg links in `src/index.html`). OpenStreetMap tiles are fetched once with
 curl and cached in `tools/.tiles/` (gitignored), so re-shooting never hits the
 tile servers again.
+
+## Round 2: app changes the mockups already assume
+
+Mocked on top of the current app in `app/decorate.js`; they need real code in `src/`:
+
+- Picking a card and sending it are two steps: tap picks (hand-drawn box), a
+  separate Send button sends. Today a tap sends.
+- SENT · LOCKED IN only while the hider hasn't answered; afterwards an
+  ANSWERED stamp over the question (never over a photo).
+- Rules in order of importance: near a path, walks, no tunnels, nothing to
+  open, truthfully, found, timings, Discord last. Two underlined.
+- Hider's radio answers: the ring stays; the pick is ticked by hand.
+- A notification gets a big red arrow at the bell until it's read.
+- Browser-style MENU / MAP tabs.

@@ -13,7 +13,7 @@ import { SCREENS, NOW, catalog } from "../app/fake-api.mjs";
 
 const styles = (process.argv[2] ?? "a,b,c,d").split(",");
 const only = process.argv[3] && process.argv[3] !== "all" ? process.argv[3].split(",") : Object.keys(SCREENS);
-const ORDER = ["login", "lobby", "ready", "hiding", "cards", "sent", "photo", "question", "choice", "tagcode", "history", "found", "win"];
+const ORDER = ["login", "loginfilled", "lobby", "ready", "hiding", "cards", "selected", "waiting", "sent", "photo", "question", "choice", "tagcode", "history", "found", "win"];
 
 // A stand-in for the hider's photo of "the nearest door" (real photos later).
 const DOOR = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 60 80"><rect width="60" height="80" fill="#000"/><rect x="14" y="12" width="32" height="66" fill="none" stroke="#fff" stroke-width="2"/><rect x="19" y="18" width="22" height="22" fill="none" stroke="#fff" stroke-width="1"/><circle cx="40" cy="48" r="1.8" fill="#fff"/><rect x="21" y="5" width="18" height="5" fill="#fff"/><text x="30" y="9.2" font-family="Arial" font-weight="700" font-size="3.6" text-anchor="middle">SORTIE</text><path d="M0 78 L14 77 M46 77 L60 78" stroke="#fff" stroke-width="1"/></svg>`;
@@ -59,6 +59,7 @@ for (const style of styles) {
         await page.goto(`${base}/src/index.html`);
         await page.waitForFunction(() => document.fonts.ready.then(() => true));
         await page.waitForTimeout(900);
+        if (screen.fill) for (const [sel, val] of Object.entries(screen.fill)) await page.fill(sel, val);
         if (screen.select !== undefined) {
             await page.evaluate((sel) => {
                 const opts = [...document.querySelectorAll("#hider-question-list .answer-option")];

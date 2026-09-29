@@ -178,10 +178,11 @@ const SETS = [
 ];
 
 const SCREENS = [
-    ["01", "login", "Log in"], ["02", "lobby", "Waiting for a team"], ["03", "ready", "Ready: you're a stalker"],
-    ["04", "hiding", "Hider: go hide, countdown"], ["05", "cards", "Stalker: three cards"], ["06", "sent", "Sent, locked in, answered"],
-    ["07", "photo", "Photo answer (stand-in)"], ["08", "question", "Hider: new question"], ["09", "choice", "Hider: which pavilion, nearest first"],
-    ["10", "tagcode", "Hider: tag code"], ["11", "history", "Questions so far"], ["12", "found", "Stalkers win"], ["13", "win", "Hider wins"],
+    ["01", "login", "Log in"], ["02", "loginfilled", "Log in, both fields typed: the button gets circled"], ["03", "lobby", "Waiting for a team, rules by importance"],
+    ["04", "ready", "Ready: you're a stalker"], ["05", "hiding", "Hider: go hide, countdown"], ["06", "cards", "Stalker: three cards, pick just one"],
+    ["07", "selected", "A card picked, not sent: Send is its own step"], ["08", "waiting", "Sent, locked in, waiting for the answer"], ["09", "sent", "Answered: the stamp says so"],
+    ["10", "photo", "Photo answer (stand-in); nothing red on the photo"], ["11", "question", "Hider: new question, ticked like a ballot"], ["12", "choice", "Hider: which pavilion, nearest first"],
+    ["13", "tagcode", "Hider: tag code"], ["14", "history", "Questions so far"], ["15", "found", "Stalkers win"], ["16", "win", "Hider wins"],
 ];
 const STYLES = [
     ["A", "Marker", "The neutral one: pure black and white, not one grey, red only as drawn ink. Built for sunlight."],
@@ -205,7 +206,7 @@ for (const s of SETS) {
     for (const [code, cap] of s.items) html += tile(code, cap, `shots/${code}.png`);
     html += `</div></section>`;
 }
-html += `<section id="styles"><h2>A–D · App styles</h2><p>The real app, restyled four ways, on 13 screens. Same scripted game in all of them: team 3, maelle hiding by the greenhouses, jules, noah_b, camille and theo hunting (made-up names). The red notes are the “someone drew on it” layer; in round 2 they become part of the app.</p></section>`;
+html += `<section id="styles"><h2>A–D · App styles</h2><p>The real app, restyled four ways, on 16 screens. Same scripted game in all of them: team 3, maelle hiding by the greenhouses, jules, noah_b, camille and theo hunting (made-up names). <b>Updated from your notes on A:</b><br>• Browser-style MENU and MAP tabs: bigger, and the open one joins the page.<br>• The bell is smaller than Log out. When a notification lands, a big red arrow and NEW point at it.<br>• Buttons are plain: nothing coloured in, no glow. A red circle only marks the step to take (the filled-in Log in, Start).<br>• Picking a card and sending it are now two steps. The picked card gets boxed by hand, and a Send button appears with NOT SENT YET.<br>• SENT · LOCKED IN shows only while the hider hasn't answered. After that, an ANSWERED stamp sits halfway over the question, never on the photo.<br>• The hider's pick is ticked by hand, like a ballot.<br>• The rules are reordered by importance, with two of them underlined.<br>• The timer is only circled while hiding.<br>• GOTCHA and HOW ABOUT THAT are big and overlap the title, with no circle.<br>A few of these (card selection, rule order, the tag-code line) are mocked up on top of the current app. In round 2 they get built into src/.</p></section>`;
 for (const [k, name, intro] of STYLES) {
     html += `<section id="style-${k.toLowerCase()}"><h2>${k} · ${name}</h2><p>${intro}</p><div class="grid">`;
     for (const [n, slug, cap] of SCREENS) html += tile(`${k}/${n}`, cap, `shots/${k}-${n}-${slug}.png`);

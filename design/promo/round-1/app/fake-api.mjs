@@ -139,6 +139,8 @@ const settings = { debug: false, discordUrl: "https://discord.gg/hideandstalk" }
 /** Every screen: what the server says, and where the phone is. */
 export const SCREENS = {
     login: { token: false, position: POS.jules },
+    // Both fields typed in: the Log in button gets its mark.
+    loginfilled: { token: false, position: POS.jules, fill: { "#auth-form input[name=username]": "jules", "#auth-form input[name=password]": "hunter22" } },
     lobby: {
         position: POS.jules,
         state: { serverNow: NOW, settings, me: { ...me("jules"), groupId: null, role: null }, team: null, users: [], cards: null },
@@ -162,6 +164,37 @@ export const SCREENS = {
                 team: team("hunting", { question: 2, nextQuestionInMs: 4 * MIN + 12_000, huntMs: 5 * MIN + 48_000 }),
                 users: users("jules"),
                 cards: { role: "stalker", batch: { id: 202, question: 2, cardIds: ROUND[1].cardIds, dealtAt: NOW - 48_000, playedCardId: null, playedBy: null, playedAt: null }, currentPlay: null, pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
+            };
+        })(),
+    },
+    // A card picked but not sent yet: picking and sending are two actions.
+    selected: {
+        position: POS.jules,
+        scrollTo: "#card-row .card:nth-child(2)",
+        state: (() => {
+            const p = plays(1);
+            return {
+                serverNow: NOW,
+                settings,
+                me: me("jules"),
+                team: team("hunting", { question: 2, nextQuestionInMs: 4 * MIN + 2_000, huntMs: 5 * MIN + 58_000 }),
+                users: users("jules"),
+                cards: { role: "stalker", batch: { id: 202, question: 2, cardIds: ROUND[1].cardIds, dealtAt: NOW - 58_000, playedCardId: null, playedBy: null, playedAt: null }, currentPlay: null, pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
+            };
+        })(),
+    },
+    // Sent, the hider hasn't answered yet: SENT · LOCKED IN.
+    waiting: {
+        position: POS.noah_b,
+        state: (() => {
+            const p = plays(3, { answerLast: false });
+            return {
+                serverNow: NOW,
+                settings,
+                me: me("noah_b"),
+                team: team("hunting", { question: 3, nextQuestionInMs: 3 * MIN + 31_000, huntMs: 11 * MIN + 29_000 }),
+                users: users("noah_b"),
+                cards: { role: "stalker", batch: { id: 203, question: 3, cardIds: ROUND[2].cardIds, dealtAt: NOW - 90_000, playedCardId: "nearest_cafe", playedBy: 13, playedAt: NOW - 29_000 }, currentPlay: p[2], pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
             };
         })(),
     },
