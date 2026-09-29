@@ -760,6 +760,145 @@
             .join("");
     }
 
+    /** Even-odd point-in-polygon over several rings. */
+    function insideRings(rings, x, y) {
+        let inside = false;
+        for (const ring of rings) {
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                const [xi, yi] = ring[i];
+                const [xj, yj] = ring[j];
+                if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+            }
+        }
+        return inside;
+    }
+
+    /**
+     * A shape coloured in the way a four-year-old does when asked to fill it
+     * all with red: thick back-and-forth strokes that overlap, so it reads as
+     * a colour, not as lines; each stroke stops a little short of the edge or
+     * runs a little over it; one lazier pass at another angle; a few specks
+     * of paper left showing. About 95% filled.
+     * rings: [[x, y], ...][] in screen coordinates (even-odd).
+     */
+    function colorIn(rings, o = {}) {
+        const r = rng(o.seed ?? "colorIn");
+        const weight = o.weight ?? 11;
+        const pts = rings.flat();
+        const minX = Math.min(...pts.map((p) => p[0]));
+        const maxX = Math.max(...pts.map((p) => p[0]));
+        const minY = Math.min(...pts.map((p) => p[1]));
+        const maxY = Math.max(...pts.map((p) => p[1]));
+        const cx = (minX + maxX) / 2;
+        const cy = (minY + maxY) / 2;
+        const diag = Math.hypot(maxX - minX, maxY - minY) / 2 + weight;
+        const pass = (angleDeg, gap, keep, w, over) => {
+            const a = (angleDeg * Math.PI) / 180;
+            const toXY = (u, v) => [cx + u * Math.cos(a) - v * Math.sin(a), cy + u * Math.sin(a) + v * Math.cos(a)];
+            const chains = [];
+            let open = [];
+            for (let v = -diag; v <= diag; v += gap * r.range(0.85, 1.15)) {
+                const runs = [];
+                let start = null;
+                for (let u = -diag; u <= diag; u += 1.5) {
+                    const [x, y] = toXY(u, v);
+                    const inn = insideRings(rings, x, y);
+                    if (inn && start === null) start = u;
+                    if (!inn && start !== null) {
+                        runs.push([start, u]);
+                        start = null;
+                    }
+                }
+                if (start !== null) runs.push([start, diag]);
+                const next = [];
+                for (const [ua, ub] of runs) {
+                    if (ub - ua < 3) continue;
+                    if (r() > keep) continue; // a missed row: paper shows through
+                    // Stops short of the line, or runs over it.
+                    const a2 = ua - r.range(-over * 0.5, over);
+                    const b2 = ub + r.range(-over * 0.5, over);
+                    const chain = open.find((c) => !c.used && c.last[1] > ua - gap && c.last[0] < ub + gap);
+                    if (chain) {
+                        chain.used = true;
+                        chain.dir *= -1;
+                        chain.pts.push(...(chain.dir > 0 ? [[a2, v], [b2, v]] : [[b2, v], [a2, v]]).map(([u, vv]) => toXY(u, vv)));
+                        chain.last = [ua, ub];
+                        next.push(chain);
+                    } else {
+                        const c = { pts: [[a2, v], [b2, v]].map(([u, vv]) => toXY(u, vv)), dir: 1, last: [ua, ub] };
+                        chains.push(c);
+                        next.push(c);
+                    }
+                }
+                for (const c of next) c.used = false;
+                open = next;
+            }
+            return chains
+                .filter((c) => c.pts.length >= 2)
+                .map((c) => pathEl(densify(c.pts, 4), { size: w * r.range(0.9, 1.1), color: o.color ?? RED, thinning: 0.1, smoothing: 0.35, streamline: 0.2, wobbleAmp: 1.4 }))
+                .join("");
+        };
+        const angle = o.angle ?? r.range(-38, -22);
+        return pass(angle, weight * 0.68, 1 - (o.misses ?? 0.012), weight, o.overshoot ?? 5) + pass(angle + r.range(55, 75), weight * 1.05, 0.8, weight * 0.85, (o.overshoot ?? 5) * 0.6);
+    }
+
+    /**
+     * An arrow as a hand draws it: one curved, pressured shaft that doesn't
+     * quite aim, and a head in a single flick (down one side, back up the
+     * other), the two sides never the same length.
+     */
+    function handArrow(x1, y1, x2, y2, o = {}) {
+        const r = rng(o.seed ?? "handArrow");
+        const len = Math.hypot(x2 - x1, y2 - y1);
+        const bend = o.bend ?? r.range(-0.22, 0.22);
+        const mx = (x1 + x2) / 2 - (y2 - y1) * bend + r.range(-4, 4);
+        const my = (y1 + y2) / 2 + (x2 - x1) * bend + r.range(-4, 4);
+        const shaft = [];
+        for (let i = 0; i <= 24; i++) {
+            const t = i / 24;
+            shaft.push([(1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * mx + t * t * x2, (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * my + t * t * y2]);
+        }
+        const w = o.weight ?? 4.5;
+        const ang = Math.atan2(y2 - my, x2 - mx);
+        const head = o.head ?? Math.min(22, 8 + len * 0.1);
+        const side = (sgn, k) => {
+            const a = ang + Math.PI + sgn * r.range(0.38, 0.6);
+            return [x2 + Math.cos(a) * head * k, y2 + Math.sin(a) * head * k];
+        };
+        const flick = [side(1, r.range(0.8, 1.15)), [x2 + r.range(-1.5, 1.5), y2 + r.range(-1.5, 1.5)], side(-1, r.range(0.6, 1.3))];
+        return (
+            pressed(shaft, (u) => 0.45 + 0.5 * Math.sin(Math.PI * Math.min(1, u * 1.2)), { size: w * 1.5, color: o.color, thinning: 0.55, taperStart: 8, taperEnd: 2, wobbleAmp: o.wobbleAmp ?? 1.8 }) +
+            pressed(spline(flick, 6), (u) => 0.4 + 0.6 * Math.sin(Math.PI * u), { size: w * 1.4, color: o.color, thinning: 0.55, taperStart: 3, taperEnd: 8 })
+        );
+    }
+
+    /** A map pin (the teardrop), drawn: a pressured outline and a coloured-in head. */
+    function mapPin(x, y, o = {}) {
+        const s = o.size ?? 16;
+        const r = rng(o.seed ?? `mp${Math.round(x)},${Math.round(y)}`);
+        // A circle for the head, two tangents down to the tip.
+        const R = s * 0.6;
+        const d = s * 1.4;
+        const cy = y - d;
+        // Tangent points sit at pi/2 +- alpha from the centre (screen coords, y down).
+        const alpha = Math.acos(R / d);
+        const loop = [[x + r.range(-0.5, 0.5), y]];
+        const steps = 30;
+        for (let i = 0; i <= steps; i++) {
+            const f = Math.PI / 2 + alpha + (i / steps) * (2 * Math.PI - 2 * alpha);
+            const k = R * (1 + r.range(-0.04, 0.04));
+            loop.push([x + Math.cos(f) * k, cy + Math.sin(f) * k]);
+        }
+        loop.push([x + r.range(-1, 1), y + r.range(0, 1.5)]);
+        const hole = [];
+        for (let i = 0; i < 14; i++) {
+            const a = (i / 14) * Math.PI * 2;
+            hole.push([x + Math.cos(a) * s * 0.2, cy + Math.sin(a) * s * 0.2]);
+        }
+        // Outline, then a small coloured-in dot where the hole would be.
+        return pressed(loop, (u) => 0.5 + 0.5 * Math.sin(Math.PI * u), { size: Math.max(2.2, s * 0.13), color: o.color, thinning: 0.5, taperStart: 2, taperEnd: 4, wobbleAmp: 0.6 }) + colorIn([hole], { seed: `${o.seed}f`, weight: Math.max(2, s * 0.12), overshoot: 1 , color: o.color });
+    }
+
     /** An imperfect box: four strokes, corners overshooting or not meeting. */
     function box(x, y, w, h, o = {}) {
         const r = rng(o.seed ?? "box");
@@ -854,6 +993,9 @@
         scribbleOut,
         pencilScribble,
         pressed,
+        colorIn,
+        handArrow,
+        mapPin,
         tuck,
         blackout,
         strike,

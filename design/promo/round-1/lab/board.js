@@ -458,8 +458,10 @@
 
     window.Board = {
         count: Object.keys(BOARDS).length,
+        /** More boards, registered by later files (board2.js). */
+        extra: {},
         draw(root, v, W, H) {
-            BOARDS[v](root, W, H);
+            return (BOARDS[v] ?? this.extra[v])(root, W, H);
         },
         make,
         card,

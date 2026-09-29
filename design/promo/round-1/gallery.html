@@ -73,7 +73,7 @@ body.only-kept .tile:not(.kept) { display: none; }
     </header>
 
     <nav class="bar" aria-label="Sections">
-        <a href="#logo2">Logo</a><a href="#hand">Handwriting</a><a href="#board">Boards</a><a href="#welcome">Welcome</a><a href="#styles">App styles</a><a href="#wild">Wild ideas</a><a href="#maps">Maps</a>
+        <a href="#logo2">Logo</a><a href="#hand">Handwriting</a><a href="#board2">Boards</a><a href="#welcome">Welcome</a><a href="#styles">App styles</a><a href="#wild">Wild ideas</a><a href="#maps">Maps</a>
         <span class="spacer"></span>
         <span class="count" id="count">0 kept</span>
         <label for="onlykept"><input type="checkbox" id="onlykept"> Kept only</label>
@@ -121,7 +121,19 @@ const SETS = [
         ["H04", "The band: one line from score 0 (30%) to 1 (70%), H1 and H3 for reference"],
         ["H05", "App lines scored automatically from size and importance"],
     ]},
-    { id: "board", title: "B · Boards", intro: "The stalker's board, for the bottom of the welcome screen. The evidence is the real game: real question cards with the answers an honest hider near the greenhouses would give, the real campus border and pavilions, and the eliminated area hatched out exactly as the app's Hints map computes it. Polaroids are drawn stand-ins for now: the free-photo sites (Wikimedia Commons, Unsplash, Pexels) are blocked here too, so real photos come with the same network change as the maps.", wide: false, items: [
+    { id: "board2", title: "B · Second pass", intro: "Built from your notes on B1–B12. Centred, with room around the edges, never a symmetric grid, and a mix of objects instead of four identical cards. No Q1 / time labels, and a bolder string. The map is now a torn-off scrap of the real map (OpenStreetMap, turned to pure black and white) pinned at four corners, so it reads as a map. What's ruled out is coloured in the way a four-year-old would do it: about 95% filled, over and under the edges, with no outline or circle on top. At most one hand-drawn map pin. The photos are drawn by hand, like B6's place to sit. Kept on purpose: the black board with the scribbled-out face (B5), white post-its (B9), the dossier with WANTED stamped over it and NEVER RUNS underlined (B10), the stalker's thoughts written underneath (B11), 500 M (B11), and CLASSIFIED, now by hand (B12). B22 is the everything-together candidate.", wide: false, items: [
+        ["B13", "B1, minimal: two cards, no labels, a bolder string, the thought underneath"],
+        ["B14", "B2, rebalanced: tighter and centred, a photo in place of the fourth card"],
+        ["B15", "The real map, pinned at four corners, coloured in, HERE?"],
+        ["B16", "500 m made visual: the circle is coloured in because she isn't in it"],
+        ["B17", "Black board: a card, the scribbled-out face, a big question mark"],
+        ["B18", "White post-its with thoughts, one red one coloured in with nothing on it"],
+        ["B19", "The dossier as one element: WANTED over it, NEVER RUNS underlined"],
+        ["B20", "CLASSIFIED by hand over the file of what she's admitted"],
+        ["B21", "Obsessive: WHERE ARE YOU, over and over"],
+        ["B22", "Everything together: map, card, photo, post-it"],
+    ]},
+    { id: "board", title: "B · Boards (first pass)", intro: "The stalker's board, for the bottom of the welcome screen. The evidence is the real game: real question cards with the answers an honest hider near the greenhouses would give, the real campus border and pavilions, and the eliminated area hatched out exactly as the app's Hints map computes it. Polaroids are drawn stand-ins for now: the free-photo sites (Wikimedia Commons, Unsplash, Pexels) are blocked here too, so real photos come with the same network change as the maps.", wide: false, items: [
         ["B01", "Minimal: two cards, one string"],
         ["B02", "The chain: Q1 → Q4 strung in order"],
         ["B03", "Campus map in the middle, everything strung to the spot"],

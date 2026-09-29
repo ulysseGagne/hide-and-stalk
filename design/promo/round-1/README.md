@@ -32,6 +32,7 @@ Gallery (all images, with Keep + notes): https://claude.ai/artifact/LdRszjr2qKJ9
 npm install                                   # here, in design/promo/round-1
 node tools/shoot-lab.mjs logo 1 12 375 480    # L01-L12
 node tools/shoot-lab.mjs board 1 12 375 440   # B01-B12
+node tools/shoot-lab.mjs board 13 22 375 480  # B13-B22, second pass (lab/board2.js)
 node tools/shoot-lab.mjs welcome 1 12 375 812 # W01-W12
 node tools/shoot-lab.mjs hand 1 3 375 560 H   # H01-H03
 node tools/shoot-app.mjs a,b,c,d              # A/01 ... D/13
