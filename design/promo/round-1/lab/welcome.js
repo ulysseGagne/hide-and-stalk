@@ -76,8 +76,9 @@
             m += `<text x="${W / 2}" y="${top + h / 2 + 8}" text-anchor="middle" font-family="${FONT}" font-weight="700" font-size="23" letter-spacing="0.06em" fill="${ink}">${label}</text>`;
             m += Ink.circle(W / 2, top + h / 2, label.length * 9 + 26, 24, { seed: `ring${label}`, weight: 4 });
         } else if (style === "red") {
-            m += `<rect x="${x}" y="${top}" width="${w}" height="${h}" fill="${Ink.RED}"/>`;
-            m += `<text x="${W / 2}" y="${top + h / 2 + 8}" text-anchor="middle" font-family="${FONT}" font-weight="700" font-size="23" letter-spacing="0.06em" fill="#fff">${label}</text>`;
+            // Coloured in hard, nearly solid, still going over the edges.
+            m += Ink.scribbleFill(x, top, w, h, { seed: `red${label}`, weight: 14, gap: 9, overshoot: 6, misses: 0.03 });
+            m += `<text x="${W / 2}" y="${top + h / 2 + 8}" text-anchor="middle" font-family="${FONT}" font-weight="700" font-size="23" letter-spacing="0.06em" fill="${ink}" stroke="${paper}" stroke-width="7" stroke-linejoin="round" paint-order="stroke">${label}</text>`;
         }
         svg.innerHTML = m;
         wrap.appendChild(svg);

@@ -84,6 +84,15 @@
         const S = STYLES[styleKey];
         document.body.dataset.style = styleKey;
         headerLogo(S.dark);
+        // A new answer or question: the bell gets circled, by hand.
+        const count = $("#bell-count");
+        if (visible(count)) {
+            const hdr = $("#site-header");
+            const H = layer(hdr);
+            const bb = H.box($("#bell"));
+            H.add(Ink.circle(bb.x + bb.w / 2, bb.y + bb.h / 2, bb.w / 2 + 6, bb.h / 2 + 5, { seed: "bell", weight: 3.2 }));
+            H.done();
+        }
         const menu = $("#view-menu");
         const L = layer(menu);
 

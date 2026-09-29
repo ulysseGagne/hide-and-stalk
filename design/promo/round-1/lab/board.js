@@ -130,10 +130,12 @@
 
     /** A sticky note: white with a black edge, or coloured-in red. */
     function sticky(b, { x, y, w = 96, rot = 0, text, red = false, seed, size = 15 }) {
-        const html = `<div style="width:${w}px;height:${w}px;box-sizing:border-box;border:2px solid ${red ? RED : b.ink};background:${red ? RED : b.paper}"></div>`;
+        // A red note is coloured in by hand, never a flat red square.
+        const fill = red ? `<svg width="${w}" height="${w}" style="position:absolute;inset:0;overflow:visible">${Ink.scribbleFill(0, 0, w, w, { seed: `st${text}`, weight: 12, gap: 9, overshoot: 3, misses: 0.04 })}</svg>` : "";
+        const html = `<div style="position:relative;width:${w}px;height:${w}px;box-sizing:border-box;${red ? "" : `border:2px solid ${b.ink};background:${b.paper}`}">${fill}</div>`;
         const it = b.item(html, { x, y, w, h: w, rot });
         const [tx, ty] = it.at(0.1, 0.34);
-        b.draw(Ink.note(text, { x: tx, y: ty, size, maxWidth: w * 0.78, seed: seed ?? text, color: red ? "#fff" : RED, weight: size * 0.15, tilt: rot, mess: 0.6 }).svg);
+        b.draw(Ink.note(text, { x: tx, y: ty, size, maxWidth: w * 0.78, seed: seed ?? text, color: red ? "#000" : RED, weight: size * 0.15, tilt: rot, mess: 0.6 }).svg);
         return it;
     }
 

@@ -126,8 +126,44 @@
         return d.join(" ");
     }
 
+    /**
+     * The house rule: nothing drawn is ever perfectly straight or perfectly
+     * round. Every stroke is resampled and nudged sideways by slow, seeded
+     * noise, more on long lines (a hand drifts over distance), barely at all
+     * on a letter.
+     */
+    function humanize(points, opts = {}) {
+        if (opts.wobble === false || points.length < 2) return points;
+        const dense = [points[0]];
+        for (let i = 1; i < points.length; i++) {
+            const [ax, ay] = points[i - 1];
+            const [bx, by] = points[i];
+            const steps = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / 5));
+            for (let k = 1; k <= steps; k++) dense.push([ax + ((bx - ax) * k) / steps, ay + ((by - ay) * k) / steps]);
+        }
+        let total = 0;
+        const dist = dense.map((p, i) => (i ? (total += Math.hypot(p[0] - dense[i - 1][0], p[1] - dense[i - 1][1])) : 0));
+        if (total < 3) return points;
+        const n = noise1(rng(`${Math.round(points[0][0])},${Math.round(points[0][1])},${Math.round(total)}`));
+        const amp = opts.wobbleAmp ?? Math.min(2.4, 0.3 + total * 0.006);
+        const wave = Math.max(24, total / 3);
+        return dense.map((p, i) => {
+            const prev = dense[Math.max(0, i - 1)];
+            const next = dense[Math.min(dense.length - 1, i + 1)];
+            let nx = -(next[1] - prev[1]);
+            let ny = next[0] - prev[0];
+            const l = Math.hypot(nx, ny) || 1;
+            nx /= l;
+            ny /= l;
+            // Ends stay put, so a stroke still meets what it points at.
+            const ease = Math.min(1, dist[i] / 8, (total - dist[i]) / 8);
+            const k = (n(dist[i] / wave) + n(dist[i] / 7 + 50) * 0.18) * amp * ease;
+            return [p[0] + nx * k, p[1] + ny * k];
+        });
+    }
+
     function pathEl(points, opts = {}) {
-        const d = outlinePath(points, opts);
+        const d = outlinePath(humanize(points, opts), opts);
         return d ? `<path d="${d}" fill="${opts.color ?? RED}"/>` : "";
     }
 
@@ -619,19 +655,33 @@
     // Board furniture (not handwriting, but part of the same drawing)
     // -----------------------------------------------------------------------
     /** A pushpin seen from above: red head, white glint, black rim. */
+    /** A pushpin seen from above: a lumpy red head, a white glint, a black rim. */
     function pin(x, y, o = {}) {
         const s = o.size ?? 9;
         const c = o.color ?? RED;
-        return `<g><circle cx="${x}" cy="${y}" r="${s}" fill="${c}" stroke="#000" stroke-width="1.5"/><circle cx="${x - s * 0.35}" cy="${y - s * 0.35}" r="${s * 0.28}" fill="#fff"/></g>`;
+        const n = noise1(rng(`pin${Math.round(x)},${Math.round(y)}`));
+        const pts = [];
+        for (let i = 0; i < 18; i++) {
+            const a = (i / 18) * Math.PI * 2;
+            const k = s * (1 + n(i * 0.7) * 0.1);
+            pts.push(`${r1(x + Math.cos(a) * k)},${r1(y + Math.sin(a) * k * 0.94)}`);
+        }
+        return `<g><polygon points="${pts.join(" ")}" fill="${c}" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/><ellipse cx="${r1(x - s * 0.33)}" cy="${r1(y - s * 0.36)}" rx="${r1(s * 0.3)}" ry="${r1(s * 0.22)}" fill="#fff" transform="rotate(-30 ${r1(x - s * 0.33)} ${r1(y - s * 0.36)})"/></g>`;
     }
 
-    /** Red string between two pins, sagging a little under its own weight. */
+    /** Red string between two pins: sagging, a little slack, never ruler-straight. */
     function string(x1, y1, x2, y2, o = {}) {
         const len = Math.hypot(x2 - x1, y2 - y1);
         const sag = o.sag ?? Math.min(18, len * 0.05);
         const mx = (x1 + x2) / 2;
         const my = (y1 + y2) / 2 + sag;
-        return `<path d="M${r1(x1)} ${r1(y1)} Q${r1(mx)} ${r1(my)} ${r1(x2)} ${r1(y2)}" fill="none" stroke="${o.color ?? RED}" stroke-width="${o.width ?? 2}" stroke-linecap="round"/>`;
+        const pts = [];
+        const steps = Math.max(8, Math.round(len / 6));
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            pts.push([(1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * mx + t * t * x2, (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * my + t * t * y2]);
+        }
+        return pathEl(pts, { size: (o.width ?? 2) * 1.1, color: o.color ?? RED, thinning: 0.08, simulatePressure: false, smoothing: 0.5, streamline: 0.2, wobbleAmp: Math.min(2.2, 0.6 + len * 0.004) });
     }
 
     window.Ink = {
@@ -641,6 +691,7 @@
         spline,
         outlinePath,
         pathEl,
+        humanize,
         write,
         note,
         scribbleOut,

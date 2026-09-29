@@ -45,7 +45,7 @@ button, input { font-family: inherit; }
 .bell.ringing { color: var(--ink); animation: none; }
 .bell-count {
     position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px;
-    box-sizing: border-box; border-radius: 9px; background: var(--red); color: #fff;
+    box-sizing: border-box; border-radius: 9px; background: var(--ink); color: var(--paper);
     font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;
 }
 .scan-btn { left: auto; right: 120px; }
@@ -85,7 +85,7 @@ button, input { font-family: inherit; }
 }
 .menu-panel { width: 100%; max-width: 440px; margin: 0 auto; padding: 0; background: none; border: none; box-sizing: border-box; }
 .muted { color: var(--ink); font-size: 13px; }
-.auth-error { margin: 0; min-height: 1.2em; color: var(--red); font-size: 14px; font-weight: 700; }
+.auth-error { margin: 0; min-height: 1.2em; color: var(--ink); font-size: 14px; font-weight: 700; }
 
 /* Log in / register ------------------------------------------------------ */
 .auth-switch { display: flex; gap: 0; margin: 8px 0 22px; border: 3px solid var(--ink); }

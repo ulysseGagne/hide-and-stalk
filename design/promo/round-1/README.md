@@ -3,6 +3,12 @@
 Everything here is code. Nothing in `src/` is changed yet; the chosen
 direction gets built into the app in round 2.
 
+**House rule:** nothing red is ever perfectly straight or round. Every
+stroke goes through `humanize()` in `lab/ink.js` (slow seeded wobble, more on
+long lines); string, pins and red fills are drawn, never CSS shapes. In round
+2 this includes the map: the hider-to-stalker tethers, the north/south line,
+radius circles and the Hints border all get drawn the same way.
+
 Gallery (all images, with Keep + notes): https://claude.ai/artifact/LdRszjr2qKJ9ckB1ZLNKgJ
 
 | Path | What |
