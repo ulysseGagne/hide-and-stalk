@@ -27,8 +27,8 @@
     const t = (x, y, size, txt, o = {}) =>
         `<div style="position:absolute;left:${x}px;top:${y}px;${o.w ? `width:${o.w}px;` : ""}font:${o.wt ?? 700} ${size}px/${o.lh ?? 1.08} ${o.f ?? F};color:${o.c ?? "#000"};letter-spacing:${o.ls ?? "-0.01em"};${o.align ? `text-align:${o.align};` : ""}${o.st ?? ""}">${txt}</div>`;
     const box = (x, y, w, h, st, inner = "") => `<div style="position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;box-sizing:border-box;${st}">${inner}</div>`;
-    const hw = (txt, x, y, size, o = {}) => Ink.write(txt, { x, y, size, seed: o.seed ?? `${txt}${x}${y}`, weight: o.weight, mess: o.mess ?? 0.5, tilt: o.tilt, maxWidth: o.maxWidth, color: o.color, spacing: o.spacing }).svg;
-    const note = (txt, x, y, size, o = {}) => Ink.note(txt, { x, y, size, maxWidth: o.maxWidth ?? 220, seed: o.seed ?? `${txt}${x}`, tilt: o.tilt ?? -3, mess: o.mess ?? 0.5, color: o.color, weight: o.weight }).svg;
+    const hw = (txt, x, y, size, o = {}) => Ink.write(txt, { x, y, size, seed: o.seed ?? `${txt}${x}${y}`, weight: o.weight, mess: o.mess, importance: o.importance, tilt: o.tilt, maxWidth: o.maxWidth, color: o.color, spacing: o.spacing }).svg;
+    const note = (txt, x, y, size, o = {}) => Ink.note(txt, { x, y, size, maxWidth: o.maxWidth ?? 220, seed: o.seed ?? `${txt}${x}`, tilt: o.tilt ?? -3, mess: o.mess, importance: o.importance ?? "aside", color: o.color, weight: o.weight }).svg;
 
     /** The lockup, anywhere, any size: HIDE AND [SEEK, scribbled] STALK. */
     function lockup(x, y, size, o = {}) {
@@ -40,13 +40,13 @@
             html += t(x, y, size, "HIDE", { c, lh: 0.9, ls: "-0.03em" }) + t(x, y + size * 0.88, size, o.amp ? "&" : "AND", { c, lh: 0.9, ls: "-0.03em" }) + t(x, y + size * 1.76, size, "SEEK", { c, lh: 0.9, ls: "-0.03em" });
             const sw = mw("SEEK", size);
             ink += Ink.scribbleOut(x + 4, y + size * 1.76 + size * 0.14, sw - 6, size * 0.72, { seed: `lk${x}${y}`, weight: size * 0.13 });
-            ink += hw("STALK", x + sw * 0.3, y + size * 3.3, size * 0.8, { seed: `lks${x}${y}`, weight: size * 0.15, tilt: -3, spacing: 0.12 });
+            ink += hw("STALK", x + sw * 0.3, y + size * 3.3, size * 0.8, { seed: `lks${x}${y}`, weight: size * 0.15, tilt: -3, spacing: 0.12, mess: 0.45 });
         } else {
             const lw = mw(`${lead} `, size);
             const sw = mw("SEEK", size);
             html += t(x, y, size, `${lead} SEEK`, { c, lh: 1, ls: "-0.02em" });
             ink += Ink.scribbleOut(x + lw + 2, y + size * 0.18, sw - 4, size * 0.72, { seed: `lk${x}${y}`, weight: size * 0.12 });
-            ink += hw("STALK", x + lw + sw * 0.1, y + size * 1.75, size * 0.72, { seed: `lks${x}${y}`, weight: size * 0.14, tilt: -4, spacing: 0.12 });
+            ink += hw("STALK", x + lw + sw * 0.1, y + size * 1.75, size * 0.72, { seed: `lks${x}${y}`, weight: size * 0.14, tilt: -4, spacing: 0.12, mess: 0.45 });
         }
         return { html, ink };
     }

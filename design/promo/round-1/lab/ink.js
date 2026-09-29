@@ -453,6 +453,12 @@
 
     /** Zigzag crossing-out, the SEEK scribble: up, down, up, slanted. */
     function scribbleOut(x, y, w, h, o = {}) {
+        // Everything crossed out now uses the pressure scribble (the first
+        // zigzag was too even); the old one stays as scribbleOutFlat.
+        return pencilScribble(x, y, w, h, { ...o, weight: (o.weight ?? h * 0.16) * 1.3 });
+    }
+
+    function scribbleOutFlat(x, y, w, h, o = {}) {
         const r = rng(o.seed ?? "scribble");
         const passes = o.passes ?? 3;
         const over = h * (o.overshoot ?? 0.16);
@@ -810,10 +816,22 @@
                     }
                 }
                 if (start !== null) runs.push([start, diag]);
+                // A miss is a short skip inside a stroke (the crayon lifted for
+                // a moment), never a whole row: a missed row would leave a
+                // ruler-straight white line.
+                const split = [];
+                for (const [ua, ub] of runs) {
+                    if (ub - ua > 60 && r() > keep) {
+                        const at = ua + (ub - ua) * r.range(0.2, 0.8);
+                        const gapLen = r.range(4, 12);
+                        split.push([ua, at - gapLen / 2], [at + gapLen / 2, ub]);
+                    } else split.push([ua, ub]);
+                }
+                runs.length = 0;
+                runs.push(...split);
                 const next = [];
                 for (const [ua, ub] of runs) {
                     if (ub - ua < 3) continue;
-                    if (r() > keep) continue; // a missed row: paper shows through
                     // Stops short of the line, or runs over it.
                     const a2 = ua - r.range(-over * 0.5, over);
                     const b2 = ub + r.range(-over * 0.5, over);
@@ -839,7 +857,7 @@
                 .join("");
         };
         const angle = o.angle ?? r.range(-38, -22);
-        return pass(angle, weight * 0.68, 1 - (o.misses ?? 0.012), weight, o.overshoot ?? 5) + pass(angle + r.range(55, 75), weight * 1.05, 0.8, weight * 0.85, (o.overshoot ?? 5) * 0.6);
+        return pass(angle, weight * 0.68, 1 - (o.misses ?? 0.004), weight, o.overshoot ?? 5) + pass(angle + r.range(55, 75), weight * 1.6, 0.97, weight * 0.8, (o.overshoot ?? 5) * 0.6);
     }
 
     /**

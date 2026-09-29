@@ -304,8 +304,10 @@
 
     window.Welcome = {
         count: Object.keys(WELCOME).length,
+        /** More screens, registered by later files (welcome2.js). */
+        extra: {},
         draw(root, v) {
-            WELCOME[v](root);
+            return (WELCOME[v] ?? this.extra[v])(root);
         },
         hand,
         button,

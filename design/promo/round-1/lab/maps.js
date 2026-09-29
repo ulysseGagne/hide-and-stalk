@@ -295,12 +295,14 @@
             svg += `<defs><clipPath id="mask"><path d="${maskD}" clip-rule="evenodd"/></clipPath></defs>`;
             if (o.hatch === "redact") svg += `<path d="${maskD}" fill="#000" fill-rule="evenodd"/>`;
             else if (o.hatch === "whiteout") svg += `<path d="${maskD}" fill="${paper}" fill-rule="evenodd"/>`;
-            else if (o.hatch === "solid") svg += `<g clip-path="url(#mask)">${crayon({ seed: `${o.game}s`, weight: 12, gap: 19, cell: 190, misses: 0.06 })}</g>`;
             else {
+                // Coloured in by hand, ~95% filled (the same fill as the boards).
                 const color = o.hatch === "black" ? ink : R;
-                svg += `<g clip-path="url(#mask)">${crayon({ seed: `${o.game}h`, weight: o.hatchWeight ?? 2.4, gap: o.hatchGap ?? 15, color })}</g>`;
+                const screen = [[-30, -30], [W + 30, -30], [W + 30, H + 30], [-30, H + 30]];
+                svg += Ink.colorIn([screen, ...regionRings.flat()], { seed: `${o.game}h`, weight: o.hatch === "solid" ? 16 : 12, overshoot: 5, color });
             }
-            for (const [i, poly] of regionRings.entries()) svg += trace(poly[0], { seed: `${o.game}r${i}`, weight: 3.6 });
+            // The fill already draws the edge; a border on top would say it twice.
+            if (o.hatch === "whiteout" || o.hatch === "redact") for (const [i, poly] of regionRings.entries()) svg += trace(poly[0], { seed: `${o.game}r${i}`, weight: 3.6 });
         }
 
         // Handwritten reasoning on each answered constraint.

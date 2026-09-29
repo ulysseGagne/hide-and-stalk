@@ -105,7 +105,7 @@
         const it = b.item(html, { x, y, w, rot, z });
         if (answer) {
             const [ax, ay] = it.at(0.08, 0.9);
-            b.draw(Ink.write(answer, { x: ax, y: ay, size: answerSize, seed: seed ?? answer, tilt: rot - 3, maxWidth: w * 0.86, mess: 0.5 }).svg);
+            b.draw(Ink.write(answer, { x: ax, y: ay, size: answerSize, seed: seed ?? answer, tilt: rot - 3, maxWidth: w * 0.86, importance: "key" }).svg);
         }
         const p = pin === "top" ? it.at(0.5, 0.06) : pin === "left" ? it.at(0.1, 0.1) : pin ? it.at(...pin) : null;
         if (p) b.pin(p);
@@ -121,7 +121,7 @@
         const it = b.item(html, { x, y, w, rot, z });
         if (caption) {
             const [cx, cy] = it.at(0.08, 0.94);
-            b.draw(Ink.write(caption, { x: cx, y: cy, size: 11, weight: 2.1, seed: caption, tilt: rot - 2, maxWidth: w * 0.85, color: "#000", mess: 0.4 }).svg);
+            b.draw(Ink.write(caption, { x: cx, y: cy, size: 11, weight: 2.1, seed: caption, tilt: rot - 2, maxWidth: w * 0.85, color: "#000", importance: "aside" }).svg);
         }
         const p = it.at(0.5, 0.05);
         b.pin(p);
@@ -135,7 +135,7 @@
         const html = `<div style="position:relative;width:${w}px;height:${w}px;box-sizing:border-box;${red ? "" : `border:2px solid ${b.ink};background:${b.paper}`}">${fill}</div>`;
         const it = b.item(html, { x, y, w, h: w, rot });
         const [tx, ty] = it.at(0.1, 0.34);
-        b.draw(Ink.note(text, { x: tx, y: ty, size, maxWidth: w * 0.78, seed: seed ?? text, color: red ? "#000" : RED, weight: size * 0.15, tilt: rot, mess: 0.6 }).svg);
+        b.draw(Ink.note(text, { x: tx, y: ty, size, maxWidth: w * 0.78, seed: seed ?? text, color: red ? "#000" : RED, weight: size * 0.15, tilt: rot, importance: "aside" }).svg);
         return it;
     }
 
@@ -460,8 +460,8 @@
         count: Object.keys(BOARDS).length,
         /** More boards, registered by later files (board2.js). */
         extra: {},
-        draw(root, v, W, H) {
-            return (BOARDS[v] ?? this.extra[v])(root, W, H);
+        draw(root, v, W, H, o) {
+            return (BOARDS[v] ?? this.extra[v])(root, W, H, o);
         },
         make,
         card,

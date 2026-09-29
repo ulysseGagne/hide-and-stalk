@@ -61,7 +61,8 @@
     }
 
     // Photos drawn by hand: white strokes on black, 100 x 100.
-    const sk = (pts, w, seed) => Ink.pathEl(Ink.spline(pts, 6), { size: w, color: "#fff", thinning: 0.3, wobbleAmp: 1.1, taperEnd: 2, seed });
+    let STROKE = "#fff";
+    const sk = (pts, w, seed) => Ink.pathEl(Ink.spline(pts, 6), { size: w, color: STROKE, thinning: 0.3, wobbleAmp: 1.1, taperEnd: 2, seed });
     const SCENES = {
         sit: () => sk([[10, 62], [50, 60.5], [90, 60]], 4.5) + sk([[12, 49], [52, 48], [88, 47]], 4.5) + sk([[20, 62], [19, 86]], 3.5) + sk([[80, 61], [82, 86]], 3.5) + sk([[0, 90], [55, 89], [100, 91]], 1.6),
         door: () => sk([[30, 100], [31, 50], [30, 18]], 3.5) + sk([[30, 18], [52, 17.5], [70, 18]], 3.5) + sk([[70, 18], [69, 60], [70, 100]], 3.5) + sk([[37, 26], [63, 26], [62, 52], [37, 53], [37, 26]], 2) + sk([[62, 64], [63, 66]], 5) + sk([[39, 6], [61, 6], [61, 12], [39, 12], [39, 6]], 2.2) + sk([[43, 9], [57, 9]], 1.6),
@@ -73,14 +74,15 @@
                 const rr = 12 + (i % 7) * 2.6 + r.range(-2, 2);
                 loops.push([50 + Math.cos(a) * rr * 1.1 + Math.sin(i * 0.37) * 6, 36 + Math.sin(a) * rr * 0.8]);
             }
-            return sk([[48, 100], [49, 72], [51, 52]], 6) + sk([[49, 74], [36, 58]], 3) + sk([[51, 66], [66, 52]], 3) + Ink.pathEl(Ink.spline(loops, 3), { size: 1.8, color: "#fff", thinning: 0.3, wobbleAmp: 0.6 });
+            return sk([[48, 100], [49, 72], [51, 52]], 6) + sk([[49, 74], [36, 58]], 3) + sk([[51, 66], [66, 52]], 3) + Ink.pathEl(Ink.spline(loops, 3), { size: 1.8, color: STROKE, thinning: 0.3, wobbleAmp: 0.6 });
         },
         above: () => sk([[0, 8], [36, 32], [40, 100]], 3) + sk([[100, 4], [64, 28], [60, 100]], 3) + [40, 56, 72, 88].map((y, i) => sk([[y / 3.4, y + 2], [37, y - 5]], 1.4, i)).join("") + [40, 56, 72, 88].map((y, i) => sk([[63, y - 6], [100 - y / 3.4, y]], 1.4, i + 9)).join(""),
     };
     function polaroid(b, { x, y, w = 118, rot = 0, scene = "sit", caption, pin = true }) {
         const ph = w - 16;
-        const html = `<div style="background:#fff;border:2px solid #000;padding:7px 7px 34px;box-sizing:border-box;width:${w}px">
-            <svg width="${ph - 2}" height="${ph - 2}" viewBox="0 0 100 100" style="display:block;background:#000">${SCENES[scene]()}</svg></div>`;
+        STROKE = b.paper;
+        const html = `<div style="background:${b.paper};border:2px solid ${b.ink};padding:7px 7px 34px;box-sizing:border-box;width:${w}px">
+            <svg width="${ph - 2}" height="${ph - 2}" viewBox="0 0 100 100" style="display:block;background:${b.ink}">${SCENES[scene]()}</svg></div>`;
         const it = b.item(html, { x, y, w, rot });
         if (caption) {
             const [cx, cy] = it.at(0.08, 0.95);
@@ -107,8 +109,8 @@
 
     /** The subject: a silhouette with the face scribbled out. */
     function subject(b, { x, y, w = 108, rot = 0, name = "HIDER" }) {
-        const html = `<div style="background:#fff;border:2px solid #000;padding:7px;font-family:${FONT}">
-            <svg width="${w - 18}" height="${w - 6}" viewBox="0 0 100 112" style="display:block"><g fill="#000"><ellipse cx="50" cy="32" rx="16" ry="19"/><path d="M16 112 C18 74 32 58 50 58 C68 58 82 74 84 112 Z"/></g></svg>
+        const html = `<div style="background:${b.paper};color:${b.ink};border:2px solid ${b.ink};padding:7px;font-family:${FONT}">
+            <svg width="${w - 18}" height="${w - 6}" viewBox="0 0 100 112" style="display:block"><g fill="${b.ink}"><ellipse cx="50" cy="32" rx="16" ry="19"/><path d="M16 112 C18 74 32 58 50 58 C68 58 82 74 84 112 Z"/></g></svg>
             <div style="font-size:12px;font-weight:700;letter-spacing:.12em;margin-top:6px">${name}</div></div>`;
         const it = b.item(html, { x, y, w, rot });
         const [fx, fy] = it.at(0.5, 0.3);
@@ -155,8 +157,8 @@
             svg += Ink.colorIn([[[-pad, -pad], [w + pad, -pad], [w + pad, h + pad], [-pad, h + pad]], ...holes], { seed: `sc${x}${y}`, weight: 12, overshoot: 5 });
         }
         if (ink) svg += ink(P, w, h);
-        const html = `<div style="position:relative;width:${w}px;height:${h}px;border:2px solid #000;box-sizing:border-box;overflow:hidden;background:#fff">
-            <div style="position:absolute;inset:0;filter:url(#bx)">${imgs}</div>
+        const html = `<div style="position:relative;width:${w}px;height:${h}px;border:2px solid ${b.ink};box-sizing:border-box;overflow:hidden;background:${b.paper}">
+            <div style="position:absolute;inset:0;filter:url(#bx)${b.dark ? " invert(1)" : ""}">${imgs}</div>
             <svg width="${w}" height="${h}" style="position:absolute;left:-2px;top:-2px;overflow:visible">${svg}</svg></div>`;
         const it = b.item(html, { x, y, w, h, rot });
         if (pins4) for (const f of [[0.04, 0.05], [0.96, 0.04], [0.05, 0.95], [0.95, 0.96]]) b.pin(it.at(...f), { size: 6.5 });
@@ -340,9 +342,39 @@
         },
     };
 
+    // Small scenes for the welcome screen: drawn at 250 x 160 and shown at 1.5x,
+    // so borders, strokes and pins come out as heavy as the title's.
+    const SCENE_W = 250;
+    const SCENE_H = 160;
+    Object.assign(BOARDS, {
+        // A card and a photo, strung.
+        w1(root, W, H, o) {
+            const b = start(root, W, H, o);
+            const sc = SC();
+            const c = card(b, { x: 12, y: 14, w: 116, rot: -5, q: Q.ns, answer: sc.answered[0].answer, answerSize: 20 });
+            const ph = polaroid(b, { x: 150, y: 8, w: 88, rot: 6, scene: "sit", caption: "PLACE TO SIT" });
+            b.string(c.pinAt, ph.pinAt, { width: 2.6 });
+        },
+        // The map scrap and one card.
+        w2(root, W, H, o) {
+            const b = start(root, W, H, o);
+            const sc = SC();
+            const m = scrap(b, { x: 104, y: 14, w: 134, h: 128, rot: 3, center: turf.centroid(sc.region).geometry.coordinates, zoom: 15.9, region: sc.region });
+            const c = card(b, { x: 10, y: 22, w: 112, rot: -5, q: Q.green, answer: sc.answered[3].answer, answerSize: 20 });
+            b.string(c.pinAt, m.pinAt, { width: 2.6 });
+        },
+        // The subject and a post-it.
+        w3(root, W, H, o) {
+            const b = start(root, W, H, o);
+            const s2 = subject(b, { x: 24, y: 10, w: 90, rot: -5 });
+            const p = postit(b, { x: 140, y: 26, w: 90, rot: 5, text: "WHERE ARE YOU", size: 15 });
+            b.string(s2.pinAt, p.pinAt, { width: 2.6 });
+        },
+    });
+
     for (const [n, f] of Object.entries(BOARDS)) {
-        Board.extra[n] = async (root, W = W0, H = H0) => {
-            f(root, W, H);
+        Board.extra[n] = async (root, W = W0, H = H0, o) => {
+            f(root, W, H, o);
             // make() collects the ink until done() lays it on top.
             current.done();
             await settle(root);
@@ -350,4 +382,5 @@
     }
     void W0;
     void H0;
+    Board.SCENE = { w: SCENE_W, h: SCENE_H };
 })();

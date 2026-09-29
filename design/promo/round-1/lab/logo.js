@@ -10,6 +10,8 @@
 (function () {
     const NS = "http://www.w3.org/2000/svg";
     const FONT = "Arimo, 'Helvetica Neue', Helvetica, Arial, sans-serif";
+    // Type colour: black, or white in dark mode (the red never changes).
+    let TYPE = "#000";
 
     /** Typeset one word and return its box (cap-height box, not the em box). */
     function word(svg, text, x, y, size, o = {}) {
@@ -20,7 +22,7 @@
         t.setAttribute("font-weight", "700");
         t.setAttribute("font-size", size);
         t.setAttribute("letter-spacing", o.tracking ?? `${-0.02 * size}`);
-        t.setAttribute("fill", o.fill ?? "#000");
+        t.setAttribute("fill", o.fill ?? TYPE);
         if (o.anchor) t.setAttribute("text-anchor", o.anchor);
         t.textContent = text;
         svg.appendChild(t);
@@ -392,9 +394,11 @@
 
     window.Logo = {
         count: Object.keys(LOCKUPS).length,
-        draw(svg, v, W, H) {
+        draw(svg, v, W, H, o = {}) {
             canvasW = W;
+            TYPE = o.dark ? "#fff" : "#000";
             LOCKUPS[v](svg, W, H);
+            TYPE = "#000";
         },
     };
 })();

@@ -149,7 +149,9 @@
                 else if (hatch === "redact") s += `<path d="${exD}" fill="#000" fill-rule="evenodd"/>`;
                 else {
                     const color = hatch === "black" ? ink : Ink.RED;
-                    s += `<g clip-path="url(#${hid})">${Ink.scribbleFill(0, 0, w, h, { seed: `${id}h`, weight: o.hatchWeight ?? 2.4, gap: o.hatchGap ?? 7, angle: -32, color, misses: 0 })}</g>`;
+                    // Coloured in by hand, ~95% filled, over and under the edges.
+                    const exRings = (sc.excluded.geometry.type === "Polygon" ? [sc.excluded.geometry.coordinates] : sc.excluded.geometry.coordinates).flatMap((poly) => poly.map((ring) => ring.map(P)));
+                    s += Ink.colorIn(exRings, { seed: `${id}h`, weight: o.hatchWeight ? Math.max(5, o.hatchWeight * 3) : Math.max(5, Math.min(12, w / 34)), overshoot: 3, color });
                 }
             }
             if (sc.region) {
