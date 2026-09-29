@@ -453,6 +453,141 @@
         return pathEl(dense, { size: o.weight ?? h * 0.16, color: o.color ?? RED, thinning: 0.15, smoothing: 0.5, streamline: 0.25 });
     }
 
+    /**
+     * A stroke with real pen pressure, the way an Apple Pencil draws: the
+     * line swells where the hand presses and thins where it lets up.
+     * `pressure(u)` gives 0..1 along the stroke (u = 0..1 by length).
+     */
+    function pressed(points, pressure, o = {}) {
+        const pts = humanize(points, o);
+        let total = 0;
+        const acc = pts.map((p, i) => (i ? (total += Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1])) : 0));
+        const withP = pts.map((p, i) => [p[0], p[1], Math.max(0.05, Math.min(1, pressure(total ? acc[i] / total : 0)))]);
+        const d = outlinePath(withP, { size: o.size ?? 10, thinning: o.thinning ?? 0.72, smoothing: 0.55, streamline: 0.28, simulatePressure: false, taperStart: o.taperStart ?? 6, taperEnd: o.taperEnd ?? 18 });
+        return d ? `<path d="${d}" fill="${o.color ?? RED}"/>` : "";
+    }
+
+    /**
+     * The SEEK scribble, by hand: a zigzag whose legs bow and wander, whose
+     * turns are round (not sharp), each leg a different height, and whose
+     * width follows the pressure: heavy through the middle of a stroke,
+     * light at the turns, lighter again as the hand gets bored at the end.
+     */
+    function pencilScribble(x, y, w, h, o = {}) {
+        const r = rng(o.seed ?? "pencil");
+        const n = noise1(r);
+        const legs = (o.passes ?? 3) * 2 + 1;
+        const over = h * (o.overshoot ?? 0.14);
+        const verts = [[x - w * r.range(0.03, 0.08), y + h * r.range(0.5, 0.75)]];
+        for (let i = 1; i < legs; i++) {
+            const t = i / legs;
+            const up = i % 2 === 1;
+            const reach = r.range(0.3, 1.3);
+            // Slanted like handwriting: the tops land further right than the bottoms.
+            const slant = up ? w * r.range(0.03, 0.08) : -w * r.range(0, 0.04);
+            verts.push([x + w * (t + r.range(-0.06, 0.06)) + slant, up ? y - over * reach * 0.6 + h * r.range(0, 0.2) : y + h + over * reach - h * r.range(0, 0.18)]);
+        }
+        verts.push([x + w * r.range(1.02, 1.1), y + h * r.range(0.05, 0.45)]);
+        // Each leg bows sideways a little, and the turns get a rounded shoulder.
+        const ctrl = [verts[0]];
+        for (let i = 1; i < verts.length; i++) {
+            const [ax, ay] = verts[i - 1];
+            const [bx, by] = verts[i];
+            const len = Math.hypot(bx - ax, by - ay) || 1;
+            const nx = -(by - ay) / len;
+            const ny = (bx - ax) / len;
+            const bow = r.range(-0.09, 0.09) * len;
+            ctrl.push([ax + (bx - ax) * 0.35 + nx * bow * 0.8, ay + (by - ay) * 0.35 + ny * bow * 0.8]);
+            ctrl.push([ax + (bx - ax) * 0.68 + nx * bow, ay + (by - ay) * 0.68 + ny * bow]);
+            // Close to the turn the hand is nearly straight again, so turns stay tight.
+            ctrl.push([ax + (bx - ax) * 0.94 + nx * bow * 0.2, ay + (by - ay) * 0.94 + ny * bow * 0.2]);
+            ctrl.push([bx, by]);
+        }
+        const path = spline(ctrl, 10);
+        const pressure = (u) => {
+            const leg = u * (verts.length - 1);
+            const f = leg - Math.floor(leg);
+            const mid = Math.sin(Math.PI * f) ** 0.8;
+            const fatigue = 1 - 0.3 * u;
+            return (0.28 + 0.72 * mid) * fatigue * (0.8 + 0.25 * n(u * 7 + 3));
+        };
+        return pressed(path, pressure, { size: o.weight ?? h * 0.2, color: o.color, thinning: o.thinning ?? 0.7, wobbleAmp: o.wobbleAmp ?? 1.6, taperEnd: 24 });
+    }
+
+    /**
+     * Handwriting with the letters tucked into each other ("emboîtées"):
+     * every letter its own size and height on the line, each one slid as
+     * close to the ones before as it can go without touching them.
+     * Draws at the origin (baseline y = 0) and returns its bounding box, so
+     * a lockup can measure it and then move it into place.
+     */
+    function tuck(text, o = {}) {
+        const r = rng(o.seed ?? text);
+        const n = noise1(r);
+        const size = o.size ?? 60;
+        const weight = o.weight ?? size * 0.17;
+        const gap = o.gap ?? weight * 0.22;
+        const mess = o.mess ?? 0.5;
+        const sizes = o.sizes ?? [];
+        const rises = o.rises ?? [];
+        const glyphs = [];
+        [...text].forEach((ch, i) => {
+            const g = glyphFor(ch);
+            if (!g) return;
+            const [gw, strokes] = g;
+            const k = sizes[i] ?? 1 + r.range(-1, 1) * (o.sizeVar ?? 0.22);
+            const sy = size * k;
+            const sx = sy * r.range(0.9, 1.06);
+            const rise = (rises[i] ?? r.range(-1, 1) * (o.riseVar ?? 0.08)) * size;
+            const lean = ((n(i * 1.7 + 5) * 7 * mess + (o.slant ?? 0)) * Math.PI) / 180;
+            const jitter = 0.035 + 0.05 * mess;
+            const local = strokes.map((st) => {
+                const pts = st.map(([px, py]) => {
+                    const lx = (px + r.range(-jitter, jitter)) * sx + (1 - py) * sy * 0.06 * mess;
+                    const ly = (py - 1 + r.range(-jitter, jitter)) * sy - rise;
+                    return rot([lx, ly], lean);
+                });
+                return densify(pts.length > 2 ? spline(pts, 8) : pts, 3);
+            });
+            glyphs.push({ local, w: gw * sx, weight: weight * r.range(0.9, 1.12) });
+        });
+        // Slide each letter left until it would touch something already down.
+        const placed = [];
+        const clear = (pts, dx, need) => {
+            for (const q of placed) for (const [px, py] of pts) if (Math.hypot(px + dx - q[0], py - q[1]) < need) return false;
+            return true;
+        };
+        const out = [];
+        let cursor = 0;
+        let prevLeft = -Infinity;
+        for (const g of glyphs) {
+            const pts = g.local.flat();
+            const minX = Math.min(...pts.map((p) => p[0]));
+            const need = g.weight / 2 + weight / 2 + gap;
+            let dx = cursor + weight * 2 - minX;
+            if (placed.length) while (dx > prevLeft - minX + weight * 0.4 && clear(pts, dx - 1, need)) dx -= 1;
+            else dx = -minX;
+            prevLeft = minX + dx;
+            for (const p of pts) placed.push([p[0] + dx, p[1]]);
+            cursor = Math.max(cursor, Math.max(...pts.map((p) => p[0])) + dx);
+            out.push({ strokes: g.local.map((st) => st.map(([px, py]) => [px + dx, py])), weight: g.weight });
+        }
+        const tilt = ((o.tilt ?? -2) * Math.PI) / 180;
+        let svg = "";
+        const all = [];
+        for (const g of out) {
+            for (const st of g.strokes) {
+                const pts = st.map((p) => rot(p, tilt));
+                all.push(...pts);
+                svg += pathEl(pts, { size: g.weight, color: o.color ?? RED, thinning: 0.2 + 0.12 * mess, taperEnd: r() * 4, wobbleAmp: 0.6 });
+            }
+        }
+        const pad = weight / 2;
+        const xs = all.map((p) => p[0]);
+        const ys = all.map((p) => p[1]);
+        return { svg, box: { x: Math.min(...xs) - pad, y: Math.min(...ys) - pad, w: Math.max(...xs) - Math.min(...xs) + pad * 2, h: Math.max(...ys) - Math.min(...ys) + pad * 2 } };
+    }
+
     /** Dense back-and-forth scribble that blacks a word out completely. */
     function blackout(x, y, w, h, o = {}) {
         const r = rng(o.seed ?? "blackout");
@@ -695,6 +830,9 @@
         write,
         note,
         scribbleOut,
+        pencilScribble,
+        pressed,
+        tuck,
         blackout,
         strike,
         circle,

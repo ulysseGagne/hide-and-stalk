@@ -8,10 +8,11 @@ const b = await browser();
 const ctx = await context(b, { viewport: { width: +w, height: +h } });
 const page = await ctx.newPage();
 page.on("pageerror", (e) => console.error("pageerror:", e.message));
-for (let v = +from; v <= +to; v++) {
+const vs = from.includes(",") || from.includes(".") ? from.split(",") : Array.from({ length: +to - +from + 1 }, (_, i) => +from + i);
+for (const v of vs) {
     await page.goto(`${base}/design/promo/round-1/lab/view.html?set=${set}&v=${v}&w=${w}&h=${h}`);
     await page.waitForSelector("body[data-ready='1']", { timeout: 60000 });
-    const out = path.join(ROUND, "shots", `${prefix}${String(v).padStart(2, "0")}.png`);
+    const out = path.join(ROUND, "shots", `${prefix}${typeof v === "string" ? v : String(v).padStart(2, "0")}.png`);
     await page.locator("#root").screenshot({ path: out });
     console.log("wrote", path.basename(out));
 }

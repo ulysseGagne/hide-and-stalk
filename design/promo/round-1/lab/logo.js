@@ -187,6 +187,209 @@
         },
     };
 
+    // ---------------------------------------------------------------------
+    // Round 1, second pass (feedback on L1, L2, L3, L7, L8, L12)
+    // ---------------------------------------------------------------------
+    const EDGE = 24; // nothing drawn closer than this to the screen's edge
+
+    /** Move an inked group so its top sits at `top`; left at `x` or centred on `cx`; kept off the edges. */
+    function place(g, o) {
+        const b = g.getBBox();
+        const room = canvasW - EDGE * 2;
+        const k = o.width ? o.width / b.width : Math.min(o.scale ?? 1, room / b.width);
+        let left = o.cx !== undefined ? o.cx - (b.width * k) / 2 : o.x ?? b.x;
+        left = Math.max(EDGE, Math.min(left, canvasW - EDGE - b.width * k));
+        g.setAttribute("transform", `translate(${left - b.x * k} ${o.top - b.y * k}) scale(${k})`);
+        return { x: left, y: o.top, w: b.width * k, h: b.height * k, bottom: o.top + b.height * k };
+    }
+
+    /** The bottom edge of what's drawn so far in a group. */
+    const bottomOf = (g) => {
+        const b = g.getBBox();
+        return b.y + b.height;
+    };
+
+    /** The SEEK scribble, pressure and all. */
+    const scribble = (svg, box, o = {}) => ink(svg, Ink.pencilScribble(box.x + 4, box.y - 2, box.w - 6, box.h + 4, { seed: o.seed ?? "p1", passes: o.passes ?? 3, weight: o.weight ?? box.h * 0.22, overshoot: o.overshoot }));
+
+    /** STALK as in L1 or L8 (the plain scrawl), drawn at the origin, to be placed. */
+    const scrawl = (svg, o = {}) => ink(svg, Ink.write(o.text ?? "STALK", { x: 0, y: 0, size: o.size ?? 84, weight: (o.size ?? 84) * 0.18, seed: o.seed ?? "L1s", mess: o.mess ?? 0.45, tilt: o.tilt ?? -2, spacing: 0.12 }).svg);
+
+    /** STALK with its letters tucked together, drawn at the origin, to be placed. */
+    const tucked = (svg, o = {}) => ink(svg, Ink.tuck(o.text ?? "STALK", { size: o.size ?? 84, seed: o.seed ?? "t1", sizeVar: o.sizeVar, riseVar: o.riseVar, sizes: o.sizes, rises: o.rises, tilt: o.tilt ?? -3, mess: o.mess ?? 0.45, gap: o.gap }).svg);
+
+    /** One typeset word at whatever size makes it exactly `width` wide. */
+    function fitWord(svg, text, x, top, width, o = {}) {
+        const w0 = word(svg, text, 0, 0, 100, { tracking: o.tracking });
+        const size = (100 * width) / w0.w;
+        w0.el.remove();
+        const cap = size * 0.716;
+        const w = word(svg, text, x, top + cap, size, { tracking: `${-0.02 * size}`, anchor: o.anchor });
+        // Nudge for the side bearing, so the ink edge (not the advance) lines up.
+        const shift = x - w.x - (o.anchor === "middle" ? 0 : 0);
+        if (!o.anchor) {
+            w.el.setAttribute("x", x + shift);
+            w.x += shift;
+        }
+        return w;
+    }
+
+    /** One typeset word at a fixed size, its letters spread to exactly `width`. */
+    function spreadWord(svg, text, x, base, size, width) {
+        const w = word(svg, text, x, base, size, { tracking: "0" });
+        w.el.setAttribute("textLength", width);
+        w.el.setAttribute("lengthAdjust", "spacing");
+        const b = w.el.getBBox();
+        w.el.setAttribute("x", x - (b.x - x));
+        return { ...w, x, w: width };
+    }
+
+    const stack = (svg, s = 104) => {
+        word(svg, "HIDE", M, 118, s);
+        word(svg, "AND", M, 206, s);
+        return word(svg, "SEEK", M, 294, s);
+    };
+
+    const TUCK_A = { sizes: [1.2, 0.72, 1.04, 0.7, 1.16], rises: [0, 0.3, 0.02, -0.12, 0.05] };
+
+    Object.assign(LOCKUPS, {
+        // L1, pencil scribble, STALK lowered clear of it.
+        "1.1"(svg) {
+            const seek = stack(svg);
+            const sc = scribble(svg, seek, { seed: "p11" });
+            place(scrawl(svg), { top: bottomOf(sc) + 22, x: seek.x + seek.w * 0.3 });
+        },
+        // L1.1 with the letters tucked in, each its own size.
+        "1.2"(svg) {
+            const seek = stack(svg);
+            const sc = scribble(svg, seek, { seed: "p12" });
+            place(tucked(svg, { seed: "t12", size: 88 }), { top: bottomOf(sc) + 20, x: seek.x + seek.w * 0.26 });
+        },
+        // L1 with L8's STALK.
+        "1.3"(svg) {
+            const seek = stack(svg);
+            const sc = scribble(svg, seek, { seed: "p13" });
+            place(scrawl(svg, { seed: "L8s", size: 76 }), { top: bottomOf(sc) + 30, x: M + 60 });
+        },
+        // Tucked, bigger swings in size and height.
+        "1.4"(svg) {
+            const seek = stack(svg);
+            const sc = scribble(svg, seek, { seed: "p14", passes: 4 });
+            place(tucked(svg, { seed: "t14", size: 92, sizeVar: 0.32, riseVar: 0.14, tilt: -5 }), { top: bottomOf(sc) + 20, x: seek.x + seek.w * 0.18 });
+        },
+        // Tucked by design: big S, small T nestled under its curve, big K.
+        "1.5"(svg) {
+            const seek = stack(svg);
+            const sc = scribble(svg, seek, { seed: "p15" });
+            place(tucked(svg, { seed: "t15", size: 90, ...TUCK_A }), { top: bottomOf(sc) + 20, x: seek.x + seek.w * 0.22 });
+        },
+        // A looser scribble that overshoots SEEK, L1's STALK.
+        "1.6"(svg) {
+            const seek = stack(svg);
+            const sc = scribble(svg, seek, { seed: "p16", passes: 2, overshoot: 0.3, weight: 20 });
+            place(scrawl(svg), { top: bottomOf(sc) + 22, x: seek.x + seek.w * 0.34 });
+        },
+        // HIDE / & SEEK, one type size throughout; big STALK inside the margins.
+        "2.1"(svg) {
+            const s = 96;
+            word(svg, "HIDE", M, 126, s);
+            const amp = word(svg, "&", M, 222, s);
+            const seek = word(svg, "SEEK", amp.x + amp.w + 18, 222, s);
+            const sc = scribble(svg, seek, { seed: "p21" });
+            place(scrawl(svg, { seed: "L2s", size: 110, tilt: -3 }), { top: bottomOf(sc) + 24, x: M });
+        },
+        "2.2"(svg) {
+            const s = 96;
+            word(svg, "HIDE", M, 126, s);
+            const amp = word(svg, "&", M, 222, s);
+            const seek = word(svg, "SEEK", amp.x + amp.w + 18, 222, s);
+            const sc = scribble(svg, seek, { seed: "p22" });
+            place(tucked(svg, { seed: "t22", size: 112, ...TUCK_A }), { top: bottomOf(sc) + 22, x: M });
+        },
+        // STALK written over SEEK: it is the crossing-out. No line under it.
+        "3.1"(svg) {
+            const seek = stack(svg);
+            const g = scrawl(svg, { seed: "L3s", size: 100, tilt: -11, mess: 0.6 });
+            place(g, { top: seek.y - 34, cx: canvasW / 2, width: canvasW - EDGE * 2 - 10 });
+        },
+        "3.2"(svg) {
+            const seek = stack(svg);
+            const g = tucked(svg, { seed: "t32", size: 104, tilt: -9, ...TUCK_A });
+            place(g, { top: seek.y - 40, cx: canvasW / 2, width: canvasW - EDGE * 2 - 10 });
+        },
+        // Centred, every word sized to the same width: one block.
+        "7.1"(svg, W) {
+            const TW = W - M * 2;
+            const hide = fitWord(svg, "HIDE", M, 36, TW);
+            const and = fitWord(svg, "AND", M, hide.base + 16, TW);
+            const seek = fitWord(svg, "SEEK", M, and.base + 16, TW);
+            const sc = scribble(svg, seek, { seed: "p71" });
+            place(scrawl(svg, { seed: "L8s", size: 76 }), { top: bottomOf(sc) + 26, cx: W / 2 });
+        },
+        // One type size, the letters spaced out so every line is the same width.
+        "7.2"(svg, W) {
+            const TW = W - M * 2;
+            const s = 100;
+            spreadWord(svg, "HIDE", M, 120, s, TW);
+            spreadWord(svg, "AND", M, 212, s, TW);
+            const seek = spreadWord(svg, "SEEK", M, 304, s, TW);
+            const sc = scribble(svg, { x: seek.x, y: seek.y, w: TW, h: seek.h }, { seed: "p72" });
+            place(tucked(svg, { seed: "t72", size: 84, ...TUCK_A }), { top: bottomOf(sc) + 22, cx: W / 2 });
+        },
+        // The same-width block, flush left, with L1's STALK.
+        "7.3"(svg, W) {
+            const TW = W - M * 2 - 40;
+            const hide = fitWord(svg, "HIDE", M, 36, TW);
+            const and = fitWord(svg, "AND", M, hide.base + 16, TW);
+            const seek = fitWord(svg, "SEEK", M, and.base + 16, TW);
+            const sc = scribble(svg, seek, { seed: "p73" });
+            place(scrawl(svg), { top: bottomOf(sc) + 24, x: M + 30 });
+        },
+        // The whole unit one width, STALK included.
+        "7.4"(svg, W) {
+            const TW = W - M * 2;
+            const hide = fitWord(svg, "HIDE", M, 30, TW);
+            const and = fitWord(svg, "AND", M, hide.base + 14, TW);
+            const seek = fitWord(svg, "SEEK", M, and.base + 14, TW);
+            const sc = scribble(svg, seek, { seed: "p74" });
+            place(tucked(svg, { seed: "t74", size: 90, ...TUCK_A, tilt: -2 }), { top: bottomOf(sc) + 20, x: M, width: TW });
+        },
+        // Header as in L12, and the icon as H & in type, S by hand.
+        "12.1"(svg, W) {
+            const line = document.createElementNS(NS, "rect");
+            Object.entries({ x: 0, y: 96, width: W, height: 3, fill: "#000" }).forEach(([k, v]) => line.setAttribute(k, v));
+            svg.appendChild(line);
+            const a = word(svg, "HIDE &", 20, 64, 28);
+            const seek = word(svg, "SEEK", a.x + a.w + 9, 64, 28);
+            ink(svg, Ink.pencilScribble(seek.x + 1, seek.y - 1, seek.w - 2, seek.h + 2, { seed: "p121", passes: 3, weight: 6 }));
+            stalk(svg, seek.x + seek.w + 14, 80, 34, { seed: "L12s", weight: 6, tilt: -8 });
+            const icon = (ix, iy, sz, dark, layout) => {
+                const sq = document.createElementNS(NS, "rect");
+                Object.entries({ x: ix, y: iy, width: sz, height: sz, rx: sz * 0.22, fill: dark ? "#000" : "#fff", stroke: "#000", "stroke-width": 3 }).forEach(([k, v]) => sq.setAttribute(k, v));
+                svg.appendChild(sq);
+                const fill = dark ? "#fff" : "#000";
+                if (layout === "row") {
+                    const h = word(svg, "H&", ix + sz * 0.1, iy + sz * 0.62, sz * 0.34, { fill });
+                    const g = ink(svg, Ink.write("S", { x: 0, y: 0, size: sz * 0.4, weight: sz * 0.08, seed: `ic${ix}`, tilt: -8, mess: 0.5 }).svg);
+                    const b = g.getBBox();
+                    const k = (sz * 0.44) / b.height;
+                    g.setAttribute("transform", `translate(${h.x + h.w + sz * 0.05 - b.x * k} ${h.y - sz * 0.1 - b.y * k}) scale(${k})`);
+                } else {
+                    const h = word(svg, "H&", ix + sz * 0.13, iy + sz * 0.46, sz * 0.36, { fill });
+                    const g = ink(svg, Ink.write("S", { x: 0, y: 0, size: sz * 0.42, weight: sz * 0.085, seed: `ic${ix}`, tilt: -10, mess: 0.5 }).svg);
+                    place(g, { top: h.base + sz * 0.06, x: ix + sz * 0.42 });
+                }
+            };
+            icon(24, 150, 150, false, "row");
+            icon(200, 150, 150, false, "stack");
+            icon(24, 340, 104, true, "row");
+            icon(148, 340, 104, false, "row");
+            icon(272, 364, 60, false, "row");
+            ink(svg, Ink.write("H & IN TYPE, S BY HAND", { x: 24, y: 330, size: 15, seed: "L121n", weight: 2.4, color: "#000", mess: 0.25, tilt: -2 }).svg);
+            ink(svg, Ink.write("DARK MODE?", { x: 30, y: 472, size: 14, seed: "L121d", weight: 2.4, color: "#000", mess: 0.25, tilt: 3 }).svg);
+        },
+    });
+
     window.Logo = {
         count: Object.keys(LOCKUPS).length,
         draw(svg, v, W, H) {

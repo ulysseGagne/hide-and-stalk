@@ -23,7 +23,7 @@
         (async () => {
             const q = new URLSearchParams(location.search);
             const set = q.get("set");
-            const v = Number(q.get("v"));
+            const v = set === "logo" ? q.get("v") : Number(q.get("v"));
             const W = Number(q.get("w") ?? 375);
             const H = Number(q.get("h") ?? 460);
             await document.fonts.load("700 40px Arimo");

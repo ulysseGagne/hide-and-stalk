@@ -73,7 +73,7 @@ body.only-kept .tile:not(.kept) { display: none; }
     </header>
 
     <nav class="bar" aria-label="Sections">
-        <a href="#logo">Logo</a><a href="#hand">Handwriting</a><a href="#board">Boards</a><a href="#welcome">Welcome</a><a href="#styles">App styles</a><a href="#wild">Wild ideas</a><a href="#maps">Maps</a>
+        <a href="#logo2">Logo</a><a href="#hand">Handwriting</a><a href="#board">Boards</a><a href="#welcome">Welcome</a><a href="#styles">App styles</a><a href="#wild">Wild ideas</a><a href="#maps">Maps</a>
         <span class="spacer"></span>
         <span class="count" id="count">0 kept</span>
         <label for="onlykept"><input type="checkbox" id="onlykept"> Kept only</label>
@@ -86,17 +86,31 @@ body.only-kept .tile:not(.kept) { display: none; }
 
 <script>
 const SETS = [
-    { id: "logo", title: "L · Logo", intro: "Your title, restacked for a phone. Helvetica stays dead plain; only the red is drawn, by code, so no two strokes repeat.", wide: false, items: [
+    { id: "logo2", title: "L · Second pass", intro: "From your notes on L1, L2, L3, L7, L8 and L12. The SEEK scribble is now drawn with pen pressure: fat where the hand presses, thin at the turns, every leg a different height and slightly bowed. STALK always sits clear of the scribble and never touches the screen edge. The \u201ctucked\u201d ones (emboîté) give each letter its own size and height and slide it as close to its neighbours as it can go without touching. L4, L5 and L10 are gone.", wide: false, items: [
+        ["L1.1", "L1, pressure scribble, STALK lowered clear of it"],
+        ["L1.2", "L1.1 with tucked letters, gentle"],
+        ["L1.3", "L1 with L8's STALK and spacing"],
+        ["L1.4", "Tucked, bigger swings, four-leg scribble"],
+        ["L1.5", "Tucked on purpose: big S, small T under its curve, small L"],
+        ["L1.6", "Looser two-leg scribble, L1's STALK"],
+        ["L2.1", "HIDE / & SEEK, one type size, big STALK inside the margins"],
+        ["L2.2", "L2.1 with tucked STALK"],
+        ["L3.1", "STALK over SEEK as the crossing-out, no line under it"],
+        ["L3.2", "L3.1 tucked"],
+        ["L7.1", "Centred, each word sized to the same width, L8's STALK"],
+        ["L7.2", "One type size, letters spaced so every line is the same width"],
+        ["L7.3", "Same-width block, flush left, L1's STALK"],
+        ["L7.4", "The whole unit one width, STALK included"],
+        ["L12.1", "Header + icons: H & in type, S by hand (one dark-mode icon)"],
+    ]},
+    { id: "logo", title: "L · Logo (first pass)", intro: "Your title, restacked for a phone. Helvetica stays dead plain; only the red is drawn, by code, so no two strokes repeat.", wide: false, items: [
         ["L01", "The poster, stacked: HIDE / AND / SEEK, zigzag, STALK below"],
         ["L02", "HIDE / & SEEK / STALK"],
         ["L03", "One strike, STALK written across SEEK"],
-        ["L04", "Proofreader: strike, caret, STALK inserted above"],
-        ["L05", "SEEK blacked out completely"],
         ["L06", "HIDE AND small, SEEK huge"],
         ["L07", "Centred stack"],
         ["L08", "SEEK circled and crossed, arrow to STALK"],
         ["L09", "Obsessive: STALK three times, angrier each time"],
-        ["L10", "HIDE circled too: the target"],
         ["L11", "L01 on black"],
         ["L12", "Small uses: in-app header, home-screen icon"],
     ]},
