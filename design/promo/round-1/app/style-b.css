@@ -1,0 +1,42 @@
+/* ==========================================================================
+   Direction B — "Case file". A on top of an evidence folder: every label and
+   number typed on a typewriter (mono), cards filed as exhibits on ruled index
+   stock, stamps instead of badges. Still only black, white and drawn red.
+   ========================================================================== */
+:root { --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace; }
+#site-header { border-bottom-width: 2px; }
+.whoami { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.status-card { border: 2px solid var(--ink); padding: 16px 16px 18px; }
+.status-card::before {
+    content: "CASE FILE \2014  TEAM 3"; position: absolute; top: -9px; left: 12px; padding: 0 6px;
+    background: var(--paper); font: 700 11px var(--mono); letter-spacing: .12em;
+}
+.status-title { font-size: 28px; }
+.timer-value { font-family: var(--mono); font-weight: 700; font-size: 70px; letter-spacing: -.04em; }
+.timer-label, .card-category, .cards-title, .question-meta, .rules-card summary, #auth-form label, .role-badge, .card-badge, .changed-mark {
+    font-family: var(--mono); letter-spacing: .08em;
+}
+.status-text, .status-team { font-family: var(--mono); font-size: 14px; line-height: 1.45; }
+.big-btn, #auth-submit { background: var(--ink); color: var(--paper); text-shadow: none; font-family: var(--mono); letter-spacing: .12em; }
+.card-row { counter-reset: exhibit; }
+.card {
+    counter-increment: exhibit; padding-top: 30px; border-width: 2px;
+    background: repeating-linear-gradient(to bottom, var(--paper) 0 25px, var(--ink) 25px 26px);
+    background-position: 0 44px;
+}
+.card::before {
+    content: "EXHIBIT " counter(exhibit, upper-alpha); position: absolute; top: 8px; right: 12px;
+    font: 700 11px var(--mono); letter-spacing: .1em;
+}
+.card-prompt { background: var(--paper); box-shadow: 0 0 0 3px var(--paper); align-self: flex-start; }
+.card-foot { background: var(--paper); align-self: flex-start; }
+.sent-card, .question-card { border-width: 2px; }
+.sent-prompt, .question-prompt, .history-prompt { font-size: 19px; }
+.rules-list li { font-family: var(--mono); font-size: 13.5px; line-height: 1.5; }
+.rules-list li::before { font-family: var(--mono); content: "\00a7" counter(r); }
+.answer-option { font-family: var(--mono); font-weight: 500; font-size: 15px; }
+.answer-distance { font-family: var(--mono); }
+.discord-btn { font-family: var(--mono); font-size: 13px; letter-spacing: .06em; text-transform: uppercase; }
+.admin-btn { font-family: var(--mono); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+.modal-head h2 { font-family: var(--mono); font-size: 18px; text-transform: uppercase; letter-spacing: .06em; }
+.history-row::before { content: "\25A0"; position: absolute; left: -2px; top: -9px; font-size: 10px; }

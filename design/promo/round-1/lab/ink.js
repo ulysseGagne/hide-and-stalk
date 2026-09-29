@@ -1,0 +1,661 @@
+/* global getStroke */
+
+// Ink: the "someone unhinged drew on the app" layer.
+//
+// Everything red in the brand is drawn by this file, never typed: the STALK
+// scrawl, crossings-out, circles, arrows, notes, the coloured-in buttons. It
+// draws the way an Apple Pencil does: a skeleton of points, pushed around by
+// seeded noise so no two letters come out the same, then turned into a
+// pressure-sensitive outline by perfect-freehand.
+//
+// Seeded: the same seed always draws the same mark, so a screen doesn't
+// "boil" every time it re-renders, but two marks never look copy-pasted.
+//
+// Output is SVG markup (strings), so it drops into any <svg>.
+
+(function () {
+    const RED = "#E7191F";
+
+    // -----------------------------------------------------------------------
+    // Randomness
+    // -----------------------------------------------------------------------
+    function hash(str) {
+        let h = 2166136261 >>> 0;
+        for (const ch of String(str)) {
+            h ^= ch.codePointAt(0);
+            h = Math.imul(h, 16777619) >>> 0;
+        }
+        return h;
+    }
+
+    /** mulberry32: a small, good-enough seeded PRNG. */
+    function rng(seed) {
+        let a = typeof seed === "number" ? seed >>> 0 : hash(seed);
+        const next = () => {
+            a = (a + 0x6d2b79f5) >>> 0;
+            let t = a;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+        next.range = (lo, hi) => lo + next() * (hi - lo);
+        next.sign = () => (next() < 0.5 ? -1 : 1);
+        next.pick = (arr) => arr[Math.floor(next() * arr.length)];
+        return next;
+    }
+
+    /** Smooth 1D value noise in [-1, 1]; wavelength ~1 unit of t. */
+    function noise1(r) {
+        const lattice = Array.from({ length: 256 }, () => r() * 2 - 1);
+        return (t) => {
+            const i = Math.floor(t);
+            const f = t - i;
+            const a = lattice[((i % 256) + 256) % 256];
+            const b = lattice[(((i + 1) % 256) + 256) % 256];
+            const s = (1 - Math.cos(f * Math.PI)) / 2;
+            return a + (b - a) * s;
+        };
+    }
+
+    // -----------------------------------------------------------------------
+    // Geometry helpers
+    // -----------------------------------------------------------------------
+    /** Catmull-Rom through the points: turns a skeleton into a smooth curve. */
+    function spline(pts, steps = 6) {
+        if (pts.length < 3) return densify(pts, steps * 2);
+        const out = [];
+        for (let i = 0; i < pts.length - 1; i++) {
+            const p0 = pts[i - 1] ?? pts[i];
+            const p1 = pts[i];
+            const p2 = pts[i + 1];
+            const p3 = pts[i + 2] ?? p2;
+            for (let s = 0; s < steps; s++) {
+                const t = s / steps;
+                const t2 = t * t;
+                const t3 = t2 * t;
+                out.push([
+                    0.5 * (2 * p1[0] + (-p0[0] + p2[0]) * t + (2 * p0[0] - 5 * p1[0] + 4 * p2[0] - p3[0]) * t2 + (-p0[0] + 3 * p1[0] - 3 * p2[0] + p3[0]) * t3),
+                    0.5 * (2 * p1[1] + (-p0[1] + p2[1]) * t + (2 * p0[1] - 5 * p1[1] + 4 * p2[1] - p3[1]) * t2 + (-p0[1] + 3 * p1[1] - 3 * p2[1] + p3[1]) * t3),
+                ]);
+            }
+        }
+        out.push(pts[pts.length - 1]);
+        return out;
+    }
+
+    function densify(pts, per = 8) {
+        const out = [];
+        for (let i = 0; i < pts.length - 1; i++) {
+            for (let s = 0; s < per; s++) {
+                const t = s / per;
+                out.push([pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t]);
+            }
+        }
+        out.push(pts[pts.length - 1]);
+        return out;
+    }
+
+    const rot = ([x, y], a, [cx, cy] = [0, 0]) => {
+        const c = Math.cos(a);
+        const s = Math.sin(a);
+        return [cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c];
+    };
+
+    const r1 = (n) => Math.round(n * 10) / 10;
+
+    /** perfect-freehand outline -> SVG path data. */
+    function outlinePath(points, opts = {}) {
+        const stroke = getStroke(points, {
+            size: opts.size ?? 6,
+            thinning: opts.thinning ?? 0.2,
+            smoothing: opts.smoothing ?? 0.62,
+            streamline: opts.streamline ?? 0.35,
+            simulatePressure: opts.simulatePressure ?? true,
+            start: { taper: opts.taperStart ?? 0, cap: true },
+            end: { taper: opts.taperEnd ?? 0, cap: true },
+            last: true,
+        });
+        if (!stroke.length) return "";
+        const d = ["M", r1(stroke[0][0]), r1(stroke[0][1]), "Q"];
+        for (let i = 0; i < stroke.length; i++) {
+            const [x0, y0] = stroke[i];
+            const [x1, y1] = stroke[(i + 1) % stroke.length];
+            d.push(r1(x0), r1(y0), r1((x0 + x1) / 2), r1((y0 + y1) / 2));
+        }
+        d.push("Z");
+        return d.join(" ");
+    }
+
+    function pathEl(points, opts = {}) {
+        const d = outlinePath(points, opts);
+        return d ? `<path d="${d}" fill="${opts.color ?? RED}"/>` : "";
+    }
+
+    // -----------------------------------------------------------------------
+    // Letter skeletons: single strokes in a unit box. y=0 cap height, y=1
+    // baseline; [width, strokes]. Curves get smoothed by spline(), so a few
+    // points per bend is enough. Capitals only: the notes are shouted.
+    // -----------------------------------------------------------------------
+    const O_RING = [[0.36, 0], [0.1, 0.1], [0, 0.48], [0.08, 0.86], [0.36, 1], [0.64, 0.87], [0.74, 0.5], [0.66, 0.13], [0.4, 0], [0.26, 0.05]];
+    const GLYPHS = {
+        A: [0.72, [[[0, 1], [0.36, 0], [0.72, 1]], [[0.14, 0.64], [0.6, 0.6]]]],
+        B: [0.62, [[[0, 1], [0, 0]], [[0, 0], [0.38, 0], [0.54, 0.1], [0.55, 0.3], [0.38, 0.46], [0.02, 0.48]], [[0.02, 0.48], [0.44, 0.5], [0.62, 0.64], [0.6, 0.86], [0.42, 1], [0, 1]]]],
+        C: [0.64, [[[0.62, 0.16], [0.46, 0.01], [0.2, 0.03], [0.03, 0.26], [0.02, 0.7], [0.2, 0.97], [0.46, 1], [0.64, 0.84]]]],
+        D: [0.66, [[[0, 0], [0, 1]], [[0, 0], [0.3, 0], [0.58, 0.16], [0.66, 0.5], [0.56, 0.84], [0.3, 1], [0, 1]]]],
+        E: [0.56, [[[0.56, 0], [0, 0], [0, 1], [0.58, 1]], [[0, 0.5], [0.44, 0.49]]]],
+        F: [0.54, [[[0.56, 0], [0, 0], [0, 1]], [[0, 0.48], [0.42, 0.47]]]],
+        G: [0.68, [[[0.62, 0.15], [0.46, 0.01], [0.2, 0.03], [0.03, 0.26], [0.02, 0.7], [0.2, 0.97], [0.46, 1], [0.66, 0.88], [0.67, 0.58], [0.4, 0.58]]]],
+        H: [0.64, [[[0, 0], [0, 1]], [[0.64, 0], [0.64, 1]], [[0, 0.5], [0.64, 0.49]]]],
+        I: [0.12, [[[0.06, 0], [0.06, 1]]]],
+        J: [0.52, [[[0.5, 0], [0.5, 0.74], [0.4, 0.96], [0.2, 1], [0.02, 0.84]]]],
+        K: [0.62, [[[0, 0], [0, 1]], [[0.58, 0], [0.02, 0.6]], [[0.2, 0.44], [0.64, 1]]]],
+        L: [0.52, [[[0, 0], [0, 1], [0.54, 1]]]],
+        M: [0.8, [[[0, 1], [0.04, 0], [0.4, 0.66], [0.76, 0], [0.8, 1]]]],
+        N: [0.64, [[[0, 1], [0, 0], [0.64, 1], [0.64, 0]]]],
+        O: [0.74, [O_RING]],
+        P: [0.58, [[[0, 1], [0, 0], [0.4, 0], [0.58, 0.13], [0.58, 0.36], [0.4, 0.5], [0, 0.52]]]],
+        Q: [0.76, [O_RING, [[0.44, 0.7], [0.78, 1.06]]]],
+        R: [0.62, [[[0, 1], [0, 0], [0.4, 0], [0.58, 0.13], [0.58, 0.36], [0.4, 0.5], [0, 0.52]], [[0.24, 0.52], [0.64, 1]]]],
+        S: [0.6, [[[0.6, 0.12], [0.42, 0], [0.15, 0.02], [0.03, 0.2], [0.12, 0.4], [0.35, 0.5], [0.55, 0.6], [0.62, 0.82], [0.45, 1], [0.15, 1], [0, 0.88]]]],
+        T: [0.66, [[[0, 0], [0.68, 0]], [[0.34, 0], [0.33, 1]]]],
+        U: [0.64, [[[0, 0], [0, 0.7], [0.12, 0.95], [0.32, 1], [0.52, 0.95], [0.64, 0.7], [0.64, 0]]]],
+        V: [0.66, [[[0, 0], [0.33, 1], [0.66, 0]]]],
+        W: [0.9, [[[0, 0], [0.2, 1], [0.44, 0.34], [0.68, 1], [0.9, 0]]]],
+        X: [0.62, [[[0, 0], [0.62, 1]], [[0.62, 0], [0, 1]]]],
+        Y: [0.64, [[[0, 0], [0.32, 0.5], [0.64, 0]], [[0.32, 0.5], [0.32, 1]]]],
+        Z: [0.62, [[[0, 0], [0.62, 0], [0, 1], [0.64, 1]]]],
+        0: [0.58, [[[0.3, 0], [0.08, 0.12], [0, 0.5], [0.07, 0.88], [0.3, 1], [0.52, 0.88], [0.6, 0.5], [0.52, 0.12], [0.3, 0], [0.2, 0.05]]]],
+        1: [0.3, [[[0, 0.2], [0.24, 0], [0.24, 1]]]],
+        2: [0.58, [[[0.03, 0.2], [0.2, 0.02], [0.42, 0.02], [0.56, 0.2], [0.5, 0.42], [0, 1], [0.6, 1]]]],
+        3: [0.56, [[[0.04, 0.1], [0.25, 0], [0.48, 0.05], [0.55, 0.22], [0.45, 0.42], [0.22, 0.48], [0.5, 0.56], [0.6, 0.78], [0.45, 0.97], [0.2, 1], [0.02, 0.88]]]],
+        4: [0.62, [[[0.46, 1], [0.46, 0], [0, 0.68], [0.64, 0.68]]]],
+        5: [0.58, [[[0.56, 0], [0.08, 0], [0.04, 0.45], [0.3, 0.4], [0.52, 0.5], [0.6, 0.72], [0.5, 0.95], [0.25, 1], [0.02, 0.88]]]],
+        6: [0.58, [[[0.52, 0.05], [0.3, 0], [0.1, 0.18], [0.02, 0.55], [0.1, 0.9], [0.3, 1], [0.5, 0.9], [0.58, 0.7], [0.45, 0.5], [0.25, 0.5], [0.05, 0.66]]]],
+        7: [0.58, [[[0, 0], [0.6, 0], [0.2, 1]]]],
+        8: [0.58, [[[0.3, 0.48], [0.08, 0.35], [0.08, 0.12], [0.3, 0], [0.5, 0.12], [0.5, 0.35], [0.3, 0.48], [0.05, 0.62], [0.05, 0.88], [0.3, 1], [0.56, 0.88], [0.56, 0.62], [0.32, 0.48]]]],
+        9: [0.58, [[[0.55, 0.3], [0.4, 0.48], [0.18, 0.48], [0.03, 0.3], [0.12, 0.05], [0.32, 0], [0.52, 0.1], [0.56, 0.35], [0.52, 0.7], [0.35, 1], [0.08, 0.95]]]],
+        ".": [0.14, [[[0.06, 0.95], [0.08, 1]]]],
+        ",": [0.16, [[[0.1, 0.92], [0.02, 1.14]]]],
+        "!": [0.14, [[[0.08, 0], [0.06, 0.7]], [[0.06, 0.95], [0.07, 1]]]],
+        "?": [0.52, [[[0, 0.18], [0.15, 0.02], [0.38, 0], [0.52, 0.18], [0.44, 0.38], [0.24, 0.5], [0.23, 0.7]], [[0.23, 0.95], [0.24, 1]]]],
+        ":": [0.14, [[[0.06, 0.3], [0.07, 0.35]], [[0.06, 0.95], [0.07, 1]]]],
+        "'": [0.12, [[[0.07, 0], [0.04, 0.26]]]],
+        '"': [0.26, [[[0.06, 0], [0.04, 0.26]], [[0.22, 0], [0.2, 0.26]]]],
+        "-": [0.38, [[[0, 0.56], [0.38, 0.54]]]],
+        "—": [0.7, [[[0, 0.56], [0.7, 0.53]]]],
+        "–": [0.5, [[[0, 0.56], [0.5, 0.54]]]],
+        "/": [0.44, [[[0.44, -0.02], [0, 1.02]]]],
+        "+": [0.5, [[[0, 0.55], [0.5, 0.54]], [[0.25, 0.3], [0.25, 0.8]]]],
+        "=": [0.5, [[[0, 0.42], [0.5, 0.41]], [[0, 0.68], [0.5, 0.67]]]],
+        "(": [0.24, [[[0.24, -0.04], [0.04, 0.3], [0.03, 0.72], [0.24, 1.06]]]],
+        ")": [0.24, [[[0, -0.04], [0.2, 0.3], [0.21, 0.72], [0, 1.06]]]],
+        "&": [0.66, [[[0.66, 1], [0.14, 0.42], [0.1, 0.15], [0.28, 0], [0.46, 0.12], [0.42, 0.3], [0.02, 0.65], [0.06, 0.92], [0.26, 1], [0.46, 0.9], [0.64, 0.58]]]],
+        "#": [0.62, [[[0.2, 0.05], [0.14, 0.95]], [[0.46, 0.05], [0.4, 0.95]], [[0, 0.35], [0.62, 0.34]], [[0, 0.65], [0.6, 0.64]]]],
+        "%": [0.62, [[[0.6, 0], [0, 1]], [[0.1, 0.06], [0.02, 0.18], [0.12, 0.3], [0.2, 0.16], [0.1, 0.06]], [[0.5, 0.7], [0.42, 0.82], [0.52, 0.94], [0.6, 0.8], [0.5, 0.7]]]],
+        "·": [0.14, [[[0.06, 0.52], [0.08, 0.56]]]],
+        "→": [0.8, [[[0, 0.54], [0.8, 0.5]], [[0.5, 0.28], [0.8, 0.5], [0.52, 0.76]]]],
+        "←": [0.8, [[[0.8, 0.54], [0, 0.5]], [[0.3, 0.28], [0, 0.5], [0.28, 0.76]]]],
+        "↑": [0.5, [[[0.25, 1], [0.26, 0]], [[0.02, 0.28], [0.26, 0], [0.48, 0.3]]]],
+        "↓": [0.5, [[[0.25, 0], [0.26, 1]], [[0.02, 0.72], [0.26, 1], [0.48, 0.7]]]],
+        "×": [0.5, [[[0, 0.3], [0.5, 0.85]], [[0.5, 0.3], [0, 0.85]]]],
+    };
+
+    // Accents ride on the plain capital: the notes only ever need French names.
+    const MARKS = {
+        acute: [[0.3, -0.12], [0.5, -0.3]],
+        grave: [[0.22, -0.3], [0.42, -0.12]],
+        circ: [[0.12, -0.12], [0.3, -0.3], [0.48, -0.12]],
+        cedilla: [[0.36, 1], [0.38, 1.12], [0.24, 1.2]],
+        diaeresis: [[0.18, -0.2], [0.2, -0.16]],
+    };
+    const ACCENTED = {
+        É: ["E", "acute"], È: ["E", "grave"], Ê: ["E", "circ"], Ë: ["E", "diaeresis"],
+        À: ["A", "grave"], Â: ["A", "circ"], Ç: ["C", "cedilla"], Ô: ["O", "circ"],
+        Î: ["I", "circ"], Ï: ["I", "diaeresis"], Ù: ["U", "grave"], Û: ["U", "circ"],
+    };
+
+    function glyphFor(ch) {
+        const up = ch.toLocaleUpperCase("fr");
+        if (GLYPHS[up]) return GLYPHS[up];
+        const acc = ACCENTED[up];
+        if (acc) {
+            const [w, strokes] = GLYPHS[acc[0]];
+            const mark = MARKS[acc[1]].map(([x, y]) => [x * (w / 0.6), y]);
+            return [w, [...strokes, mark]];
+        }
+        const plain = up.normalize("NFD").replace(/[̀-ͯ]/g, "");
+        return GLYPHS[plain] ?? null;
+    }
+
+    // -----------------------------------------------------------------------
+    // Handwriting
+    // -----------------------------------------------------------------------
+    /**
+     * Lay out and draw one line of capitals.
+     * @param {string} text
+     * @param {object} o
+     *   x, y      baseline start
+     *   size      cap height in px
+     *   weight    stroke width in px (default size * 0.16)
+     *   seed      same seed, same scrawl
+     *   mess      0 calm .. 1 unhinged (default 0.5)
+     *   tilt      whole-line angle in degrees (default: a little random)
+     *   maxWidth  when the line runs out of room it curls upward and squeezes
+     *   spacing   extra tracking, in cap heights
+     *   color
+     * @returns {{svg: string, width: number, end: [number, number]}}
+     */
+    function write(text, o = {}) {
+        const r = rng(o.seed ?? text);
+        const n = noise1(r);
+        const size = o.size ?? 32;
+        const mess = o.mess ?? 0.5;
+        const weight = o.weight ?? size * 0.16;
+        const color = o.color ?? RED;
+        const spacing = (o.spacing ?? 0.2) * size;
+        const tilt = ((o.tilt ?? r.range(-2.5, 1.5)) * Math.PI) / 180;
+
+        // 1. Natural layout along a straight baseline, in local units.
+        const items = [];
+        let cursor = 0;
+        for (const ch of text) {
+            if (ch === " ") {
+                cursor += size * r.range(0.36, 0.5);
+                continue;
+            }
+            const g = glyphFor(ch);
+            if (!g) continue;
+            const scale = size * (1 + (r() - 0.5) * 0.22 * mess);
+            const [w, strokes] = g;
+            items.push({ x: cursor, scale, w, strokes, ch });
+            cursor += w * scale + spacing * r.range(0.6, 1.4);
+        }
+        const natural = Math.max(0, cursor - spacing);
+
+        // 2. The baseline. Straight, drifting a little; if it overflows
+        //    maxWidth, the last stretch bends upward (a writer running out
+        //    of room) just enough that the end lands on the edge.
+        const maxWidth = o.maxWidth ?? Infinity;
+        const MAX_BEND = (38 * Math.PI) / 180;
+        let bend = 0; // heading reached at the very end of the line, radians
+        let squeeze = 1;
+        const bendFrom = 0.6; // fraction of the line that stays straight
+        // Heading at fraction u of the line: flat, then turning upward ever faster.
+        const heading = (u) => (u <= bendFrom ? 0 : -bend * ((u - bendFrom) / (1 - bendFrom)) ** 1.6);
+        const extent = (L) => {
+            let x = 0;
+            const steps = 60;
+            for (let i = 0; i < steps; i++) x += Math.cos(heading((i + 0.5) / steps)) * (L / steps);
+            return x;
+        };
+        if (natural > maxWidth) {
+            // Cram a little, curl upward, and cram harder only if that's not enough.
+            squeeze = Math.max(0.88, maxWidth / natural);
+            let lo = 0;
+            let hi = MAX_BEND;
+            bend = hi;
+            while (extent(natural * squeeze) > maxWidth && squeeze > 0.6) squeeze -= 0.02;
+            for (let i = 0; i < 30; i++) {
+                bend = (lo + hi) / 2;
+                if (extent(natural * squeeze) > maxWidth) lo = bend;
+                else hi = bend;
+            }
+            bend = hi;
+        }
+        const L = natural * squeeze;
+        // Position and heading on the baseline at arc length s.
+        const baseline = (s) => {
+            if (!bend || s <= L * bendFrom) return { x: s, y: 0, a: 0 };
+            let x = 0;
+            let y = 0;
+            const steps = 40;
+            const ds = s / steps;
+            for (let i = 0; i < steps; i++) {
+                const a = heading((ds * (i + 0.5)) / L);
+                x += Math.cos(a) * ds;
+                y += Math.sin(a) * ds;
+            }
+            return { x, y, a: heading(s / L) };
+        };
+
+        // 3. Draw each glyph: jitter its skeleton, place it on the baseline.
+        const paths = [];
+        const jitter = 0.035 + 0.06 * mess;
+        let end = [0, 0];
+        for (const it of items) {
+            const s = it.x * squeeze;
+            const b = baseline(s);
+            const drift = n(s / (size * 2.2)) * size * 0.1 * mess;
+            const lean = ((n(s / size + 40) * 5 * mess + (o.slant ?? 0)) * Math.PI) / 180;
+            const angle = b.a + lean;
+            const sx = it.scale * (0.94 + r() * 0.1) * (squeeze < 1 ? squeeze : 1);
+            const sy = it.scale;
+            for (const stroke of it.strokes) {
+                const pts = stroke.map(([px, py]) => {
+                    const jx = (r() - 0.5) * jitter * 2;
+                    const jy = (r() - 0.5) * jitter * 2;
+                    // Italic-ish shear so the letters lean together.
+                    const lx = (px + jx) * sx + (1 - py) * sy * 0.06 * mess;
+                    const ly = (py - 1 + jy) * sy + drift;
+                    const [qx, qy] = rot([lx, ly], angle);
+                    return [b.x + qx, b.y + qy];
+                });
+                const smooth = pts.length > 2 ? spline(pts, 7) : densify(pts, 10);
+                const placed = smooth.map((p) => {
+                    const [x, y] = rot(p, tilt);
+                    return [(o.x ?? 0) + x, (o.y ?? 0) + y];
+                });
+                paths.push(pathEl(placed, { size: weight * (0.9 + r() * 0.22), color, thinning: 0.18 + 0.12 * mess, taperEnd: r() * 4 }));
+            }
+            const tail = rot([b.x + it.w * sx, b.y], tilt);
+            end = [(o.x ?? 0) + tail[0], (o.y ?? 0) + tail[1]];
+        }
+        return { svg: paths.join(""), width: Math.min(natural * squeeze, maxWidth), end };
+    }
+
+    /** Several lines, each its own angle; wraps on words at maxWidth. */
+    function note(text, o = {}) {
+        const r = rng((o.seed ?? text) + ":note");
+        const size = o.size ?? 22;
+        const lineH = size * (o.leading ?? 1.55);
+        const maxWidth = o.maxWidth ?? 240;
+        const words = String(text).split(/\s+/);
+        // Rough measure, so wrapping works before anything is drawn.
+        const measure = (s) => [...s].reduce((w, ch) => w + (ch === " " ? 0.43 : (glyphFor(ch)?.[0] ?? 0.5) + 0.16), 0) * size;
+        const lines = [];
+        let line = "";
+        for (const w of words) {
+            const next = line ? `${line} ${w}` : w;
+            // Allow a little overflow on the last word: that's where the curl lives.
+            if (line && measure(next) > maxWidth * 1.12) {
+                lines.push(line);
+                line = w;
+            } else line = next;
+        }
+        if (line) lines.push(line);
+        let svg = "";
+        lines.forEach((l, i) => {
+            const res = write(l, {
+                ...o,
+                size,
+                x: (o.x ?? 0) + r.range(-1, 1) * size * 0.15 * (o.mess ?? 0.5),
+                y: (o.y ?? 0) + i * lineH,
+                seed: `${o.seed ?? text}:${i}`,
+                tilt: (o.tilt ?? 0) + r.range(-2, 2) * (o.mess ?? 0.5),
+                maxWidth,
+            });
+            svg += res.svg;
+        });
+        return { svg, height: lines.length * lineH, lines: lines.length };
+    }
+
+    // -----------------------------------------------------------------------
+    // Marks
+    // -----------------------------------------------------------------------
+    const stroke = (pts, o, extra = {}) =>
+        pathEl(spline(pts, 8), { size: o.weight ?? 6, color: o.color ?? RED, thinning: o.thinning ?? 0.22, ...extra });
+
+    /** Zigzag crossing-out, the SEEK scribble: up, down, up, slanted. */
+    function scribbleOut(x, y, w, h, o = {}) {
+        const r = rng(o.seed ?? "scribble");
+        const passes = o.passes ?? 3;
+        const over = h * (o.overshoot ?? 0.16);
+        const pts = [[x - w * 0.06, y + h * r.range(0.45, 0.7)]];
+        for (let i = 0; i < passes; i++) {
+            const t = (i + 0.5) / passes;
+            const tt = (i + 1) / passes;
+            pts.push([x + w * t + r.range(-0.04, 0.04) * w, y - over * r.range(0.5, 1.2)]);
+            pts.push([x + w * (tt - 0.55 / passes) + r.range(-0.03, 0.03) * w, y + h + over * r.range(0.4, 1)]);
+        }
+        pts.push([x + w * 1.05, y + h * r.range(-0.05, 0.3)]);
+        // Sharp turns: no spline smoothing across the zigzag, just a little.
+        const dense = [];
+        for (let i = 0; i < pts.length - 1; i++) {
+            const seg = spline([pts[i], [(pts[i][0] + pts[i + 1][0]) / 2 + r.range(-2, 2), (pts[i][1] + pts[i + 1][1]) / 2 + r.range(-2, 2)], pts[i + 1]], 6);
+            dense.push(...(i ? seg.slice(1) : seg));
+        }
+        return pathEl(dense, { size: o.weight ?? h * 0.16, color: o.color ?? RED, thinning: 0.15, smoothing: 0.5, streamline: 0.25 });
+    }
+
+    /** Dense back-and-forth scribble that blacks a word out completely. */
+    function blackout(x, y, w, h, o = {}) {
+        const r = rng(o.seed ?? "blackout");
+        // Tight loops dragged left to right, then a second messier pass back.
+        const loops = o.loops ?? Math.max(6, Math.round(w / (h * 0.16)));
+        const pass = (dir, amp) => {
+            const pts = [];
+            for (let i = 0; i <= loops * 6; i++) {
+                const t = i / (loops * 6);
+                const a = t * loops * Math.PI * 2;
+                const px = x + (dir > 0 ? t : 1 - t) * w + Math.cos(a) * h * 0.22 * amp;
+                const py = y + h / 2 + Math.sin(a) * h * 0.62 * amp + r.range(-2, 2);
+                pts.push([px, py]);
+            }
+            return pts;
+        };
+        const weight = o.weight ?? h * 0.22;
+        return (
+            pathEl(pass(1, 1), { size: weight, color: o.color ?? RED, thinning: 0.1, smoothing: 0.4, streamline: 0.2 }) +
+            pathEl(pass(-1, 0.85).map(([px, py]) => [px, py + r.range(-3, 3)]), { size: weight * 0.8, color: o.color ?? RED, thinning: 0.1, smoothing: 0.4, streamline: 0.2 })
+        );
+    }
+
+    /** One or two nearly-flat strokes through a word. */
+    function strike(x, y, w, h, o = {}) {
+        const r = rng(o.seed ?? "strike");
+        const out = [];
+        for (let i = 0; i < (o.lines ?? 1); i++) {
+            const yy = y + h * (0.5 + (i - ((o.lines ?? 1) - 1) / 2) * 0.24) + r.range(-2, 2);
+            const lean = r.range(-0.08, 0.04) * h;
+            out.push(stroke([[x - w * 0.06, yy - lean], [x + w * 0.5, yy + r.range(-2, 2)], [x + w * 1.06, yy + lean]], { weight: o.weight ?? h * 0.12, color: o.color }, { taperEnd: 6 }));
+        }
+        return out.join("");
+    }
+
+    /** A loop around something, never quite closed, a bit more than one turn. */
+    function circle(cx, cy, rx, ry, o = {}) {
+        const r = rng(o.seed ?? "circle");
+        const n = noise1(r);
+        const turns = o.turns ?? r.range(1.08, 1.25);
+        const start = r.range(-Math.PI * 0.9, -Math.PI * 0.4);
+        const steps = 64;
+        const pts = [];
+        for (let i = 0; i <= steps * turns; i++) {
+            const t = i / steps;
+            const a = start + t * Math.PI * 2 * (o.dir ?? 1);
+            const k = 1 + n(t * 3) * 0.07 + t * 0.06;
+            pts.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k * (1 + (o.squash ?? 0))]);
+        }
+        const tilt = ((o.tilt ?? r.range(-8, 8)) * Math.PI) / 180;
+        return pathEl(pts.map((p) => rot(p, tilt, [cx, cy])), { size: o.weight ?? 5, color: o.color ?? RED, thinning: 0.3, taperEnd: 12, taperStart: 3 });
+    }
+
+    function underline(x, y, w, o = {}) {
+        const r = rng(o.seed ?? "underline");
+        const out = [];
+        for (let i = 0; i < (o.lines ?? 1); i++) {
+            const yy = y + i * (o.gap ?? 7);
+            out.push(stroke([[x + r.range(-4, 2), yy + r.range(-1, 2)], [x + w * 0.5, yy + r.range(-2, 1)], [x + w + r.range(-2, 8), yy + r.range(-5, 1)]], o, { taperEnd: 10 }));
+        }
+        return out.join("");
+    }
+
+    /** A curved arrow with a two-stroke head. */
+    function arrow(x1, y1, x2, y2, o = {}) {
+        const r = rng(o.seed ?? "arrow");
+        const bend = o.bend ?? r.range(-0.25, 0.25);
+        const mx = (x1 + x2) / 2 - (y2 - y1) * bend;
+        const my = (y1 + y2) / 2 + (x2 - x1) * bend;
+        const shaft = [];
+        for (let i = 0; i <= 20; i++) {
+            const t = i / 20;
+            shaft.push([(1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * mx + t * t * x2, (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * my + t * t * y2]);
+        }
+        const ang = Math.atan2(y2 - my, x2 - mx);
+        const head = o.head ?? 16;
+        const wing = (side) => {
+            const a = ang + Math.PI + side * r.range(0.42, 0.62);
+            return [[x2 + Math.cos(a) * head * r.range(0.9, 1.2), y2 + Math.sin(a) * head * r.range(0.9, 1.2)], [x2 + r.range(-1, 1), y2 + r.range(-1, 1)]];
+        };
+        const w = o.weight ?? 4.5;
+        return (
+            pathEl(shaft, { size: w, color: o.color ?? RED, thinning: 0.25, taperStart: 4 }) +
+            pathEl(densify(wing(1), 6), { size: w, color: o.color ?? RED }) +
+            pathEl(densify(wing(-1), 6), { size: w, color: o.color ?? RED })
+        );
+    }
+
+    function cross(cx, cy, s, o = {}) {
+        const r = rng(o.seed ?? "cross");
+        const a = [[cx - s + r.range(-3, 3), cy - s + r.range(-3, 3)], [cx + s + r.range(-3, 3), cy + s * r.range(0.8, 1.1)]];
+        const b = [[cx + s * r.range(0.8, 1.1), cy - s + r.range(-3, 3)], [cx - s * r.range(0.9, 1.2), cy + s + r.range(-3, 3)]];
+        return stroke(a, { weight: o.weight ?? s * 0.3, color: o.color }, { taperEnd: 5 }) + stroke(b, { weight: o.weight ?? s * 0.3, color: o.color }, { taperEnd: 5 });
+    }
+
+    function check(x, y, s, o = {}) {
+        const r = rng(o.seed ?? "check");
+        return stroke([[x, y + s * 0.5], [x + s * 0.35, y + s * r.range(0.85, 1)], [x + s * 1.1, y - s * r.range(0.1, 0.3)]], { weight: o.weight ?? s * 0.2, color: o.color }, { taperEnd: 8 });
+    }
+
+    /** Proofreader's caret: insert here. */
+    function caret(x, y, s, o = {}) {
+        return stroke([[x - s * 0.5, y + s * 0.4], [x, y - s * 0.4], [x + s * 0.52, y + s * 0.38]], { weight: o.weight ?? s * 0.18, color: o.color, seed: o.seed });
+    }
+
+    /**
+     * Coloured in like a child would: one back-and-forth zigzag across the
+     * shape, overshooting the edge in places, falling short in others, with
+     * the odd gap. Clip-free on purpose; the overshoot IS the look.
+     */
+    function scribbleFill(x, y, w, h, o = {}) {
+        const r = rng(o.seed ?? "fill");
+        const gap = o.gap ?? Math.max(5, (o.weight ?? 9) * 1.2);
+        const angle = ((o.angle ?? r.range(-24, -14)) * Math.PI) / 180;
+        const over = o.overshoot ?? 5;
+        const cx = x + w / 2;
+        const cy = y + h / 2;
+        // Work in a rotated frame big enough to cover the box.
+        const diag = Math.hypot(w, h);
+        const rows = Math.ceil(diag / gap);
+        const inside = ([px, py]) => {
+            const [qx, qy] = rot([px, py], -angle, [0, 0]);
+            return [cx + qx, cy + qy];
+        };
+        const segs = [];
+        let current = [];
+        for (let i = 0; i <= rows; i++) {
+            const v = -diag / 2 + i * gap + r.range(-gap * 0.2, gap * 0.2);
+            // Where this row crosses the box, in the rotated frame.
+            const hits = [];
+            for (let s = -diag; s <= diag; s += 1.5) {
+                const [px, py] = inside([s, v]);
+                if (px >= x && px <= x + w && py >= y && py <= y + h) hits.push(s);
+            }
+            if (!hits.length) continue;
+            let a = hits[0] - r.range(-over * 0.6, over);
+            let b = hits[hits.length - 1] + r.range(-over * 0.6, over);
+            if (r() < (o.misses ?? 0.05)) {
+                // A gap: lift the pen, skip a row.
+                if (current.length) segs.push(current);
+                current = [];
+                continue;
+            }
+            const row = i % 2 ? [[b, v], [a, v]] : [[a, v], [b, v]];
+            current.push(...row.map(inside));
+        }
+        if (current.length) segs.push(current);
+        return segs
+            .map((seg) => pathEl(densify(seg, 3), { size: o.weight ?? 9, color: o.color ?? RED, thinning: 0.12, smoothing: 0.3, streamline: 0.2 }))
+            .join("");
+    }
+
+    /** An imperfect box: four strokes, corners overshooting or not meeting. */
+    function box(x, y, w, h, o = {}) {
+        const r = rng(o.seed ?? "box");
+        const j = o.jitter ?? 3;
+        const c = [[x, y], [x + w, y], [x + w, y + h], [x, y + h]].map(([px, py]) => [px + r.range(-j, j), py + r.range(-j, j)]);
+        const out = [];
+        for (let i = 0; i < 4; i++) {
+            const a = c[i];
+            const b = c[(i + 1) % 4];
+            const ext = r.range(-3, 7);
+            const dx = (b[0] - a[0]) / Math.hypot(b[0] - a[0], b[1] - a[1]);
+            const dy = (b[1] - a[1]) / Math.hypot(b[0] - a[0], b[1] - a[1]);
+            const mid = [(a[0] + b[0]) / 2 + r.range(-j, j) * 0.6, (a[1] + b[1]) / 2 + r.range(-j, j) * 0.6];
+            out.push(stroke([[a[0] - dx * ext, a[1] - dy * ext], mid, [b[0] + dx * ext, b[1] + dy * ext]], o, { taperEnd: 3 }));
+        }
+        return out.join("");
+    }
+
+    /** Hand-drawn line along any polyline (screen coords), gently wobbling. */
+    function wobble(points, o = {}) {
+        const r = rng(o.seed ?? "wobble");
+        const n = noise1(r);
+        const amp = o.amp ?? 2.5;
+        const dense = [];
+        for (let i = 0; i < points.length - 1; i++) {
+            const [ax, ay] = points[i];
+            const [bx, by] = points[i + 1];
+            const len = Math.hypot(bx - ax, by - ay);
+            const steps = Math.max(1, Math.round(len / 6));
+            for (let s = 0; s < steps; s++) dense.push([ax + ((bx - ax) * s) / steps, ay + ((by - ay) * s) / steps]);
+        }
+        dense.push(points[points.length - 1]);
+        let dist = 0;
+        const out = dense.map((p, i) => {
+            if (i) dist += Math.hypot(p[0] - dense[i - 1][0], p[1] - dense[i - 1][1]);
+            const prev = dense[Math.max(0, i - 1)];
+            const next = dense[Math.min(dense.length - 1, i + 1)];
+            const nx = -(next[1] - prev[1]);
+            const ny = next[0] - prev[0];
+            const l = Math.hypot(nx, ny) || 1;
+            const k = n(dist / (o.wavelength ?? 40)) * amp + n(dist / 9 + 100) * amp * 0.25;
+            return [p[0] + (nx / l) * k, p[1] + (ny / l) * k];
+        });
+        return pathEl(out, { size: o.weight ?? 4, color: o.color ?? RED, thinning: 0.18, smoothing: 0.5, streamline: 0.3 });
+    }
+
+    // -----------------------------------------------------------------------
+    // Board furniture (not handwriting, but part of the same drawing)
+    // -----------------------------------------------------------------------
+    /** A pushpin seen from above: red head, white glint, black rim. */
+    function pin(x, y, o = {}) {
+        const s = o.size ?? 9;
+        const c = o.color ?? RED;
+        return `<g><circle cx="${x}" cy="${y}" r="${s}" fill="${c}" stroke="#000" stroke-width="1.5"/><circle cx="${x - s * 0.35}" cy="${y - s * 0.35}" r="${s * 0.28}" fill="#fff"/></g>`;
+    }
+
+    /** Red string between two pins, sagging a little under its own weight. */
+    function string(x1, y1, x2, y2, o = {}) {
+        const len = Math.hypot(x2 - x1, y2 - y1);
+        const sag = o.sag ?? Math.min(18, len * 0.05);
+        const mx = (x1 + x2) / 2;
+        const my = (y1 + y2) / 2 + sag;
+        return `<path d="M${r1(x1)} ${r1(y1)} Q${r1(mx)} ${r1(my)} ${r1(x2)} ${r1(y2)}" fill="none" stroke="${o.color ?? RED}" stroke-width="${o.width ?? 2}" stroke-linecap="round"/>`;
+    }
+
+    window.Ink = {
+        RED,
+        rng,
+        noise1,
+        spline,
+        outlinePath,
+        pathEl,
+        write,
+        note,
+        scribbleOut,
+        blackout,
+        strike,
+        circle,
+        underline,
+        arrow,
+        cross,
+        check,
+        caret,
+        scribbleFill,
+        box,
+        wobble,
+        pin,
+        string,
+    };
+})();

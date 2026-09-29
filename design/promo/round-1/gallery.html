@@ -1,0 +1,248 @@
+<title>Hide and Stalk, Round 1</title>
+<style>
+/* Layout: one long contact sheet, sections by set, tiles in a wrapping grid. The page wears the brand: paper, ink, one red. Single look on purpose. */
+:root {
+    --paper: #ffffff;
+    --ink: #000000;
+    --red: #e7191f;
+    --line: #000000;
+    --display: "Arimo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --body: "Arimo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --hand: "Shantell Sans", "Comic Sans MS", cursive;
+    color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font: 15px/1.45 var(--body); margin: 0; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 18px; padding-block: 28px 80px; }
+header.top { display: grid; gap: 14px; border-bottom: 4px solid var(--ink); padding-bottom: 22px; }
+.title { font: 700 clamp(40px, 8vw, 84px)/0.9 var(--display); letter-spacing: -0.04em; margin: 0; position: relative; }
+.title s { text-decoration: none; position: relative; }
+.title s::after { content: ""; position: absolute; left: -2%; right: -2%; top: 46%; height: 0.11em; background: var(--red); transform: rotate(-4deg); border-radius: 4px; }
+.title .stalk { color: var(--red); font-family: var(--hand); font-weight: 700; font-size: 0.8em; display: inline-block; transform: rotate(-5deg) translateY(0.1em); letter-spacing: 0; }
+.lede { max-width: 68ch; margin: 0; font-size: 16px; }
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 6px 0 0; padding: 0; list-style: none; }
+.how li { border: 2px solid var(--ink); padding: 12px 14px; min-width: 0; }
+.how b { display: block; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 4px; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); border-bottom: 2px solid var(--ink); display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding: 10px 0; }
+.bar a { color: var(--ink); font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; }
+.bar a:hover, .bar a:focus-visible { text-decoration: underline; text-decoration-color: var(--red); text-decoration-thickness: 3px; }
+.bar .spacer { flex: 1; }
+.bar label { display: flex; gap: 6px; align-items: center; font-size: 13px; font-weight: 700; }
+.bar .count { font-size: 13px; font-variant-numeric: tabular-nums; }
+section { padding-top: 34px; }
+section > h2 { font: 700 30px/1 var(--display); letter-spacing: -0.02em; margin: 0 0 6px; text-wrap: balance; }
+section > p { margin: 0 0 16px; max-width: 72ch; }
+.grid { display: grid; gap: 18px 16px; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+.grid.wide { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.tile { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tile button.shot { padding: 0; border: 2px solid var(--ink); background: var(--paper); cursor: zoom-in; display: block; }
+.tile img { display: block; width: 100%; height: auto; }
+.tile.kept button.shot { outline: 4px solid var(--red); outline-offset: 2px; }
+.meta { display: flex; align-items: baseline; gap: 8px; }
+.code { font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.cap { font-size: 13px; flex: 1; min-width: 0; }
+.keep { border: 2px solid var(--ink); background: var(--paper); color: var(--ink); font: 700 12px var(--body); letter-spacing: .08em; text-transform: uppercase; padding: 5px 9px; cursor: pointer; white-space: nowrap; }
+.keep[aria-pressed="true"] { background: var(--red); border-color: var(--red); color: #fff; }
+.keep:focus-visible, .tile button.shot:focus-visible, textarea:focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+textarea { width: 100%; min-height: 38px; resize: vertical; border: none; border-bottom: 2px solid var(--ink); font: 14px/1.35 var(--body); padding: 6px 2px; background: var(--paper); color: var(--ink); }
+.saved { font-size: 12px; min-height: 1em; }
+.pending { border: 3px dashed var(--ink); padding: 18px; max-width: 72ch; }
+.pending b { color: var(--red); }
+.status { font-size: 13px; margin: 8px 0 0; }
+dialog { border: 3px solid var(--ink); padding: 0; max-width: min(96vw, 900px); max-height: 94vh; background: var(--paper); }
+dialog::backdrop { background: var(--paper); }
+dialog img { display: block; max-width: 100%; max-height: 84vh; margin: 0 auto; }
+dialog .dh { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 2px solid var(--ink); font-weight: 700; }
+dialog button { border: 2px solid var(--ink); background: var(--paper); font: 700 14px var(--body); padding: 4px 10px; cursor: pointer; }
+body.only-kept .tile:not(.kept) { display: none; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;700&family=Shantell+Sans:wght@700&display=swap">
+
+<div class="wrap">
+    <header class="top">
+        <h1 class="title">HIDE AND <s>SEEK</s> <span class="stalk">STALK</span></h1>
+        <p class="lede">Round 1 of the redesign: every idea, side by side, for Monday's game (Oct 5, 1 PM). Everything here is code, not generated images. The app screens are the real app from the repo, fed a scripted game with truthful answers, restyled four ways.</p>
+        <ul class="how">
+            <li><b>1 · Mark</b>Press <em>Keep</em> on anything you like. Kept tiles get a red frame.</li>
+            <li><b>2 · Comment</b>Type a note under any tile. It saves when you leave the box, and Claude reads it straight from this page.</li>
+            <li><b>3 · Reply</b>Or just answer in the chat with codes, like “L01 + B07 + W06, style A”.</li>
+        </ul>
+        <p class="status" id="store-status">Loading saved picks…</p>
+    </header>
+
+    <nav class="bar" aria-label="Sections">
+        <a href="#logo">Logo</a><a href="#hand">Handwriting</a><a href="#board">Boards</a><a href="#welcome">Welcome</a><a href="#styles">App styles</a><a href="#maps">Maps</a>
+        <span class="spacer"></span>
+        <span class="count" id="count">0 kept</span>
+        <label for="onlykept"><input type="checkbox" id="onlykept"> Kept only</label>
+    </nav>
+
+    <main id="sections"></main>
+</div>
+
+<dialog id="zoom"><div class="dh"><span id="zoom-code"></span><button type="button" id="zoom-close">Close</button></div><img id="zoom-img" alt=""></dialog>
+
+<script>
+const SETS = [
+    { id: "logo", title: "L · Logo", intro: "Your title, restacked for a phone. Helvetica stays dead plain; only the red is drawn, by code, so no two strokes repeat.", wide: false, items: [
+        ["L01", "The poster, stacked: HIDE / AND / SEEK, zigzag, STALK below"],
+        ["L02", "HIDE / & SEEK / STALK"],
+        ["L03", "One strike, STALK written across SEEK"],
+        ["L04", "Proofreader: strike, caret, STALK inserted above"],
+        ["L05", "SEEK blacked out completely"],
+        ["L06", "HIDE AND small, SEEK huge"],
+        ["L07", "Centred stack"],
+        ["L08", "SEEK circled and crossed, arrow to STALK"],
+        ["L09", "Obsessive: STALK three times, angrier each time"],
+        ["L10", "HIDE circled too: the target"],
+        ["L11", "L01 on black"],
+        ["L12", "Small uses: in-app header, home-screen icon"],
+    ]},
+    { id: "hand", title: "H · Handwriting", intro: "Same notes, three techniques. H1 and H3 draw every letter as a single jittered stroke with pressure (the Apple Pencil look), and lines curl upward when they run out of room. H2 is a real handwriting font, shaken letter by letter, for comparison.", wide: true, items: [
+        ["H01", "Drawn strokes, calm"],
+        ["H02", "Handwriting font (Shantell Sans) + shake"],
+        ["H03", "Drawn strokes, unhinged"],
+    ]},
+    { id: "board", title: "B · Boards", intro: "The stalker's board, for the bottom of the welcome screen. The evidence is the real game: real question cards with the answers an honest hider near the greenhouses would give, the real campus border and pavilions, and the eliminated area hatched out exactly as the app's Hints map computes it. Polaroids are drawn stand-ins until your photos arrive.", wide: false, items: [
+        ["B01", "Minimal: two cards, one string"],
+        ["B02", "The chain: Q1 → Q4 strung in order"],
+        ["B03", "Campus map in the middle, everything strung to the spot"],
+        ["B04", "Full chaos on 1-bit “cork”"],
+        ["B05", "Black board"],
+        ["B06", "Photo answers around a faceless hider"],
+        ["B07", "The elimination, big"],
+        ["B08", "Timeline: one question every 5 minutes"],
+        ["B09", "Sticky notes: the stalker's conclusions"],
+        ["B10", "Dossier with a WANTED stamp"],
+        ["B11", "Graph paper: 500 m drawn with a compass"],
+        ["B12", "Redacted file"],
+    ]},
+    { id: "welcome", title: "W · Welcome screens", intro: "The app's first screen: title card, button at the bottom (375 × 812, the iPhone 12 mini's size). W01–W03 are title only; the rest pair a logo with a board. The button labels are options; I'd avoid “Start game” because the app already has a “Start the game” button that launches your team's 10-minute countdown.", wide: false, items: [
+        ["W01", "L01 alone, coloured-in ENTER"],
+        ["W02", "L02 alone, black I'M IN"],
+        ["W03", "L11 on black, LET ME IN"],
+        ["W04", "L01 + B01"],
+        ["W05", "L01 + B02, JOIN THE HUNT"],
+        ["W06", "L07 + B03, PLAY"],
+        ["W07", "L06 + B07, START STALKING"],
+        ["W08", "L01 + B06"],
+        ["W09", "All black: L11 + B05"],
+        ["W10", "L03 + B04"],
+        ["W11", "L02 + B09"],
+        ["W12", "L04 + B11, “YOU'RE NEXT”"],
+    ]},
+];
+
+const SCREENS = [
+    ["01", "login", "Log in"], ["02", "lobby", "Waiting for a team"], ["03", "ready", "Ready: you're a stalker"],
+    ["04", "hiding", "Hider: go hide, countdown"], ["05", "cards", "Stalker: three cards"], ["06", "sent", "Sent, locked in, answered"],
+    ["07", "photo", "Photo answer (stand-in)"], ["08", "question", "Hider: new question"], ["09", "choice", "Hider: which pavilion, nearest first"],
+    ["10", "tagcode", "Hider: tag code"], ["11", "history", "Questions so far"], ["12", "found", "Stalkers win"], ["13", "win", "Hider wins"],
+];
+const STYLES = [
+    ["A", "Marker", "The neutral one: pure black and white, not one grey, red only as drawn ink. Built for sunlight."],
+    ["B", "Case file", "A on an evidence folder: typewriter labels and numbers, cards filed as exhibits, stamps instead of badges."],
+    ["C", "Swiss", "The boring layer turned all the way up: enormous type, heavy rules, everything uppercase."],
+    ["D", "Night", "A inverted. Strong in screenshots, weaker in the sun."],
+];
+
+function tile(code, cap, file) {
+    return `<figure class="tile" data-code="${code}">
+        <button type="button" class="shot" data-src="${file}" aria-label="Enlarge ${code}"><img src="${file}" alt="${code}: ${cap}" loading="lazy"></button>
+        <div class="meta"><span class="code">${code}</span><span class="cap">${cap}</span><button type="button" class="keep" aria-pressed="false">Keep</button></div>
+        <textarea id="note-${code.replace("/", "-")}" placeholder="Note on ${code}…" aria-label="Note on ${code}"></textarea>
+        <span class="saved" aria-live="polite"></span>
+    </figure>`;
+}
+
+let html = "";
+for (const s of SETS) {
+    html += `<section id="${s.id}"><h2>${s.title}</h2><p>${s.intro}</p><div class="grid${s.wide ? " wide" : ""}">`;
+    for (const [code, cap] of s.items) html += tile(code, cap, `shots/${code}.png`);
+    html += `</div></section>`;
+}
+html += `<section id="styles"><h2>A–D · App styles</h2><p>The real app, restyled four ways, on 13 screens. Same scripted game in all of them: team 3, maelle hiding by the greenhouses, jules, noah_b, camille and theo hunting (made-up names). The red notes are the “someone drew on it” layer; in round 2 they become part of the app.</p></section>`;
+for (const [k, name, intro] of STYLES) {
+    html += `<section id="style-${k.toLowerCase()}"><h2>${k} · ${name}</h2><p>${intro}</p><div class="grid">`;
+    for (const [n, slug, cap] of SCREENS) html += tile(`${k}/${n}`, cap, `shots/${k}-${n}-${slug}.png`);
+    html += `</div></section>`;
+}
+html += `<section id="maps"><h2>M · Maps</h2><div class="pending"><p><b>Waiting on map tiles.</b> This environment blocks tile.openstreetmap.org, so the map screens (several simulated games, the map after each question, stalker and hider views with the red “string” to each stalker) come as soon as you allow it. The board maps above use the same real geometry, drawn without tiles.</p></div></section>`;
+document.getElementById("sections").innerHTML = html;
+
+// Zoom
+const dlg = document.getElementById("zoom");
+document.addEventListener("click", (e) => {
+    const b = e.target.closest("button.shot");
+    if (!b) return;
+    document.getElementById("zoom-img").src = b.dataset.src;
+    document.getElementById("zoom-code").textContent = b.closest(".tile").dataset.code;
+    dlg.showModal();
+});
+document.getElementById("zoom-close").addEventListener("click", () => dlg.close());
+dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+
+// Kept only
+const onlyBox = document.getElementById("onlykept");
+onlyBox.addEventListener("change", () => document.body.classList.toggle("only-kept", onlyBox.checked));
+
+// Picks: saved in the page's database, one document per code.
+const state = new Map();
+const docId = (code) => code.replace("/", "-");
+function paint() {
+    let kept = 0;
+    for (const t of document.querySelectorAll(".tile")) {
+        const p = state.get(docId(t.dataset.code)) ?? {};
+        t.classList.toggle("kept", Boolean(p.keep));
+        t.querySelector(".keep").setAttribute("aria-pressed", String(Boolean(p.keep)));
+        const ta = t.querySelector("textarea");
+        if (document.activeElement !== ta && ta.dataset.dirty !== "1") ta.value = p.note ?? "";
+        if (p.keep) kept++;
+    }
+    document.getElementById("count").textContent = `${kept} kept`;
+}
+const statusEl = document.getElementById("store-status");
+(async () => {
+    const db = await window.claude?.use?.("db");
+    if (!db) {
+        statusEl.textContent = "Picks can't be saved in this view. Reply in the chat with codes instead.";
+        for (const b of document.querySelectorAll(".keep, textarea")) b.disabled = true;
+        return;
+    }
+    statusEl.textContent = "Picks and notes save to this page.";
+    const col = db.collection("picks");
+    col.onSnapshot((snap) => {
+        state.clear();
+        for (const d of snap.docs) state.set(d.id, d.data() ?? {});
+        paint();
+    }, () => { statusEl.textContent = "Lost the connection to saved picks. Reload to try again."; });
+    async function save(code, patch, tileEl) {
+        const id = docId(code);
+        const next = { ...(state.get(id) ?? {}), ...patch, code, at: new Date().toISOString() };
+        state.set(id, next);
+        paint();
+        const s = tileEl.querySelector(".saved");
+        try {
+            await col.doc(id).set(next);
+            s.textContent = "Saved";
+        } catch (err) {
+            s.textContent = err?.code === "not_granted" || err?.code === "permission_denied" ? "You can't save picks on this page." : "Not saved. Check your connection and try again.";
+        }
+    }
+    document.addEventListener("click", (e) => {
+        const b = e.target.closest("button.keep");
+        if (!b) return;
+        const t = b.closest(".tile");
+        save(t.dataset.code, { keep: b.getAttribute("aria-pressed") !== "true" }, t);
+    });
+    document.addEventListener("input", (e) => { if (e.target.matches(".tile textarea")) e.target.dataset.dirty = "1"; });
+    document.addEventListener("focusout", (e) => {
+        const ta = e.target;
+        if (!ta.matches?.(".tile textarea") || ta.dataset.dirty !== "1") return;
+        ta.dataset.dirty = "";
+        const t = ta.closest(".tile");
+        save(t.dataset.code, { note: ta.value.trim() }, t);
+    });
+})();
+</script>
