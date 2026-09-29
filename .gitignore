@@ -1,2 +1,12 @@
 # macOS
 .DS_Store
+
+# Node
+node_modules/
+
+# Cloudflare Worker
+.wrangler/
+worker/.dev.vars
+
+# Local credentials
+cookies.json

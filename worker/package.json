@@ -1,0 +1,20 @@
+{
+  "name": "hidenstalk-api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "dev:lan": "wrangler dev --ip 0.0.0.0",
+    "deploy": "wrangler deploy",
+    "db:init": "wrangler d1 execute hidenstalk --remote --file=./schema.sql",
+    "db:init:local": "wrangler d1 execute hidenstalk --local --file=./schema.sql",
+    "db:migrate": "node migrate.mjs --remote",
+    "db:migrate:local": "node migrate.mjs",
+    "smoke": "node smoke-teams.mjs",
+    "simulate": "node simulate.mjs"
+  },
+  "devDependencies": {
+    "@turf/turf": "7.2.0",
+    "wrangler": "^4.0.0"
+  }
+}

@@ -1,0 +1,2201 @@
+/* Anything marked hidden stays hidden, whatever display a class gives it. */
+[hidden] {
+    display: none !important;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: #0f172a;
+    font-family:
+        system-ui,
+        -apple-system,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    color: #e2e8f0;
+}
+
+/* Header */
+#site-header {
+    position: relative;
+    flex: 0 0 auto;
+    background: #1e293b;
+    border-bottom: 2px solid #334155;
+    z-index: 1500;
+}
+
+#site-title {
+    margin: 0;
+    padding: 14px 16px 22px;
+    text-align: center;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: #f8fafc;
+    white-space: pre;
+}
+
+#user-status {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+#user-status[hidden] {
+    display: none;
+}
+
+#user-status button {
+    background: transparent;
+    color: #cbd5e1;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+#user-status button:hover {
+    background: #334155;
+}
+
+/* Notification bell: rings for the stalker on an answer, for the hider on a
+   new question. */
+.bell {
+    position: absolute;
+    top: 10px;
+    left: 16px;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    color: #94a3b8;
+    border: 1px solid #334155;
+    border-radius: 9999px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.bell[hidden] {
+    display: none;
+}
+
+.bell svg {
+    width: 18px;
+    height: 18px;
+}
+
+.bell:hover {
+    background: #334155;
+    color: #f8fafc;
+}
+
+.bell.ringing {
+    color: #fbbf24;
+    border-color: #b45309;
+    animation: bell-swing 1.6s ease-in-out infinite;
+}
+
+@keyframes bell-swing {
+    0%,
+    70%,
+    100% {
+        transform: rotate(0deg);
+    }
+    75% {
+        transform: rotate(12deg);
+    }
+    85% {
+        transform: rotate(-10deg);
+    }
+    95% {
+        transform: rotate(4deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bell.ringing {
+        animation: none;
+    }
+}
+
+.bell-count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    box-sizing: border-box;
+    border-radius: 9999px;
+    background: #dc2626;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 17px;
+    text-align: center;
+}
+
+.bell-count[hidden] {
+    display: none;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* MENU / MAP tabs poking out of the bottom-left of the header */
+#view-tabs {
+    position: absolute;
+    left: 16px;
+    bottom: -2px;
+    display: flex;
+    gap: 2px;
+}
+
+.view-tab {
+    background: #334155;
+    color: #cbd5e1;
+    border: 2px solid #334155;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    padding: 4px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transform: translateY(2px);
+}
+
+.view-tab:hover {
+    background: #475569;
+}
+
+.view-tab.active {
+    background: #0f172a;
+    color: #f8fafc;
+    border-color: #334155;
+    transform: translateY(2px);
+}
+
+/* Notices under the header (no connection / location not shared) */
+#notices {
+    flex: 0 0 auto;
+}
+
+.notice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.notice[hidden] {
+    display: none;
+}
+
+.notice-offline {
+    background: #991b1b;
+    color: #fef2f2;
+    border-bottom: 1px solid #dc2626;
+}
+
+.notice-location {
+    background: #1e293b;
+    color: #fde68a;
+    border-bottom: 1px solid #334155;
+}
+
+.notice-location.notice-flash {
+    animation: notice-flash 0.7s ease-out;
+}
+
+@keyframes notice-flash {
+    0% {
+        background: #b45309;
+        color: #fff;
+    }
+    100% {
+        background: #1e293b;
+    }
+}
+
+.notice-btn {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.notice-btn:hover {
+    background: #1d4ed8;
+}
+
+.notice-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.notice-btn[hidden] {
+    display: none;
+}
+
+/* Views */
+#views {
+    flex: 1 1 auto;
+    min-height: 0;
+    position: relative;
+}
+
+.view {
+    width: 100%;
+    height: 100%;
+}
+
+.view[hidden] {
+    display: none !important;
+}
+
+/* MENU */
+#view-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
+    padding: 40px 16px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.menu-panel {
+    width: 100%;
+    max-width: 360px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.menu-panel[hidden],
+.admin-panel[hidden],
+#player-panel[hidden],
+#hider-panel[hidden],
+#stalker-panel[hidden] {
+    display: none !important;
+}
+
+.auth-switch {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+}
+
+.auth-switch-btn {
+    flex: 1;
+    background: transparent;
+    color: #94a3b8;
+    border: 1px solid #334155;
+    border-radius: 4px;
+    padding: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.auth-switch-btn.active {
+    background: #334155;
+    color: #f8fafc;
+}
+
+#auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#auth-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+#auth-form input {
+    background: #0f172a;
+    color: #f8fafc;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 14px;
+}
+
+#auth-form input:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 0;
+}
+
+#auth-submit {
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#auth-submit:hover {
+    background: #1d4ed8;
+}
+
+#auth-submit:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.auth-error {
+    margin: 0;
+    min-height: 1.2em;
+    color: #f87171;
+    font-size: 13px;
+}
+
+.muted {
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+/* Player panel (logged in, non-admin) */
+.role-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: #334155;
+    color: #cbd5e1;
+}
+
+.role-badge[data-role="hider"] {
+    background: #14532d;
+    color: #bbf7d0;
+}
+
+.role-badge[data-role="stalker"] {
+    background: #7f1d1d;
+    color: #fecaca;
+}
+
+.role-badge[data-role="admin"] {
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+.game-status {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: #94a3b8;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------------------
+   Cards: the stalker's batch of three + countdown, and the hider's queue
+   --------------------------------------------------------------------------- */
+.cards-panel {
+    margin: 12px 0 0;
+    padding: 14px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+}
+
+.cards-panel[hidden] {
+    display: none !important;
+}
+
+.cards-title {
+    margin: 0 0 4px;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #cbd5e1;
+}
+
+.card-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    align-items: stretch;
+}
+
+/* Face-up: picking blind would not be a choice. Picking one discards the
+   other two until the clock runs out. */
+.card {
+    --card-accent: #64748b;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 150px;
+    padding: 10px;
+    text-align: left;
+    background: #1e293b;
+    color: #e2e8f0;
+    border: 1px solid #334155;
+    border-top: 3px solid var(--card-accent);
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    font: inherit;
+    transition:
+        transform 0.12s ease,
+        border-color 0.12s ease;
+}
+
+.card[data-category="direction"] {
+    --card-accent: #3b82f6;
+}
+
+.card[data-category="radius"] {
+    --card-accent: #06b6d4;
+}
+
+.card[data-category="proximity"] {
+    --card-accent: #a855f7;
+}
+
+.card[data-category="context"] {
+    --card-accent: #f59e0b;
+}
+
+.card[data-category="photo"] {
+    --card-accent: #22c55e;
+}
+
+.card:hover:not(:disabled) {
+    transform: translateY(-3px);
+    border-color: var(--card-accent);
+}
+
+.card:disabled {
+    cursor: default;
+}
+
+.card-category {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--card-accent);
+}
+
+.card-prompt {
+    flex: 1 1 auto;
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.card-foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.card-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    font-size: 10px;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+.card-badge.hint {
+    color: #7dd3fc;
+    border-color: #0369a1;
+}
+
+.card-note {
+    margin: 10px 0 0;
+    text-align: center;
+}
+
+.cards-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.hint-status {
+    margin: 8px 0 0;
+    text-align: center;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* Lines that only sometimes have something to say take no room when empty. */
+.cards-panel .card-note:empty,
+.cards-panel .hint-status:empty,
+.cards-panel .auth-error:empty,
+.status-card .auth-error:empty {
+    display: none;
+}
+
+.hint-status[data-tone="warn"] {
+    color: #fca5a5;
+}
+
+/* Hider: one form per unanswered question */
+.question-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 12px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+}
+
+.question-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.question-meta {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.question-prompt {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.35;
+    color: #f8fafc;
+}
+
+.answer-widget {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.answer-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.answer-option:hover {
+    border-color: #475569;
+}
+
+.answer-option input {
+    margin: 0;
+    cursor: pointer;
+}
+
+.answer-input {
+    background: #0f172a;
+    color: #f8fafc;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 14px;
+}
+
+.answer-file {
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+/* "Send me your exact coordinates": one button, no typing */
+.answer-coords {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.answer-coords-readout {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+/* Where the stalker asked from, on the walking-time card */
+.asker-location {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 4px;
+    padding: 8px;
+    border-radius: 6px;
+    background: rgba(148, 163, 184, 0.12);
+}
+
+.asker-location-text {
+    flex: 1 1 100%;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    color: #e2e8f0;
+}
+
+.asker-location a.admin-btn {
+    text-decoration: none;
+}
+
+/* Ending the hunt without the camera */
+.found-panel {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.found-panel p {
+    margin: 0 0 8px;
+}
+
+.answer-preview {
+    max-width: 100%;
+    border-radius: 6px;
+    border: 1px solid #334155;
+}
+
+.answer-error {
+    margin: 0;
+}
+
+/* Admin dashboard */
+.admin-panel {
+    width: 100%;
+    max-width: 900px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.admin-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.admin-header h2 {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: 0.08em;
+}
+
+.admin-header .game-status {
+    margin: 0;
+}
+
+.admin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.admin-btn {
+    background: #334155;
+    color: #f8fafc;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-btn:hover {
+    background: #475569;
+}
+
+.admin-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.admin-btn[hidden] {
+    display: none;
+}
+
+.admin-btn.primary {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+.admin-btn.primary:hover {
+    background: #1d4ed8;
+}
+
+.admin-btn.danger {
+    background: #7f1d1d;
+    border-color: #991b1b;
+}
+
+.admin-btn.danger:hover {
+    background: #991b1b;
+}
+
+.admin-btn.active {
+    background: #0f172a;
+    border-color: #3b82f6;
+    color: #93c5fd;
+}
+
+.board-hint {
+    margin: 0 0 12px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.board-groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.board-group {
+    --group-color: #94a3b8;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-left: 4px solid var(--group-color);
+    border-radius: 6px;
+    padding: 10px;
+}
+
+.board-group.new-group {
+    border-style: dashed;
+    border-left-style: solid;
+    opacity: 0.8;
+}
+
+.board-group.pool {
+    grid-column: 1 / -1;
+}
+
+.board-group h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--group-color);
+}
+
+.board-slot {
+    margin-bottom: 8px;
+}
+
+.board-slot:last-child {
+    margin-bottom: 0;
+}
+
+.slot-label {
+    font-size: 11px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+}
+
+.board-list {
+    min-height: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px;
+    border: 1px dashed transparent;
+    border-radius: 4px;
+    transition: border-color 0.1s ease, background 0.1s ease;
+}
+
+.board-list.drop-target,
+.board-slot.drop-target > .board-list {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.12);
+}
+
+.board-name {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    max-width: 100%;
+    box-sizing: border-box;
+    background: #1e293b;
+    border: 1px solid #475569;
+    border-radius: 10px;
+    padding: 4px 10px;
+    font-size: 13px;
+    color: #f8fafc;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.board-name[draggable="false"] {
+    cursor: default;
+}
+
+.board-name:active {
+    cursor: grabbing;
+}
+
+.board-name.dragging {
+    opacity: 0.35;
+}
+
+.board-name.offline {
+    opacity: 0.55;
+}
+
+.board-name[data-role="hider"] {
+    border-color: #22c55e;
+}
+
+.board-name[data-role="stalker"] {
+    border-color: #ef4444;
+}
+
+.board-name-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Live coordinates under the name. Each part (lat/lng, accuracy) stays on one
+   line but may wrap as a whole in a narrow group column. */
+.board-coords {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+    color: #94a3b8;
+}
+
+.board-coords > span {
+    white-space: nowrap;
+}
+
+.board-coords[data-state="off"] {
+    color: #fbbf24;
+}
+
+.board-coords[data-state="lost"],
+.board-coords[data-state="stale"] {
+    color: #f87171;
+}
+
+/* Wi-Fi style signal icon: data-signal (0-3) on .board-name lights the arcs. */
+.board-name {
+    --signal-color: #22c55e;
+}
+
+.board-name[data-signal="2"] {
+    --signal-color: #eab308;
+}
+
+.board-name[data-signal="1"] {
+    --signal-color: #f97316;
+}
+
+.board-name[data-signal="0"] {
+    --signal-color: #ef4444;
+}
+
+.signal-icon {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 auto;
+    stroke: #475569;
+}
+
+.signal-icon .sig-dot {
+    fill: #475569;
+    stroke: none;
+}
+
+.signal-icon .sig-off {
+    display: none;
+}
+
+.board-name:not([data-signal="0"]) .sig-dot {
+    fill: var(--signal-color);
+}
+
+.board-name:not([data-signal="0"]) .sig-1,
+.board-name[data-signal="2"] .sig-2,
+.board-name[data-signal="3"] .sig-2,
+.board-name[data-signal="3"] .sig-3 {
+    stroke: var(--signal-color);
+}
+
+.board-name[data-signal="0"] .sig-off {
+    display: inline;
+    stroke: var(--signal-color);
+}
+
+.drag-ghost {
+    position: fixed;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 3000;
+    opacity: 0.9;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+/* MAP */
+#map-modal-dialog-container-leaflet {
+    width: 100%;
+    height: 100%;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+/* Pins for other users sharing their location */
+.user-pin {
+    --pin-color: #ef4444;
+    position: relative;
+    width: 18px;
+    height: 18px;
+}
+
+.user-pin-dot {
+    display: block;
+    width: 18px;
+    height: 18px;
+    border-radius: 9999px;
+    background: var(--pin-color);
+    border: 2px solid #fff;
+    box-sizing: border-box;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Hiders: square pin. Stalkers: round. Admin: diamond with dark border. */
+.user-pin[data-role="hider"] .user-pin-dot {
+    border-radius: 3px;
+}
+
+.user-pin[data-role="admin"] .user-pin-dot {
+    border-radius: 3px;
+    transform: rotate(45deg);
+    border-color: #0f172a;
+}
+
+/* Hider-only: the distance written beside each tether line. Nudged off the
+   line's midpoint so it never sits on top of the dashes. */
+.tether-label {
+    display: inline-block;
+    transform: translate(9px, -50%);
+    background: rgba(15, 23, 42, 0.85);
+    color: #fff;
+    border: 1px solid var(--tether-color, #94a3b8);
+    padding: 0 5px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 16px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.user-pin-label {
+    position: absolute;
+    left: 22px;
+    top: -1px;
+    background: rgba(15, 23, 42, 0.85);
+    color: #fff;
+    border-left: 3px solid var(--pin-color);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* Fullscreen + tile-layer buttons, styled like the original Leaflet controls */
+.leaflet-control-custom {
+    background: #fff;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    color: #000;
+    user-select: none;
+}
+
+.leaflet-control-custom:hover {
+    background: #f4f4f4;
+}
+
+.leaflet-control-custom svg {
+    width: 20px;
+    height: 20px;
+}
+
+.leaflet-control-custom select {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.leaflet-control-tile-select {
+    width: auto;
+    padding: 0 4px;
+}
+
+/* Overlays menu (top-right) */
+.leaflet-control-overlays {
+    position: relative;
+    align-self: flex-end;
+}
+
+.leaflet-control-overlays-menu {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 38px;
+    min-width: 170px;
+    background: #fff;
+    border: 2px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 12px;
+    color: #000;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.3);
+}
+
+.leaflet-control-overlays-menu.open {
+    display: block;
+}
+
+.overlays-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.overlays-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 0;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.overlays-row input {
+    margin: 0;
+    cursor: pointer;
+}
+
+/* Heading above the campus rows, so the menu reads as two lists */
+.overlays-subtitle {
+    margin-top: 6px;
+    padding-top: 5px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: none;
+    color: #475569;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* The stalker whose question is currently on the table */
+.ask-pin {
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-radius: 9999px;
+    background: var(--ask-color, #f43f5e);
+    border: 2px solid #fff;
+    box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------------------------
+   Campus overlays (generated from locations/geojson)
+   --------------------------------------------------------------------------- */
+.campus-pin {
+    display: block;
+    width: 12px;
+    height: 12px;
+    border-radius: 9999px;
+    background: var(--campus-color, #64748b);
+    border: 2px solid #fff;
+    box-sizing: border-box;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.leaflet-marker-icon:hover > .campus-pin {
+    transform: scale(1.35);
+}
+
+/* Landmark names sit on the map permanently, so they stay light */
+.campus-tooltip.leaflet-tooltip {
+    background: rgba(15, 23, 42, 0.85);
+    color: #f8fafc;
+    border: none;
+    box-shadow: none;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 1px 6px;
+    white-space: nowrap;
+}
+
+.campus-tooltip.leaflet-tooltip::before {
+    display: none;
+}
+
+.campus-popup {
+    --campus-color: #64748b;
+    min-width: 170px;
+    max-width: 240px;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.campus-popup-name {
+    display: block;
+    font-size: 13px;
+    color: #0f172a;
+}
+
+.campus-popup-layer {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 0 6px;
+    border-radius: 9999px;
+    background: var(--campus-color);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.campus-popup-detail {
+    margin: 8px 0 0;
+}
+
+.campus-popup-detail > div {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+}
+
+.campus-popup-detail dt {
+    flex: 0 0 auto;
+    min-width: 62px;
+    color: #64748b;
+    font-size: 11px;
+}
+
+.campus-popup-detail dd {
+    margin: 0;
+    color: #0f172a;
+}
+
+/* The link back to the deck: which card this place is an answer to */
+.campus-popup-cards {
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.campus-popup-cards-title {
+    display: block;
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.campus-popup-cards p {
+    margin: 2px 0 0;
+    padding-left: 7px;
+    border-left: 3px solid var(--campus-color);
+    color: #0f172a;
+    font-style: italic;
+}
+
+/* Location marker (mirrors the "follow me" marker in the original) */
+.follow-me-marker {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    border-radius: 9999px;
+    background: #fff;
+    border: 2px solid #1d4ed8;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: filter 0.3s ease, border-color 0.3s ease;
+}
+
+/* The GPS has gone quiet: this is where you WERE. */
+.follow-me-marker.stale {
+    filter: grayscale(1);
+    border-color: #64748b;
+    opacity: 0.8;
+}
+
+/* Which way the player is facing: a soft beam out of the dot, like Google
+   Maps. Drawn pointing north; map.js rotates it. */
+.heading-cone {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 110px;
+    height: 110px;
+    z-index: -1;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    background: conic-gradient(
+        from -30deg,
+        rgba(37, 99, 235, 0.75) 0deg 60deg,
+        transparent 60deg
+    );
+    -webkit-mask-image: radial-gradient(circle, #000 15%, transparent 70%);
+    mask-image: radial-gradient(circle, #000 15%, transparent 70%);
+    border-radius: 50%;
+}
+
+/* Small toast for feedback (clipboard, geolocation errors) */
+#toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.92);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+#toast.visible {
+    opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   Card history
+   --------------------------------------------------------------------------- */
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+    background: rgba(2, 6, 23, 0.72);
+}
+
+.modal[hidden] {
+    display: none !important;
+}
+
+.modal-card {
+    width: 100%;
+    max-width: 560px;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #334155;
+}
+
+.modal-head h2 {
+    margin: 0;
+    font-size: 16px;
+    letter-spacing: 0.06em;
+}
+
+.modal-close {
+    background: transparent;
+    color: #cbd5e1;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    background: #334155;
+}
+
+.history-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 12px 16px 16px;
+}
+
+.history-row {
+    --card-accent: #64748b;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-left: 3px solid var(--card-accent);
+    border-radius: 6px;
+}
+
+.history-row[data-category="direction"] {
+    --card-accent: #3b82f6;
+}
+
+.history-row[data-category="radius"] {
+    --card-accent: #06b6d4;
+}
+
+.history-row[data-category="proximity"] {
+    --card-accent: #a855f7;
+}
+
+.history-row[data-category="context"] {
+    --card-accent: #f59e0b;
+}
+
+.history-row[data-category="photo"] {
+    --card-accent: #22c55e;
+}
+
+.history-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.history-prompt {
+    margin: 0;
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+.history-answer {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #f8fafc;
+}
+
+.history-answer.pending {
+    font-weight: 400;
+    font-style: italic;
+    color: #94a3b8;
+}
+
+.history-photo {
+    max-width: 100%;
+    border-radius: 6px;
+    border: 1px solid #334155;
+}
+
+.history-row .card-badge {
+    align-self: flex-start;
+}
+
+/* ---------------------------------------------------------------------------
+   End of game: the stalker's scan button, the hider's QR, and the verdict.
+   --------------------------------------------------------------------------- */
+
+/* Shares .bell's shape, so it only needs shifting clear of it. */
+.scan-btn {
+    left: 58px;
+    color: #7dd3fc;
+    border-color: #0369a1;
+}
+
+.scan-btn:hover {
+    background: #0c4a6e;
+    color: #f0f9ff;
+}
+
+/* The hider's QR code, at the bottom of their panel. */
+.hider-qr {
+    margin-top: 14px;
+    padding: 12px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+}
+
+.hider-qr[hidden] {
+    display: none;
+}
+
+.hider-qr-figure {
+    /* A white quiet zone is part of the code: scanners need the contrast. */
+    background: #fff;
+    border-radius: 6px;
+    margin: 10px auto 0;
+    width: 100%;
+    max-width: 260px;
+    line-height: 0;
+}
+
+.hider-qr-figure svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.hider-qr-text {
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.hider-qr-text code {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: #cbd5e1;
+    word-break: break-all;
+}
+
+/* Admin: a labelled input with its button. */
+.admin-field {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.admin-field label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #94a3b8;
+}
+
+.admin-input {
+    width: 84px;
+    padding: 7px 10px;
+    box-sizing: border-box;
+    background: #0f172a;
+    color: #f8fafc;
+    border: 1px solid #475569;
+    border-radius: 4px;
+    font: inherit;
+    font-size: 14px;
+    text-align: center;
+}
+
+.admin-input:focus {
+    outline: none;
+    border-color: #38bdf8;
+}
+
+.admin-field .muted {
+    font-size: 12px;
+}
+
+/* Admin board: one status line per team. */
+.board-outcome {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: baseline;
+    margin: -4px 0 8px;
+    font-size: 11px;
+    color: #94a3b8;
+    font-variant-numeric: tabular-nums;
+}
+
+.board-outcome[data-phase="hiding"],
+.board-outcome[data-phase="hunting"] {
+    color: #fde68a;
+}
+
+.board-outcome[data-phase="ended"] {
+    color: #86efac;
+}
+
+/* Scanner modal. */
+.scan-card {
+    max-width: 420px;
+}
+
+.scan-stage {
+    position: relative;
+    background: #020617;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+}
+
+#scan-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Frames the middle of the picture, where jsQR finds a code soonest. */
+.scan-reticle {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    transform: translate(-50%, -50%);
+    width: 62%;
+    aspect-ratio: 1 / 1;
+    border: 2px solid rgba(125, 211, 252, 0.9);
+    border-radius: 12px;
+    box-shadow: 0 0 0 100vmax rgba(2, 6, 23, 0.45);
+    pointer-events: none;
+}
+
+.scan-status {
+    margin: 12px 16px 0;
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+#scan-error {
+    margin: 6px 16px 0;
+}
+
+#scan-error:empty {
+    margin: 0;
+}
+
+.scan-fallback {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 12px 16px 16px;
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+.scan-fallback[hidden] {
+    display: none;
+}
+
+.scan-fallback input {
+    font: inherit;
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+/* ---------------------------------------------------------------------------
+   Home screen: the status card says what to do right now, then the cards,
+   then the rules.
+   --------------------------------------------------------------------------- */
+.whoami {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+.status-card {
+    --status-accent: #475569;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 14px;
+    text-align: center;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-top: 4px solid var(--status-accent);
+    border-radius: 10px;
+}
+
+.status-card[data-phase="ready"] {
+    --status-accent: #3b82f6;
+}
+
+.status-card[data-phase="hiding"] {
+    --status-accent: #f59e0b;
+}
+
+.status-card[data-phase="hunting"] {
+    --status-accent: #ef4444;
+}
+
+.status-card[data-result="win"] {
+    --status-accent: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.status-card[data-result="loss"] {
+    --status-accent: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.status-title {
+    margin: 4px 0 0;
+    font-size: 22px;
+    line-height: 1.2;
+    color: #f8fafc;
+}
+
+.status-timer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+}
+
+.timer-value {
+    font-size: 44px;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: #f8fafc;
+}
+
+.timer-label {
+    margin-top: 2px;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: #94a3b8;
+}
+
+.status-timer.expiring .timer-value {
+    color: #fbbf24;
+}
+
+.status-text {
+    margin: 2px 0 0;
+    font-size: 15px;
+    line-height: 1.4;
+    color: #e2e8f0;
+}
+
+.status-team {
+    margin: 2px 0 0;
+}
+
+.big-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #fff;
+    font: inherit;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+}
+
+.big-btn:hover {
+    background: #1d4ed8;
+}
+
+.big-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.discord-btn {
+    display: block;
+    margin-top: 12px;
+    padding: 11px;
+    border-radius: 8px;
+    background: #5865f2;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.discord-btn:hover {
+    background: #4752c4;
+}
+
+/* The rules: open before the game, folded away once the hunt is on. */
+.rules-card {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+}
+
+.rules-card summary {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #cbd5e1;
+}
+
+.rules-goal {
+    margin: 10px 0 6px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #f8fafc;
+}
+
+.rules-list {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 14px;
+    line-height: 1.45;
+    color: #cbd5e1;
+}
+
+.rules-list li {
+    margin-bottom: 5px;
+}
+
+.rules-list strong {
+    color: #f8fafc;
+}
+
+/* A card as it is being sent, before the server confirms. */
+.card.sending {
+    border-color: var(--card-accent);
+    box-shadow: 0 0 0 2px var(--card-accent);
+}
+
+/* After a pick: the question that went out, stamped so there is no doubt that
+   it is sent and locked in. */
+.sent-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    background: #1e293b;
+    border: 2px solid #22c55e;
+    border-radius: 10px;
+}
+
+.sent-stamp {
+    align-self: center;
+    padding: 4px 12px;
+    border: 2px solid #22c55e;
+    border-radius: 6px;
+    color: #86efac;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transform: rotate(-2deg);
+}
+
+.sent-prompt {
+    margin: 0;
+    font-size: 16px;
+    line-height: 1.35;
+    color: #f8fafc;
+    text-align: center;
+}
+
+.sent-answer {
+    margin: 0;
+    font-size: 15px;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.sent-card[data-state="answered"] .sent-answer {
+    padding: 8px;
+    border-radius: 6px;
+    background: rgba(34, 197, 94, 0.12);
+    color: #bbf7d0;
+    font-weight: 700;
+}
+
+.sent-photo {
+    max-width: 100%;
+    border-radius: 6px;
+    border: 1px solid #334155;
+}
+
+.changed-mark {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 0 5px;
+    border-radius: 4px;
+    background: rgba(251, 191, 36, 0.16);
+    color: #fbbf24;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+/* Hider: the answers already given, each with a way back. */
+.answer-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 10px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+}
+
+.answer-row-text {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.answer-row-prompt {
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+.answer-row-answer {
+    font-size: 14px;
+    color: #f8fafc;
+}
+
+.question-card.editing {
+    border-color: #fbbf24;
+}
+
+.question-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.answer-distance {
+    margin-left: auto;
+    padding-left: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+.answer-more {
+    padding: 8px;
+    background: transparent;
+    border: 1px dashed #475569;
+    border-radius: 6px;
+    color: #93c5fd;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+/* Notices: the compass offer, and debug mode's readout. */
+.notice-compass {
+    background: #1e293b;
+    color: #bfdbfe;
+    border-bottom: 1px solid #334155;
+}
+
+.notice-btn-quiet {
+    background: transparent;
+    border: 1px solid #475569;
+    color: #cbd5e1;
+}
+
+.notice-btn-quiet:hover {
+    background: #334155;
+}
+
+.debug-strip {
+    padding: 4px 10px;
+    background: #422006;
+    border-bottom: 1px solid #b45309;
+    color: #fde68a;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    text-align: center;
+}
+
+/* ---------------------------------------------------------------------------
+   Admin dashboard sections
+   --------------------------------------------------------------------------- */
+#admin-summary[data-debug="on"] {
+    color: #fbbf24;
+    font-weight: 700;
+}
+
+.admin-section {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #334155;
+}
+
+.admin-section > h3,
+.admin-section > summary {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #cbd5e1;
+}
+
+.admin-section > summary {
+    cursor: pointer;
+}
+
+.join-qr {
+    width: 100%;
+    max-width: 280px;
+    margin: 8px auto 0;
+    background: #fff;
+    border-radius: 8px;
+    line-height: 0;
+}
+
+.join-qr svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.join-url {
+    margin: 8px 0 0;
+    text-align: center;
+    word-break: break-all;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.admin-inline-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+.admin-input.small {
+    width: 60px;
+}
+
+.admin-input.wide {
+    flex: 1 1 240px;
+    width: auto;
+    text-align: left;
+}
+
+.admin-btn.small {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+.team-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 8px;
+}
+
+.team-controls:empty {
+    display: none;
+}
+
+.results-list {
+    margin: 0;
+    padding-left: 22px;
+    font-size: 14px;
+    color: #e2e8f0;
+}
+
+.results-list li {
+    margin-bottom: 6px;
+}
+
+.results-list .results-empty {
+    list-style: none;
+    margin-left: -22px;
+}
+
+.result-time {
+    display: inline-block;
+    margin: 0 6px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: #86efac;
+}
+
+.switch-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #f8fafc;
+    cursor: pointer;
+}
+
+.switch-row input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.todo-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.todo-item {
+    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #e2e8f0;
+}
+
+.todo-item label {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    cursor: pointer;
+}
+
+.todo-item input {
+    margin-top: 3px;
+}
+
+.todo-item.done span {
+    color: #64748b;
+    text-decoration: line-through;
+}
+
+.todo-who {
+    flex: 0 0 auto;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: #334155;
+    color: #cbd5e1;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.7;
+}
+
+.todo-item.done .todo-who {
+    text-decoration: none;
+}
+
+/* Phones: the title, the bell/camera and "Log out" share one narrow header.
+   The name is already on the home screen ("Logged in as ..."). */
+@media (max-width: 480px) {
+    #site-title {
+        font-size: 19px;
+        letter-spacing: 0.08em;
+        padding-top: 16px;
+    }
+
+    #user-status-name {
+        display: none;
+    }
+
+    #view-menu {
+        padding: 16px 12px;
+    }
+
+    .menu-panel {
+        padding: 14px;
+    }
+}

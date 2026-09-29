@@ -1,0 +1,7 @@
+{
+    "name": "HideNStalk",
+    "private": true,
+    "scripts": {
+        "build:locations": "node tools/build-locations.mjs"
+    }
+}

@@ -1,0 +1,35 @@
+are you north or south of me?
+are you east or west of me?
+
+using google maps, how many minutes do i have to walk to get to you?
+are you within a _ m radius of me?
+→ 100, 200, 300, 500
+
+which uni _ are you closest to?
+→ building, café, bus stop, aVélo station
+
+are you closer to the _ than me?
+→ church, twin towers, ULAVAL sign, athletics track, greenhouses, OUTER RING OF CAMPUS
+
+are you inside or outside?
+what's your floor number?
+what's the number of the nearest room? (the tree last digits)
+
+send a photo of _
+→ the tallest thing you can see
+→ what's below you
+→ what's above you
+→ the nearest door
+→ the nearest sign
+→ a window
+→ the biggest plant/tree near you
+→ a car parked near you
+→ the nearest place to sit
+
+could we see you on google street view?
+do you see a bike lane?
+how many people are around?
+
+
+
+as a stalker, i want my menu page to feature a selection of three of these cards and a timer. the timer will, as previously stated, feature an icon of a clock and a countdown. as previously stated, if the group's hider is currently located in a high-activity spot within the heatmap, the timer will fluctuate in time (the timer goes down considerably slower if the hider is in a high activity spot,the opposite also occurs). each timer goes out, a new deck of three cards is displayed on the stalker's screen. they may pick a single one per given batch and will be required to wait for new ones. each card will send a prompt to the hider in which they will have to answer truthfullyl. some of these questions will come in the form of text boxes, picture uploading, radio buttons/checkboxes to prompt the answer. both parties should have a small bell icon featured on their headers which will act as a notification bar for when a part prompts or answers. at any given moment, the stalkers can check their used card history as well as the answer given for each cards.  just like in /dependencies/jetlagthegame, make it so that some cards that arent just answered with a picture, but with a clear cut objective answer that actual indicate directions will have their own map filter, the map filter, known as "hints" will, like in the dependencies, actually come to start delimiting the territory by drawing borders around where we know that the hider is

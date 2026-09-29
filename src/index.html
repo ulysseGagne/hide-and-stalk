@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+        <title>Hide 'N' Stalk</title>
+
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            crossorigin=""
+        />
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/leaflet-contextmenu@1.4.0/dist/leaflet.contextmenu.css"
+            crossorigin=""
+        />
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <header id="site-header">
+            <h1 id="site-title">HIDE&nbsp;&nbsp;'N'&nbsp;&nbsp;STALK</h1>
+            <!-- Rings for the stalker when the hider answers, and for the
+                 hider when a new question arrives. -->
+            <button type="button" id="bell" class="bell" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                     aria-hidden="true">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                <span id="bell-count" class="bell-count" hidden>0</span>
+                <span class="sr-only">Notifications</span>
+            </button>
+            <!-- Stalkers only: scan the hider's QR code to catch them. -->
+            <button type="button" id="scan-btn" class="bell scan-btn" hidden>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                     aria-hidden="true">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                </svg>
+                <span class="sr-only">Scan a hider's code</span>
+            </button>
+            <div id="user-status" hidden>
+                <span id="user-status-name"></span>
+                <button type="button" id="logout-btn">Log out</button>
+            </div>
+            <nav id="view-tabs" role="tablist" aria-label="Views">
+                <button
+                    type="button"
+                    class="view-tab"
+                    role="tab"
+                    data-view="menu"
+                    aria-selected="false"
+                >
+                    MENU
+                </button>
+                <button
+                    type="button"
+                    class="view-tab active"
+                    role="tab"
+                    data-view="map"
+                    aria-selected="true"
+                >
+                    MAP
+                </button>
+            </nav>
+        </header>
+
+        <!-- Connection / location notices for the logged-in user. Outside the
+             tabs so a player on the map sees them too. -->
+        <div id="notices">
+            <div id="offline-notice" class="notice notice-offline" role="alert" hidden>
+                <strong>No connection.</strong>
+                <span>
+                    Your position isn't reaching the game. Get back to a spot
+                    with better Wi-Fi or signal. Retrying…
+                </span>
+            </div>
+            <div id="location-notice" class="notice notice-location" hidden>
+                <span id="location-notice-text"></span>
+                <button type="button" id="location-share-btn" class="notice-btn">
+                    Share location
+                </button>
+            </div>
+            <!-- iPhones only hand over the compass after a tap. -->
+            <div id="compass-notice" class="notice notice-compass" hidden>
+                <span>Show which way you're facing on the map?</span>
+                <button type="button" id="compass-btn" class="notice-btn">Turn on</button>
+                <button type="button" id="compass-dismiss" class="notice-btn notice-btn-quiet">
+                    No thanks
+                </button>
+            </div>
+            <!-- Debug mode (admin switch): what the phone itself knows. -->
+            <div id="debug-strip" class="debug-strip" hidden></div>
+        </div>
+
+        <main id="views">
+            <section id="view-menu" class="view" role="tabpanel" hidden>
+                <div class="menu-panel">
+                    <div id="auth-panel">
+                        <div class="auth-switch" role="tablist">
+                            <button
+                                type="button"
+                                class="auth-switch-btn active"
+                                data-mode="login"
+                            >
+                                Log in
+                            </button>
+                            <button
+                                type="button"
+                                class="auth-switch-btn"
+                                data-mode="register"
+                            >
+                                Register
+                            </button>
+                        </div>
+                        <form id="auth-form" autocomplete="on">
+                            <label>
+                                Username
+                                <input
+                                    type="text"
+                                    name="username"
+                                    autocomplete="username"
+                                    minlength="3"
+                                    maxlength="20"
+                                    pattern="[A-Za-z0-9_]+"
+                                    required
+                                />
+                            </label>
+                            <label>
+                                Password
+                                <input
+                                    type="password"
+                                    name="password"
+                                    autocomplete="current-password"
+                                    minlength="6"
+                                    maxlength="128"
+                                    required
+                                />
+                            </label>
+                            <button type="submit" id="auth-submit">Log in</button>
+                            <p id="auth-error" class="auth-error" role="alert"></p>
+                        </form>
+                    </div>
+                    <!-- Player: the home screen. Top to bottom: what to do
+                         right now, the live cards, then the rules. -->
+                    <div id="player-panel" hidden>
+                        <p class="whoami">
+                            Logged in as <strong id="logged-in-name"></strong>.
+                        </p>
+                        <!-- The one thing to know right now. app.js rewrites it
+                             for every phase: no team, ready, hiding, hunting,
+                             over. -->
+                        <section id="status-card" class="status-card" aria-live="polite">
+                            <div id="role-badge" class="role-badge"></div>
+                            <h2 id="status-title" class="status-title"></h2>
+                            <p id="status-timer" class="status-timer" hidden></p>
+                            <p id="status-text" class="status-text"></p>
+                            <p id="status-team" class="status-team muted"></p>
+                            <button type="button" id="team-start-btn" class="big-btn" hidden>
+                                Start the game
+                            </button>
+                            <button type="button" id="team-again-btn" class="big-btn" hidden>
+                                Play again
+                            </button>
+                            <p id="team-error" class="auth-error" role="alert"></p>
+                        </section>
+                        <a id="discord-btn" class="discord-btn" target="_blank" rel="noopener" hidden>
+                            Join the Discord call
+                        </a>
+                        <div id="hider-panel" hidden>
+                            <div id="hider-questions" class="cards-panel" hidden>
+                                <h3 class="cards-title">Questions for you</h3>
+                                <p class="muted">Answer truthfully.</p>
+                                <div id="hider-question-list"></div>
+                            </div>
+                            <div id="hider-answers" class="cards-panel" hidden>
+                                <h3 class="cards-title">Your answers</h3>
+                                <p class="muted">Tapped the wrong one? Change it.</p>
+                                <div id="hider-answer-list"></div>
+                            </div>
+                            <div id="hider-qr" class="hider-qr" hidden>
+                                <h3 class="cards-title">Your tag code</h3>
+                                <p class="muted">
+                                    When a stalker finds you, show them this
+                                    code. They scan it and the round is over.
+                                </p>
+                                <div id="hider-qr-figure" class="hider-qr-figure"></div>
+                                <p class="muted hider-qr-text">
+                                    Trouble scanning? Read this out instead:
+                                    <code id="hider-qr-code"></code>
+                                </p>
+                            </div>
+                        </div>
+                        <div id="stalker-panel" hidden>
+                            <div id="stalker-cards" class="cards-panel" hidden>
+                                <div id="card-row" class="card-row"></div>
+                                <!-- After a pick: the question as sent, locked
+                                     in, and then its answer. -->
+                                <div id="sent-card" class="sent-card" hidden>
+                                    <span class="sent-stamp">&#10003; Sent &mdash; locked in</span>
+                                    <p id="sent-prompt" class="sent-prompt"></p>
+                                    <p id="sent-answer" class="sent-answer"></p>
+                                    <img id="sent-photo" class="sent-photo" alt="Photo answer" hidden />
+                                </div>
+                                <p id="card-note" class="muted card-note"></p>
+                                <p id="card-error" class="auth-error"></p>
+                                <div class="cards-actions">
+                                    <button type="button" id="history-btn" class="admin-btn">
+                                        Questions so far<span id="history-count"></span>
+                                    </button>
+                                </div>
+                                <p id="hint-status" class="hint-status"></p>
+                            </div>
+                            <!-- The scanner's fallback: end the hunt by hand. -->
+                            <div id="found-panel" class="found-panel" hidden>
+                                <p class="muted">
+                                    Found your hider? Scan their code with the
+                                    camera button at the top. Camera playing up?
+                                    Press this instead.
+                                </p>
+                                <button type="button" id="found-btn" class="admin-btn danger">
+                                    Hider has been found
+                                </button>
+                                <p id="found-error" class="auth-error"></p>
+                            </div>
+                        </div>
+                        <details id="rules-card" class="rules-card" open>
+                            <summary>Rules</summary>
+                            <p class="rules-goal">
+                                The stalkers find the hider before question 7.
+                                The hider stays hidden.
+                            </p>
+                            <ol class="rules-list">
+                                <li><strong>Discord call.</strong> Everyone on the team stays in the call for the whole game.</li>
+                                <li><strong>One hider</strong> gets 10 minutes to hide. After that, a new question every 5 minutes.</li>
+                                <li><strong>The hider walks.</strong> Never runs. Stalkers may run.</li>
+                                <li><strong>Hide near a path.</strong> Within 10&ndash;20&nbsp;m of a sidewalk, bike path, hallway or trail, where people on it could see you.</li>
+                                <li><strong>No tunnels.</strong></li>
+                                <li><strong>Nothing to open.</strong> No hiding behind doors, in lockers or in bins: stalkers never open anything.</li>
+                                <li><strong>Answer truthfully.</strong> Every question, every time.</li>
+                                <li><strong>Found?</strong> The hider shows their code and the stalkers win. If question 7 would come first, the hider wins.</li>
+                            </ol>
+                        </details>
+                        <p id="location-status" class="muted"></p>
+                    </div>
+                </div>
+
+                <!-- Admin dashboard -->
+                <div id="admin-panel" class="admin-panel" hidden>
+                    <div class="admin-header">
+                        <h2>Admin dashboard</h2>
+                        <p id="admin-summary" class="game-status"></p>
+                    </div>
+                    <p id="admin-error" class="auth-error" role="alert"></p>
+
+                    <details id="admin-join" class="admin-section" open>
+                        <summary>Players join here</summary>
+                        <p class="muted">
+                            Players scan this with their phone camera, then
+                            create an account.
+                        </p>
+                        <div id="join-qr" class="join-qr"></div>
+                        <p class="join-url"><code id="join-url"></code></p>
+                    </details>
+
+                    <section class="admin-section">
+                        <h3>Teams</h3>
+                        <div class="admin-actions">
+                            <label class="admin-inline-field">
+                                Players per team
+                                <input type="number" id="team-size" class="admin-input small"
+                                       min="2" max="8" value="4" inputmode="numeric" />
+                            </label>
+                            <button type="button" id="admin-make-teams" class="admin-btn primary">
+                                Make teams
+                            </button>
+                            <button type="button" id="admin-disband" class="admin-btn">
+                                Disband all teams
+                            </button>
+                            <button type="button" id="admin-clear" class="admin-btn danger">
+                                Delete all players
+                            </button>
+                        </div>
+                        <p class="muted board-hint">
+                            Make teams puts everyone who is not in a team yet
+                            into new teams, one hider each. Then drag names
+                            around: onto a team's hider or stalker slot, onto
+                            New team, or back to Not in a team. Works whether
+                            the player is online or not. Each team starts its
+                            own game from their phones.
+                        </p>
+                        <div id="board-groups" class="board-groups"></div>
+                    </section>
+
+                    <section class="admin-section">
+                        <h3>Results &mdash; longest hide wins</h3>
+                        <ol id="results-list" class="results-list"></ol>
+                    </section>
+
+                    <section class="admin-section">
+                        <h3>Settings</h3>
+                        <label class="switch-row">
+                            <input type="checkbox" id="debug-toggle" />
+                            <span>Debug mode</span>
+                        </label>
+                        <p class="muted">
+                            For testing. Teams that start while it is on get a
+                            1-minute hide and a question every minute, and every
+                            phone shows its GPS and connection details.
+                        </p>
+                        <div class="admin-field">
+                            <label for="discord-url">Discord invite link</label>
+                            <input type="url" id="discord-url" class="admin-input wide"
+                                   placeholder="https://discord.gg/..." autocomplete="off" />
+                            <button type="button" id="discord-save" class="admin-btn">Save</button>
+                        </div>
+                        <p class="muted">
+                            Once saved, every player gets a &ldquo;Join the
+                            Discord call&rdquo; button.
+                        </p>
+                    </section>
+
+                    <section class="admin-section">
+                        <h3>To-do before game day</h3>
+                        <ul id="todo-list" class="todo-list"></ul>
+                    </section>
+                </div>
+            </section>
+
+            <section id="view-map" class="view" role="tabpanel">
+                <div id="map-modal-dialog-container-leaflet">
+                    <div id="map"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Every question this team has asked, with the hider's answer. -->
+        <div id="history-modal" class="modal" hidden>
+            <div class="modal-card" role="dialog" aria-modal="true" aria-label="Questions so far">
+                <header class="modal-head">
+                    <h2>Questions so far</h2>
+                    <button type="button" id="history-close" class="modal-close">
+                        &times;
+                    </button>
+                </header>
+                <div id="history-list" class="history-list"></div>
+            </div>
+        </div>
+
+        <!-- Stalker's QR scanner. The camera only runs while this is open. -->
+        <div id="scan-modal" class="modal" hidden>
+            <div class="modal-card scan-card" role="dialog" aria-modal="true"
+                 aria-label="Scan a hider's code">
+                <header class="modal-head">
+                    <h2>Catch your hider</h2>
+                    <button type="button" id="scan-close" class="modal-close">
+                        &times;
+                    </button>
+                </header>
+                <div class="scan-stage">
+                    <video id="scan-video" playsinline muted></video>
+                    <div class="scan-reticle" aria-hidden="true"></div>
+                </div>
+                <p id="scan-status" class="scan-status">Point the camera at your hider's code.</p>
+                <p id="scan-error" class="auth-error"></p>
+                <!-- Fallback for browsers that won't hand over a live camera:
+                     take one photo and decode that instead. -->
+                <label id="scan-fallback" class="scan-fallback" hidden>
+                    <span>Camera unavailable — take a photo of the code</span>
+                    <input type="file" accept="image/*" capture="environment" />
+                </label>
+            </div>
+        </div>
+
+        <script
+            src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            crossorigin=""
+        ></script>
+        <script
+            src="https://unpkg.com/leaflet-contextmenu@1.4.0/dist/leaflet.contextmenu.js"
+            crossorigin=""
+        ></script>
+        <script
+            src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"
+            crossorigin=""
+        ></script>
+        <!-- Polygon maths for the Hints filter (same approach as the
+             JetLagHideAndSeek elimination overlay). -->
+        <script
+            src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"
+            crossorigin=""
+        ></script>
+        <!-- The hider's QR code, and the stalker's decoder for it. -->
+        <script
+            src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"
+            crossorigin=""
+        ></script>
+        <script
+            src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"
+            crossorigin=""
+        ></script>
+        <!-- Campus places (generated from locations/geojson by
+             tools/build-locations.mjs). Must load before map.js. -->
+        <script src="locations.js"></script>
+        <script src="config.js"></script>
+        <script src="hints.js"></script>
+        <script src="map.js"></script>
+        <script src="cards.js"></script>
+        <script src="endgame.js"></script>
+        <script src="admin.js"></script>
+        <script src="app.js"></script>
+    </body>
+</html> 
