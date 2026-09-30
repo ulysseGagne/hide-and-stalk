@@ -392,6 +392,154 @@
         },
     });
 
+    // ---------------------------------------------------------------------
+    // Round 1, third pass: a rounder, balanced scribble (L13), a wilder
+    // STALK with even spacing (L14), SEEK crossed out (L15), the same-width
+    // block smaller and centred (L7.5), one app icon (L12.2).
+    // ---------------------------------------------------------------------
+
+    /** The new scribble, over a typeset box. */
+    const round = (svg, box, o = {}) => ink(svg, Ink.roundScribble(box.x + 2, box.y, box.w - 4, box.h, { ...o, weight: box.h * (o.weight ?? 0.2) }));
+
+    /** STALK at the top of the handwriting band: even gaps, a loose hand. */
+    const WILD = { sizes: [1.06, 0.94, 1.02, 0.95, 1.0], rises: [0.02, -0.02, 0.03, 0, 0.02] };
+    const wild = (svg, o = {}) => tucked(svg, { seed: "w1", size: 74, mess: 1.15, tilt: -4, ...WILD, spin: 5, overshoot: 0.05, ...o });
+
+    /** A plain stack whose SEEK is scribbled by `mark`, STALK below. */
+    function lockup(svg, mark, st, o = {}) {
+        const seek = stack(svg);
+        const m = mark(svg, seek);
+        const b = m.getBBox();
+        place(st(svg), { top: Math.max(b.y + b.height, seek.base) + (o.gap ?? 18), x: seek.x + seek.w * (o.at ?? 0.16) });
+    }
+
+    const S13 = { seed: "w13" };
+    Object.assign(LOCKUPS, {
+        "13.1"(svg) {
+            lockup(svg, (s, k) => round(s, k, { seed: "r131" }), (s) => wild(s, S13));
+        },
+        "13.2"(svg) {
+            lockup(svg, (s, k) => round(s, k, { seed: "r132", round: [0.7, 1] }), (s) => wild(s, S13));
+        },
+        "13.3"(svg) {
+            lockup(svg, (s, k) => round(s, k, { seed: "r133", round: [0.1, 0.9], fly: 0.45 }), (s) => wild(s, S13));
+        },
+        "13.4"(svg) {
+            lockup(svg, (s, k) => round(s, k, { seed: "r134", passes: 5, weight: 0.18 }), (s) => wild(s, S13));
+        },
+        "13.5"(svg) {
+            lockup(svg, (s, k) => round(s, k, { seed: "r135", passes: 3, fly: 0.6, weight: 0.23 }), (s) => wild(s, S13));
+        },
+        "13.6"(svg) {
+            lockup(svg, (s, k) => round(s, k, { seed: "r136", slant: 0.07, round: [0.3, 0.8] }), (s) => wild(s, S13));
+        },
+    });
+
+    /** An earlier STALK (plain scrawl), pushed up the band, gaps made even. */
+    const loose = (svg, o) => ink(svg, Ink.write("STALK", { x: 0, y: 0, size: o.size ?? 78, weight: (o.size ?? 78) * 0.18, seed: o.seed, mess: o.mess ?? 1.15, tilt: o.tilt ?? -3, spacing: 0.15, even: true }).svg);
+    const R14 = (s, k) => round(s, k, { seed: "r131" });
+    Object.assign(LOCKUPS, {
+        // L1.3's STALK, wilder, even gaps.
+        "14.1"(svg) {
+            lockup(svg, R14, (s) => loose(s, { seed: "L8s" }));
+        },
+        // L3.1's STALK, under SEEK instead of over it.
+        "14.2"(svg) {
+            lockup(svg, R14, (s) => loose(s, { seed: "L3s", size: 84, tilt: -8, mess: 1.1 }), { at: 0.06 });
+        },
+        // Tucked, letters close to one size.
+        "14.3"(svg) {
+            lockup(svg, R14, (s) => wild(s, { seed: "w143" }));
+        },
+        // Tucked, the K pulled in against the L.
+        "14.4"(svg) {
+            lockup(svg, R14, (s) => wild(s, { seed: "w144", sizes: [1.06, 0.94, 1.02, 0.96, 0.9], rises: [0.02, -0.02, 0.03, 0, 0.16], gap: 0 }));
+        },
+        // Tucked, top of the band: more lean, overshooting strokes.
+        "14.5"(svg) {
+            lockup(svg, R14, (s) => wild(s, { seed: "w145", mess: 1.3, spin: 9, overshoot: 0.1, tilt: -6 }));
+        },
+        // L2.2 again: HIDE / & SEEK, a big tucked STALK, sizes closer, K tucked in.
+        "14.6"(svg) {
+            const s = 96;
+            word(svg, "HIDE", M, 126, s);
+            const amp = word(svg, "&", M, 222, s);
+            const seek = word(svg, "SEEK", amp.x + amp.w + 18, 222, s);
+            const m = round(svg, { ...seek, w: seek.w - 12 }, { seed: "r146", passes: 3 });
+            const b = m.getBBox();
+            place(wild(svg, { seed: "w146", size: 104, sizes: [1.1, 0.92, 1.02, 0.96, 0.92], rises: [0.02, -0.03, 0.03, 0, 0.14], gap: 0 }), { top: b.y + b.height + 18, x: M, width: canvasW - EDGE * 2 - 20 });
+        },
+    });
+
+    // SEEK crossed out rather than scribbled.
+    const cross = (style, seed) => (s, k) => ink(s, Ink.crossOut(k.x, k.y, k.w, k.h, { style, seed, weight: k.h * 0.19 }));
+    Object.assign(LOCKUPS, {
+        "15.1"(svg) {
+            lockup(svg, cross("one", "c151"), (s) => wild(s, { seed: "w143" }));
+        },
+        "15.2"(svg) {
+            lockup(svg, cross("two", "c152"), (s) => wild(s, { seed: "w143" }));
+        },
+        "15.3"(svg) {
+            lockup(svg, cross("back", "c153"), (s) => wild(s, { seed: "w143" }));
+        },
+        "15.4"(svg) {
+            lockup(svg, cross("x", "c154"), (s) => wild(s, { seed: "w143" }));
+        },
+    });
+
+    Object.assign(LOCKUPS, {
+        // L7.3 centred and smaller: the same-width block with room around it.
+        "7.5"(svg, W) {
+            const TW = W - M * 2 - 90;
+            const x = (W - TW) / 2;
+            const hide = fitWord(svg, "HIDE", x, 56, TW);
+            const and = fitWord(svg, "AND", x, hide.base + 14, TW);
+            const seek = fitWord(svg, "SEEK", x, and.base + 14, TW);
+            const m = round(svg, seek, { seed: "r175" });
+            const b = m.getBBox();
+            place(wild(svg, { seed: "w143", size: 60 }), { top: b.y + b.height + 16, cx: W / 2 });
+        },
+        // The same, keeping L7.1's scribble.
+        "7.6"(svg, W) {
+            const TW = W - M * 2 - 90;
+            const x = (W - TW) / 2;
+            const hide = fitWord(svg, "HIDE", x, 56, TW);
+            const and = fitWord(svg, "AND", x, hide.base + 14, TW);
+            const seek = fitWord(svg, "SEEK", x, and.base + 14, TW);
+            const m = scribble(svg, seek, { seed: "p71" });
+            const b = m.getBBox();
+            place(wild(svg, { seed: "w143", size: 60 }), { top: b.y + b.height + 16, cx: W / 2 });
+        },
+        // The app icon: H & in type, S by hand at the H's height, even gaps.
+        "12.2"(svg, W) {
+            const sz = 220;
+            const ix = (W - sz) / 2;
+            const iy = 80;
+            const sq = document.createElementNS(NS, "rect");
+            Object.entries({ x: ix, y: iy, width: sz, height: sz, fill: "#fff", stroke: "#000", "stroke-width": 3 }).forEach(([k, v]) => sq.setAttribute(k, v));
+            svg.appendChild(sq);
+            const size = sz * 0.44;
+            const h = word(svg, "H", 0, 0, size);
+            const amp = word(svg, "&", 0, 0, size);
+            const g = ink(svg, Ink.write("S", { x: 0, y: 0, size, weight: size * 0.2, seed: "ic122", tilt: -6, mess: 1 }).svg);
+            const gb = g.getBBox();
+            const k = h.h / gb.height;
+            const gap = size * 0.08;
+            const total = h.w + gap + amp.w + gap + gb.width * k;
+            let cx = ix + (sz - total) / 2;
+            const base = iy + sz / 2 + h.h / 2;
+            const put = (w) => {
+                w.el.setAttribute("x", cx - (w.x - Number(w.el.getAttribute("x"))));
+                w.el.setAttribute("y", base);
+                cx += w.w + gap;
+            };
+            put(h);
+            put(amp);
+            g.setAttribute("transform", `translate(${cx - gb.x * k} ${base - h.h - gb.y * k}) scale(${k})`);
+        },
+    });
+
     window.Logo = {
         count: Object.keys(LOCKUPS).length,
         draw(svg, v, W, H, o = {}) {

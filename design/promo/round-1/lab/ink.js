@@ -323,7 +323,8 @@
             const scale = size * (1 + (r() - 0.5) * 0.22 * mess);
             const [w, strokes] = g;
             items.push({ x: cursor, scale, w, strokes, ch });
-            cursor += w * scale + spacing * r.range(0.6, 1.4);
+            const gap = r.range(0.6, 1.4);
+            cursor += w * scale + spacing * (o.even ? 1 : gap);
         }
         const natural = Math.max(0, cursor - spacing);
 
@@ -541,6 +542,120 @@
     }
 
     /**
+     * The SEEK scribble, second pass. The turns are evenly spaced across the
+     * word (no gap in the middle), every leg leans the same way, and each
+     * turn has its own roundness: mostly a round hairpin like a real hand
+     * scribble, now and then a sharp one. Tops and bottoms reach past the
+     * letters by uneven amounts, and a few fly well out. The pressure swells
+     * in every leg and eases at every turn, the same at the end as at the
+     * start.
+     */
+    function roundScribble(x, y, w, h, o = {}) {
+        const r = rng(o.seed ?? "round");
+        const n = noise1(r);
+        const legs = (o.passes ?? 4) * 2;
+        // How far past the letters it reaches, above and below.
+        const overTop = h * (o.overTop ?? 0.05);
+        const overBottom = h * (o.overBottom ?? 0.3);
+        const slant = w * (o.slant ?? 0.035);
+        const [rLo, rHi] = o.round ?? [0.35, 0.85];
+        const x0 = x;
+        const x1 = x + w * 1.03;
+        const pts = [[x0, y + h * r.range(0.55, 0.75)]];
+        for (let i = 0; i < legs; i++) {
+            const up = i % 2 === 0;
+            const t = (i + 0.5) / legs;
+            let reach = r.range(0.45, 1.15);
+            if (r() < (o.fly ?? 0.3)) reach += r.range(0.7, 1.4);
+            pts.push([x0 + (x1 - x0) * t + r.range(-0.015, 0.015) * w + (up ? slant : -slant), up ? y - overTop * reach : y + h + overBottom * reach]);
+        }
+        pts.push([x1 + slant, y + h * r.range(0.25, 0.45)]);
+        // Round each turn: the pen slows down, swings round, heads back.
+        const ctrl = [pts[0]];
+        const turnAt = [];
+        for (let i = 1; i < pts.length; i++) {
+            const [ax, ay] = pts[i - 1];
+            const [bx, by] = pts[i];
+            const len = Math.hypot(bx - ax, by - ay) || 1;
+            const bow = r.range(-0.05, 0.05) * len;
+            ctrl.push([(ax + bx) / 2 - ((by - ay) / len) * bow, (ay + by) / 2 + ((bx - ax) / len) * bow]);
+            if (i === pts.length - 1) {
+                ctrl.push([bx, by]);
+                break;
+            }
+            const [cx, cy] = pts[i + 1];
+            const k = r.range(rLo, rHi);
+            const d = k * Math.min(len, Math.hypot(cx - bx, cy - by)) * (o.turn ?? 0.13);
+            const ua = [(ax - bx) / len, (ay - by) / len];
+            const lb = Math.hypot(cx - bx, cy - by) || 1;
+            const ub = [(cx - bx) / lb, (cy - by) / lb];
+            const mid = [bx + ((ua[0] + ub[0]) / 2) * d, by + ((ua[1] + ub[1]) / 2) * d];
+            ctrl.push([bx + ua[0] * d, by + ua[1] * d]);
+            turnAt.push(ctrl.length);
+            ctrl.push([bx + (mid[0] - bx) * (1 - k) * 0.7, by + (mid[1] - by) * (1 - k) * 0.7]);
+            ctrl.push([bx + ub[0] * d, by + ub[1] * d]);
+        }
+        const STEPS = 10;
+        const path = spline(ctrl, STEPS);
+        let total = 0;
+        const acc = path.map((p, i) => (i ? (total += Math.hypot(p[0] - path[i - 1][0], p[1] - path[i - 1][1])) : 0));
+        const marks = [0, ...turnAt.map((c) => acc[Math.min(acc.length - 1, c * STEPS)] / total), 1];
+        const legP = marks.map(() => r.range(0.86, 1.08));
+        const pressure = (u) => {
+            let i = 0;
+            while (i < marks.length - 2 && u > marks[i + 1]) i++;
+            const f = (u - marks[i]) / (marks[i + 1] - marks[i] || 1);
+            return (0.3 + 0.7 * Math.sin(Math.PI * Math.max(0, Math.min(1, f))) ** 0.7) * legP[i] * (0.92 + 0.1 * n(u * 9 + 2));
+        };
+        return pressed(path, pressure, { size: o.weight ?? h * 0.2, color: o.color, thinning: o.thinning ?? 0.62, wobbleAmp: o.wobbleAmp ?? 1.4, taperStart: o.taper ?? 16, taperEnd: o.taper ?? 16 });
+    }
+
+    /**
+     * Crossing a word out rather than scribbling it: a few fast, nearly
+     * flat pressure strokes. `style`: "one" (one heavy line), "two" (two
+     * lines), "back" (right, back left, right again, like crossing out in
+     * a hurry), "x" (one cross over the whole word).
+     */
+    function crossOut(x, y, w, h, o = {}) {
+        const r = rng(o.seed ?? "cross");
+        const weight = o.weight ?? h * 0.2;
+        const line = (x1, y1, x2, y2, taperS = 10, taperE = 22) => {
+            const pts = [];
+            const sag = r.range(-0.05, 0.05) * h;
+            for (let i = 0; i <= 12; i++) {
+                const t = i / 12;
+                pts.push([x1 + (x2 - x1) * t, y1 + (y2 - y1) * t + Math.sin(Math.PI * t) * sag]);
+            }
+            const lean = r.range(0.85, 1.05);
+            return pressed(spline(pts, 4), (u) => (0.55 + 0.45 * Math.sin(Math.PI * Math.min(1, u * 1.15)) ** 0.5) * lean, { size: weight, color: o.color, thinning: 0.55, wobbleAmp: 1.2, taperStart: taperS, taperEnd: taperE });
+        };
+        const L = x - w * 0.02;
+        const R = x + w * 1.04;
+        const mid = y + h * 0.52;
+        const rise = -h * (o.rise ?? 0.1);
+        switch (o.style ?? "one") {
+            case "two":
+                return line(L, mid - h * 0.14 - rise / 2, R, mid - h * 0.14 + rise / 2) + line(L + w * 0.03, mid + h * 0.2 - rise / 2 + r.range(-2, 2), R - w * 0.02, mid + h * 0.2 + rise / 2);
+            case "back": {
+                // One continuous stroke: across, back, across again.
+                const pts = [
+                    [L, mid - h * 0.1 - rise / 2],
+                    [R, mid - h * 0.16 + rise / 2],
+                    [R - w * 0.02, mid + h * 0.02],
+                    [L + w * 0.05, mid + h * 0.12 - rise / 2],
+                    [L + w * 0.04, mid + h * 0.24],
+                    [R + w * 0.02, mid + h * 0.18 + rise / 2],
+                ];
+                return pressed(spline(pts, 14), (u) => 0.6 + 0.4 * Math.abs(Math.sin(Math.PI * u * 3)) ** 0.5, { size: weight * 0.85, color: o.color, thinning: 0.55, wobbleAmp: 1.4, taperStart: 10, taperEnd: 22 });
+            }
+            case "x":
+                return line(L + w * 0.04, y - h * 0.18, R - w * 0.04, y + h * 1.15) + line(L + w * 0.02, y + h * 1.12, R - w * 0.02, y - h * 0.12);
+            default:
+                return line(L, mid - rise / 2, R, mid + rise / 2);
+        }
+    }
+
+    /**
      * Handwriting with the letters tucked into each other ("emboîtées"):
      * every letter its own size and height on the line, each one slid as
      * close to the ones before as it can go without touching them.
@@ -565,7 +680,7 @@
             const sy = size * k;
             const sx = sy * r.range(0.9, 1.06);
             const rise = (rises[i] ?? r.range(-1, 1) * (o.riseVar ?? 0.08)) * size;
-            const lean = ((n(i * 1.7 + 5) * 7 * mess + (o.slant ?? 0)) * Math.PI) / 180;
+            const lean = ((n(i * 1.7 + 5) * 7 * mess + r.range(-1, 1) * (o.spin ?? 0) + (o.slant ?? 0)) * Math.PI) / 180;
             const jitter = 0.035 + 0.05 * mess;
             const local = strokes.map((st) => {
                 const pts = st.map(([px, py]) => {
@@ -573,6 +688,16 @@
                     const ly = (py - 1 + r.range(-jitter, jitter)) * sy - rise;
                     return rot([lx, ly], lean);
                 });
+                // A fast hand overshoots where a stroke starts and ends.
+                if (o.overshoot) {
+                    const ext = (a, b) => {
+                        const l = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1;
+                        const e = r.range(0, o.overshoot) * size;
+                        return [a[0] + ((a[0] - b[0]) / l) * e, a[1] + ((a[1] - b[1]) / l) * e];
+                    };
+                    pts[0] = ext(pts[0], pts[1]);
+                    pts[pts.length - 1] = ext(pts[pts.length - 1], pts[pts.length - 2]);
+                }
                 return densify(pts.length > 2 ? spline(pts, 8) : pts, 3);
             });
             glyphs.push({ local, w: gw * sx, weight: weight * r.range(0.9, 1.12) });
@@ -1077,6 +1202,8 @@
         messFor,
         scribbleOut,
         pencilScribble,
+        roundScribble,
+        crossOut,
         pressed,
         colorIn,
         handArrow,
