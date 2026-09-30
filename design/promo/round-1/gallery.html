@@ -88,17 +88,9 @@ body.only-kept .tile:not(.kept) { display: none; }
 
 <script>
 const SETS = [
-    { id: "logo2", title: "Logo", intro: "Closing in. L16 puts together what you picked: the stack flush left, L7.6's scribble (weight evened out), and the STALK of L14.2 or L14.4, at three sizes and places each. L13.1, L14.2, L14.4 and L7.6 stay for reference; the rest are gone.", wide: false, items: [
-        ["L16.1", "L14.2's STALK, as in L14.2"],
-        ["L16.2", "L14.2's STALK, big, flush left"],
-        ["L16.3", "L14.2's STALK, small, tucked under the scribble's right half"],
-        ["L16.4", "L14.4's STALK, as in L14.4"],
-        ["L16.5", "L14.4's STALK, big, flush left"],
-        ["L16.6", "L14.4's STALK, small, tucked under the scribble's right half"],
-        ["L13.1", "Reference: STALK moved up closer"],
-        ["L14.2", "Reference"],
-        ["L14.4", "Reference"],
-        ["L7.6", "Reference: the scribble, centred block"],
+    { id: "logo2", title: "Logo", intro: "Only your scribble now (L7.6's), on the stack flush left. Two rows, one per STALK; the three columns are the same three sizes and places in both rows, so you can compare straight down.", wide: false, items: [], groups: [
+        ["STALK from L14.2", [["L16.1", "As in L14.2"], ["L16.2", "Big, from the left edge"], ["L16.3", "Small, under the scribble's right half"]]],
+        ["STALK from L14.4", [["L16.4", "As in L14.4"], ["L16.5", "Big, from the left edge"], ["L16.6", "Small, under the scribble's right half"]]],
     ]},
     { id: "hand", title: "Handwriting", intro: "All app handwriting sits between 30% and 70% of the way from H1 (calm) to H3 (unhinged). Small or important text leans calm; big text, or text that's just for the vibe, leans wild.", wide: true, items: [
         ["H04", "The band: score 0 to 1, with H1 and H3 for reference"],
@@ -154,9 +146,15 @@ function tile(code, cap, file) {
 
 let html = "";
 for (const s of SETS) {
-    html += `<section id="${s.id}"><h2>${s.title}</h2><p>${s.intro}</p><div class="grid${s.wide ? " wide" : ""}">`;
-    for (const [code, cap] of s.items) html += tile(code, cap, `shots/${code}.png`);
-    html += `</div></section>`;
+    html += `<section id="${s.id}"><h2>${s.title}</h2><p>${s.intro}</p>`;
+    // Grouped sets: one labelled row per group.
+    for (const [title, items] of s.groups ?? [["", s.items]]) {
+        if (title) html += `<h3>${title}</h3>`;
+        html += `<div class="grid${s.wide ? " wide" : ""}">`;
+        for (const [code, cap] of items) html += tile(code, cap, `shots/${code}.png`);
+        html += `</div>`;
+    }
+    html += `</section>`;
 }
 html += `<section id="styles"><h2>App</h2><p>One direction, rebuilt from all your notes.<br>• One line weight (3 px), nothing rounded.<br>• White button = not yet, black = press this now, drawn red = pressed or picked.<br>• At most two red marks per screen; the header's STALK turns black when anything else is red.<br>• Anything not useful at that moment is gone.<br>This pass: the header is HIDE &amp; plus the logo's STALK (no SEEK, no scribble); something red always points at what to do next; shorter copy everywhere; Questions so far is a tab; the old rules screens (09–11) are gone.</p></section>`;
 for (const [k, name, intro] of STYLES) {
