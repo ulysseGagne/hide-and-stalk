@@ -405,5 +405,14 @@
         return draw(root, LIST.length);
     }
 
-    window.Maps2 = { list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, drawHint, SKIN_LIST };
+    /** Just the name tags in one style, on white: one stalker and YOU. */
+    function tagsOnly(root, t) {
+        TAGS = TAG_LIST["abcdef".indexOf(t)];
+        root.style.background = "#fff";
+        PENDING = [];
+        for (const [x, y, n, me] of [[60, 80, "CAMILLE", false], [150, 150, "YOU", true]]) tag(x, y, n, me);
+        root.innerHTML = `<div style="position:absolute;inset:0">${flushTags()}</div>`;
+    }
+
+    window.Maps2 = { tagsOnly, list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, drawHint, SKIN_LIST };
 })();
