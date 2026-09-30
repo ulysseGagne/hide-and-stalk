@@ -125,8 +125,9 @@
         datablackdotsall: { look: "blackdots", key: 4, roads: "all" },
     };
     // The map under every screen that doesn't name its own skin (the hints
-    // layer, the questions): S20, picked, with the key's rules.
-    const MAP_SKIN = "datablackdotskey4";
+    // layer, the questions): S20, decided: every road and path OpenStreetMap
+    // has, with the key's areas.
+    const MAP_SKIN = "datablackdotsall";
 
     // The app around the map (direction E): header with MAP open, the question box.
     function chrome(box) {
