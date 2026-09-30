@@ -185,26 +185,32 @@ const MAPPART = [
     ["answer", "4 · Answering it (hider)", "The same questions on the hider's map, plus the hider between questions: one string, to the closest stalker.", [[9, "Nearest café"], [12, "East or west"], [14, "Within 200 m"], [15, "Between questions: the closest stalker"]]],
 ];
 const SKINS = [
-    ["Xerox: pure black and white, light", "the one from the round before"],
-    ["Xerox, darker", "the cut is lower, so more of the map turns black"],
-    ["Figure-ground: buildings black", ""],
-    ["Toner grain: buildings speckled", ""],
-    ["Hatched buildings", ""],
-    ["Dotted buildings", ""],
-    ["Traced: outlines only, thin", ""],
-    ["Traced, bold", ""],
-    ["Traced, sketchy", "the lines wobble like a copy of a copy"],
-    ["Streets black", "the roads read like a transit map"],
-    ["Grey", "breaks the no-grey rule, for comparison"],
-    ["Plain OpenStreetMap", "breaks the palette, for comparison"],
+    [15, "Redrawn: roads black, shapes outlined", "every road, bike path and walkway black; buildings, woods and grass white with a black outline; no text at all"],
+    [16, "Redrawn, thinner roads", "only the road itself is black, not its grey edge"],
+    [17, "Redrawn, dotted buildings", "S15 with S06's dots inside the buildings"],
+    [18, "Redrawn, dotted green", "S15 with dots inside woods and grass instead"],
+    [19, "Redrawn, bold outlines", "S17 with outlines twice as thick"],
+    [13, "Xerox, in between", "between S01 and S02"],
+    [14, "Toner grain, brighter", "S04 with less black and more of the map white; the blacks stay black"],
+    [1, "Xerox: pure black and white, light", "too light"],
+    [2, "Xerox, darker", ""],
+    [3, "Figure-ground: buildings black", ""],
+    [4, "Toner grain: buildings speckled", ""],
+    [5, "Hatched buildings", ""],
+    [6, "Dotted buildings", "your favourite so far"],
+    [7, "Traced: outlines only, thin", ""],
+    [8, "Traced, bold", ""],
+    [9, "Traced, sketchy", ""],
+    [10, "Streets black", ""],
+    [11, "Grey", "breaks the no-grey rule, for comparison"],
 ];
 const ZOOM = { a: "whole campus", b: "a few blocks", c: "a few buildings" };
 html += `<section id="maps"><h2>Map</h2><p>Everything you need is computer-drawn: the map, the hints layer, the players (name tags, you in black) and the question. Red is the one thing to look at right now. The map opens on the whole campus, with no auto-zoom.</p></section>`;
-html += `<section id="maps-skins"><h2>1 · Skins: how the tiles are printed</h2><p>Twelve treatments of the same OpenStreetMap tiles, each at three zoom levels: a, the whole campus (what the map opens on); b, a few blocks; c, a few buildings, zoomed in on YOU. No hints and nothing waiting. Pick one skin by its number.</p>`;
-SKINS.forEach(([name, note], i) => {
-    const n = String(i + 1).padStart(2, "0");
+html += `<section id="maps-skins"><h2>1 · Skins: how the tiles are printed</h2><p>Each at three zoom levels: a, the whole campus (what the map opens on); b, a few blocks; c, a few buildings, zoomed in on YOU. New on top: S15–S19 are the map redrawn, not filtered. Every pixel of the OpenStreetMap tiles is sorted by its colour (road, building, green, ground, label), labels are removed and filled in from what's around them, and the result is printed in black and white. S12 is gone.</p>`;
+SKINS.forEach(([num, name, note]) => {
+    const n = String(num).padStart(2, "0");
     html += `<h3>S${n} · ${name}${note ? ` <span class="note">(${note})</span>` : ""}</h3><div class="grid">`;
-    for (const z of "abc") html += tile(`S${n}${z}`, ZOOM[z], `shots/S${i + 1}${z}.png`);
+    for (const z of "abc") html += tile(`S${n}${z}`, ZOOM[z], `shots/S${num}${z}.png`);
     html += `</div>`;
 });
 html += `</section>`;

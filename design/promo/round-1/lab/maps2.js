@@ -48,6 +48,10 @@
         <filter id="m2w" color-interpolation-filters="sRGB">${LUMA}${EDGE.replace("/>", ' result="e"/>')}<feMorphology operator="erode" radius="0.5" result="e2"/>
             <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="e2" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/></filter>
         ${patterned("m2h", HATCH, 7)}${patterned("m2d", DOTS, 6)}
+        <filter id="m2m" color-interpolation-filters="sRGB">${LUMA}${ct(0.75)}</filter>
+        <filter id="m2N" color-interpolation-filters="sRGB">${LUMA.replace("/>", ' result="l"/>')}
+            <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="1" seed="3"/><feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1" result="n"/>
+            <feComposite in="l" in2="n" operator="arithmetic" k2="1" k3="0.34" k4="-0.17"/>${ct(0.8)}</filter>
         <filter id="m2n" color-interpolation-filters="sRGB">${LUMA.replace("/>", ' result="l"/>')}
             <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="1" seed="3"/><feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1" result="n"/>
             <feComposite in="l" in2="n" operator="arithmetic" k2="1" k3="0.45" k4="-0.225"/>${ct(0.845)}</filter>
@@ -57,12 +61,21 @@
     const SKINS = {
         xerox: "url(#m2x)", xeroxdark: "url(#m2k)", ground: "url(#m2g)", grain: "url(#m2n)", hatch: "url(#m2h)", dots: "url(#m2d)",
         lines: "url(#m2l)", linesbold: "url(#m2L)", sketch: "url(#m2w)", streets: "url(#m2s)", grey: "grayscale(1) contrast(1.3)", osm: "none",
+        xeroxmid: "url(#m2m)", grainlight: "url(#m2N)",
+    };
+    // Redrawn skins (retrace.js): the tiles sorted pixel by pixel, not filtered.
+    const RETRACE = {
+        traced: { roads: "all" },
+        tracedthin: { roads: "fill" },
+        traceddots: { roads: "all", dots: ["building"] },
+        tracedgreen: { roads: "all", dots: ["green"] },
+        tracedbold: { roads: "all", outline: 2, dots: ["building"] },
     };
 
     // The app around the map (direction E): header with MAP open, the question box.
     function chrome(box) {
         const hdr = `<div style="position:absolute;left:0;top:0;width:${W}px;height:${HEAD}px;background:#fff;border-bottom:3px solid #000;box-sizing:border-box;z-index:60">
-            <div style="position:absolute;left:12px;top:17px;font:700 17px ${FONT};white-space:pre">HIDE &amp; SEEK</div>
+            <div style="position:absolute;left:12px;top:17px;font:700 17px ${FONT};white-space:pre">HIDE &amp;</div>
             <div style="position:absolute;right:98px;top:12px;width:40px;height:40px;box-sizing:border-box;border:3px solid #000;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#000" stroke-width="2.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
             <div style="position:absolute;right:12px;top:12px;height:40px;box-sizing:border-box;border:3px solid #000;padding:0 10px;font:700 14px/34px ${FONT}">Log out</div>
             <div style="position:absolute;left:12px;bottom:-3px;display:flex;gap:6px;align-items:flex-end">
@@ -71,9 +84,11 @@
         // The header's red steps back to black: the map always has its one red thing.
         const cx = document.createElement("canvas").getContext("2d");
         cx.font = `700 17px ${FONT}`;
-        const sx = 12 + cx.measureText("HIDE & ").width;
-        const skw = cx.measureText("SEEK").width;
-        const hdrInk = Ink.scribbleOut(sx, 20, skw, 13, { seed: "m2h", passes: 3, weight: 3, color: "#000" }) + Ink.write("STALK", { x: sx + skw + 6, y: 38, size: 19, weight: 3.8, seed: "hdrs", tilt: -7, spacing: 0.1, mess: 0.45, color: "#000" }).svg;
+        // HIDE & plus the logo's STALK, as in the app's header.
+        const sx = 12 + cx.measureText("HIDE &").width + 7;
+        const st = Ink.tuck("STALK", { size: 74, seed: "w13", mess: 1.15, tilt: -4, sizes: [1.06, 0.94, 1.02, 0.95, 1.0], rises: [0.02, -0.02, 0.03, 0, 0.02], spin: 5, overshoot: 0.05, color: "#000" });
+        const sk = 25 / st.box.h;
+        const hdrInk = `<g transform="translate(${sx - st.box.x * sk} ${40 - (st.box.y + st.box.h) * sk}) scale(${sk})">${st.svg}</g>`;
         const q = `<div style="position:absolute;left:12px;top:${HEAD + 12}px;width:${W - 24}px;box-sizing:border-box;background:#fff;border:3px solid #000;padding:12px 14px;z-index:55;font-family:${FONT}">
             <div style="display:flex;justify-content:space-between;font:700 13px ${FONT};letter-spacing:.12em"><span>${box.kicker}</span><span>${box.clock ?? ""}</span></div>
             ${box.text ? `<div style="margin-top:6px;font:700 20px/1.2 ${FONT};letter-spacing:-.01em">${box.text}</div>` : ""}
@@ -120,8 +135,9 @@
         root.appendChild(mapEl);
         const map = L.map(mapEl, { zoomControl: false, attributionControl: true, zoomSnap: 0, fadeAnimation: false, zoomAnimation: false });
         map.attributionControl.setPrefix(false);
-        const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
-        mapEl.querySelector(".leaflet-tile-pane").style.filter = SKINS[o.skin ?? "xerox"];
+        const redraw = RETRACE[o.skin];
+        const tiles = (redraw ? Retrace.layer(redraw) : L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" })).addTo(map);
+        mapEl.querySelector(".leaflet-tile-pane").style.filter = redraw ? "none" : SKINS[o.skin ?? "xerox"];
         // The whole campus, below the question box: no auto-zoom.
         const ring = Campus.layers.campus.ring;
         map.fitBounds(L.latLngBounds(ring.map(([lng, lat]) => [lat, lng])), { paddingTopLeft: [10, 118], paddingBottomRight: [10, 16], animate: false });
@@ -266,7 +282,7 @@
     ];
 
     // Skin samples: every skin at three zoom levels (a: whole campus, b: a few buildings, c: close up).
-    const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm"];
+    const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold"];
     const ZOOMS = { a: null, b: 16.6, c: 18.2 };
     function drawSkin(root, code) {
         const [, n, z] = /^(\d+)([abc])$/.exec(code);

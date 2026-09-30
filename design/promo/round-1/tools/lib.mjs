@@ -64,7 +64,7 @@ export async function context(b, opts = {}) {
                 return route.abort();
             }
         }
-        route.fulfill({ path: file, contentType: "image/png" });
+        route.fulfill({ path: file, contentType: "image/png", headers: { "access-control-allow-origin": "*" } });
     });
     await ctx.route("https://overpass*/**", (route) => route.abort());
     return ctx;
