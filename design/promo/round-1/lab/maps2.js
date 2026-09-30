@@ -78,6 +78,8 @@
         dotsclean: { roads: "outline", outlines: ["building"], dots: ["building"] },
         streetsclean: { roads: "fill", outlines: [] },
         grainclean: { mode: "tone", pixel: true, road: "pixel" },
+        // S04 exactly (the same grain filter), on tiles with the text taken out.
+        grainnotext: { mode: "clean", filter: "url(#m2n)" },
     };
 
     // The app around the map (direction E): header with MAP open, the question box.
@@ -211,8 +213,10 @@
         const map = L.map(mapEl, { zoomControl: false, attributionControl: true, zoomSnap: 0, fadeAnimation: false, zoomAnimation: false });
         map.attributionControl.setPrefix(false);
         const redraw = RETRACE[o.skin];
+        // Under a filter, tiles are stretched a pixel so no seam shows between them.
+        if (redraw?.filter) mapEl.insertAdjacentHTML("beforeend", "<style>.leaflet-tile{width:257px!important;height:257px!important}</style>");
         const tiles = (redraw ? Retrace.layer(redraw) : L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" })).addTo(map);
-        mapEl.querySelector(".leaflet-tile-pane").style.filter = redraw ? "none" : SKINS[o.skin ?? "xerox"];
+        mapEl.querySelector(".leaflet-tile-pane").style.filter = redraw ? redraw.filter ?? "none" : SKINS[o.skin ?? "xerox"];
         // The whole campus, below the question box: no auto-zoom.
         const ring = Campus.layers.campus.ring;
         map.fitBounds(L.latLngBounds(ring.map(([lng, lat]) => [lat, lng])), { paddingTopLeft: [10, 118], paddingBottomRight: [10, 16], animate: false });
@@ -359,7 +363,7 @@
     ];
 
     // Skin samples: every skin at three zoom levels (a: whole campus, b: a few buildings, c: close up).
-    const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold", "dotsonly", "tone", "tonelight", "tonegrey", "dotsclean", "streetsclean", "grainclean"];
+    const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold", "dotsonly", "tone", "tonelight", "tonegrey", "dotsclean", "streetsclean", "grainclean", "grainnotext"];
     const ZOOMS = { a: null, b: 16.6, c: 18.2 };
     function drawSkin(root, code) {
         const [, n, z] = /^(\d+)([abc])$/.exec(code);

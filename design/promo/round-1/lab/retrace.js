@@ -88,7 +88,8 @@
         }
         // Labels and their halos: grow the label mask, then fill it in from
         // the classes around it, one ring at a time.
-        const grow = 2;
+        // Clean mode keeps colours, so it needs a wider cut around each label.
+        const grow = o.mode === "clean" ? 3 : 2;
         let unknown = new Uint8Array(N * N);
         for (let i = 0; i < N * N; i++) if (cls[i] === LABEL) unknown[i] = 1;
         for (let k = 0; k < grow; k++) {
@@ -102,8 +103,11 @@
             unknown = next;
         }
         // Halo pixels that are clearly a shape keep it; white halo pixels don't.
-        for (let i = 0; i < N * N; i++) if (unknown[i] && (cls[i] === CLASS.building || cls[i] === CLASS.green)) unknown[i] = 0;
+        if (o.mode !== "clean") for (let i = 0; i < N * N; i++) if (unknown[i] && (cls[i] === CLASS.building || cls[i] === CLASS.green)) unknown[i] = 0;
         const wasLabel = unknown.slice();
+        // The pixels' own colours, carried along as labels get filled in ("clean" mode).
+        const col = new Uint32Array(N * N);
+        for (let i = 0; i < N * N; i++) col[i] = (d[i * 4] << 16) | (d[i * 4 + 1] << 8) | d[i * 4 + 2];
         for (let pass = 0; pass < 40; pass++) {
             let left = 0;
             const fill = [];
@@ -113,31 +117,46 @@
                     if (!unknown[i]) continue;
                     // The most common known class among the 8 neighbours; roads win ties.
                     const votes = [0, 0, 0, 0, 0];
+                    const donor = [0, 0, 0, 0, 0];
                     for (let dy = -1; dy <= 1; dy++)
                         for (let dx = -1; dx <= 1; dx++) {
                             const xx = x + dx;
                             const yy = y + dy;
                             if (xx < 0 || yy < 0 || xx >= N || yy >= N) continue;
                             const j = yy * N + xx;
-                            if (!unknown[j]) votes[cls[j]]++;
+                            if (!unknown[j]) {
+                                votes[cls[j]]++;
+                                donor[cls[j]] = col[j];
+                            }
                         }
                     let bc = 0;
                     let bv = 0;
                     for (let c = 1; c <= 4; c++) if (votes[c] > bv || (votes[c] === bv && c === CLASS.road && bv > 0)) (bc = c), (bv = votes[c]);
-                    if (bv) fill.push([i, bc]);
+                    if (bv) fill.push([i, bc, donor[bc]]);
                     else left++;
                 }
-            for (const [i, c] of fill) {
+            for (const [i, c, k] of fill) {
                 cls[i] = c;
+                col[i] = k;
                 unknown[i] = 0;
             }
             if (!left) break;
         }
         for (let i = 0; i < N * N; i++) if (cls[i] === LABEL) cls[i] = CLASS.ground;
-        despeckle(cls, N, o.speck ?? { 1: 9, 2: 40, 3: 160 });
+        despeckle(cls, N, o.speck ?? { 1: 9, 2: 40, 3: 160 }, col);
 
         const out = new ImageData(N, N);
         const o4 = out.data;
+        if (o.mode === "clean") {
+            // The tile as it was, minus its text and icons: a filter prints it after.
+            for (let i = 0; i < N * N; i++) {
+                o4[i * 4] = col[i] >>> 16;
+                o4[i * 4 + 1] = (col[i] >>> 8) & 255;
+                o4[i * 4 + 2] = col[i] & 255;
+                o4[i * 4 + 3] = 255;
+            }
+            return out;
+        }
         if (o.mode === "tone") {
             // No lines anywhere: every shape is a field of grain, darker for
             // darker map colours; roads are coloured in.
@@ -208,7 +227,7 @@
      * or green smaller than `min[class]` pixels, not touching the tile's
      * edge (it may carry on in the next tile), takes the class around it.
      */
-    function despeckle(cls, N, min) {
+    function despeckle(cls, N, min, col) {
         const seen = new Int32Array(N * N).fill(-1);
         const stack = [];
         for (let s = 0; s < N * N; s++) {
@@ -218,6 +237,7 @@
             const members = [];
             let edge = false;
             const around = [0, 0, 0, 0, 0];
+            const aroundCol = [0, 0, 0, 0, 0];
             stack.push(s);
             seen[s] = s;
             while (stack.length) {
@@ -233,14 +253,20 @@
                             seen[j] = s;
                             stack.push(j);
                         }
-                    } else around[cls[j]]++;
+                    } else {
+                        around[cls[j]]++;
+                        aroundCol[cls[j]] = col ? col[j] : 0;
+                    }
                 }
             }
             if (!cap || edge || members.length >= cap) continue;
             let bc = CLASS.ground;
             let bv = -1;
             for (let k = 1; k <= 4; k++) if (around[k] > bv) (bc = k), (bv = around[k]);
-            for (const i of members) cls[i] = bc;
+            for (const i of members) {
+                cls[i] = bc;
+                if (col) col[i] = aroundCol[bc];
+            }
         }
     }
 
