@@ -590,7 +590,8 @@
      * spec: a look ("outline" | "solid" | "grain" | "dots" | "key" | "blackroads"
      * | "blackdots" | "figure"), or { look, drop, prune, key }: drop "detail"
      * (pavements, crossings, parking aisles, driveways) or "paths" (every
-     * path), prune dead ends, or key: 3 to show only what the key keeps
+     * path), prune dead ends, or key: 3 (or 4) to show only what the key keeps
+     * (with key: 4, roads: "all" draws every road and path whatever the key says)
      * (pedestrian streets as streets; woods, grass and car parks in black and
      * white, the same in every look).
      */
@@ -624,7 +625,9 @@
             list = list.filter((f) => f.kind !== "road").concat(roads);
         }
         if (o.key === 3) list = list.filter((f) => KEY3_ON.has(keyOf3(f)));
-        if (o.key === 4) list = list.filter((f) => (f.kind === "road" ? lineOn(f) : !!areaOf4(f)));
+        // roads: "all" keeps every road and path OpenStreetMap has (tunnels are
+        // never drawn); otherwise only what the key and the editor turned on.
+        if (o.key === 4) list = list.filter((f) => (f.kind === "road" ? o.roads === "all" || lineOn(f) : !!areaOf4(f)));
         const of = (kind, fn = () => true) => list.filter((f) => f.kind === kind && fn(f));
         // By the key, a pedestrian street is a street: a side street's width.
         const rankOf = (f) => (o.key && f.hw === "pedestrian" ? "minor" : f.rank);

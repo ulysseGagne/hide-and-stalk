@@ -16,7 +16,7 @@ work it out (`key` < `info` < `aside` < `vibe`; bigger text leans wilder).
 `write()` and `note()` use it whenever no explicit `mess` is given.
 
 Gallery (all images, with Keep + notes): https://claude.ai/artifact/He5TXmq1iCTb7XiyVuGYRk
-(the up-to-date one, version 6, Sept 30, on the ugagne08 login). Color Map
+(the up-to-date one, version 7, Sept 30, on the ugagne08 login). Color Map
 Editor: https://claude.ai/artifact/Y6kmr77pJjn1JwPpUyfp9n (same login). Older
 galleries: https://claude.ai/artifact/6LoZgEJAQMzaR6Z6AintGP (version 14, the
 other login) and https://claude.ai/artifact/LdRszjr2qKJ9ckB1ZLNKgJ (this
@@ -51,8 +51,12 @@ republish after every change they might want to see.
   E14's MORE arrow like E19's, E18 asks for the nearest place to sit (card
   `photo_seat`, the bench from `app/bench.svg`), E19/E20 ticks on their
   circles, E21's tick sharp (`Ink.sharpCheck`). NOAH_B is NOAH everywhere.
-- **Map.** S20 (streets and buildings black, woods in close dots, grass in
-  sparse ones, the stadium and track hatched) with the key's fourth pass:
+- **Map.** One look (streets and buildings black, woods in close dots, grass
+  in sparse ones, the stadium and track hatched), two sets of roads, side by
+  side in the gallery for the user to pick: S20 (skin code 31.23) draws every
+  road and path OpenStreetMap has (tunnels never); S21 (31.22) only what the
+  key and the editor keep. The map screens are drawn on S21 (`MAP_SKIN` in
+  `lab/maps2.js`). The key, fourth pass:
   - `KEY4`, `kindOf4`, `lineOn`, `areaOf4` in `lab/osmdraw.js`: streets on;
     footpaths and bike paths on unless small and messy (`sortPaths`: small
     loops, loose pieces under 60 m, knots in a 40 m box, stubs under 20 m);
@@ -66,8 +70,9 @@ republish after every change they might want to see.
     true|false } }`). To bake them: ArtifactData `list` of `overrides` with
     `out_dir`, then `node tools/bake-key-overrides.mjs <that dir>/overrides`,
     which writes `lab/data/key-overrides.json`; re-render the key map, S20
-    and the N screens, and republish. Baked last at 5:37 AM (1,013 ways);
-    the user was still editing.
+    and the N screens, and republish. Baked: the user's final choices (1,626
+    ways; every street, 558 of 723 footpaths, 140 of 149 bike paths, 400 of
+    415 aisles and driveways, all 8 tracks, no service roads, no sidewalks).
   - Next, asked but not started: smoothing over every path and road (roads
     only a little; footpaths and bike paths are the worst). Paths are already
     simplified and corner-cut (`smoothLine`).
@@ -125,7 +130,7 @@ node tools/shoot-lab.mjs welcome 53 53 375 812 # W53, the home screen: the file 
 node tools/shoot-lab.mjs board 29 29 375 480 B  # B29, the board (the source of truth)
 node tools/shoot-lab.mjs welcome 54.1,54.1a,54.1b,54.1c,54.1d,54.1e,55.1,55.2 0 375 812 W  # W54.1 and its variations, W55 in two steps
 node tools/shoot-lab.mjs osmkey 4 4 375 640 K  # K04, the key's legend, fourth pass
-node tools/shoot-lab.mjs skin 30.03a,31.22a,31.22b 0 375 812 S  # the key map, and S20 with the key (whole campus, a few blocks)
+node tools/shoot-lab.mjs skin 30.03a,31.23a,31.23b,31.22a,31.22b 0 375 812 S  # the key map; S20 (every road) and S21 (the editor's), whole campus and a few blocks
 node tools/shoot-lab.mjs hint 2a,3a 0 375 812 N  # the hints layer on S20
 node tools/shoot-lab.mjs map2 08,08a,08.2a,10.1,11,13,15 0 375 812 N  # the question screens on S20
 node tools/shoot-app.mjs e                     # E-01 ... E-24b (needs app/bench.svg: node tools/export-bench.mjs)

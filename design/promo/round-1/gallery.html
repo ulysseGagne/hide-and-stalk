@@ -157,28 +157,33 @@ for (const [k, name, intro] of STYLES) {
     html += `</div></section>`;
 }
 const MAPPART = [
-    ["hints", "2 · The hints layer", "On S20 now. YOU is Yn on every map, and every white tag is one outlined shape, its pointer included. First the map: how the ruled-out part looks (the tags are the same in both). Then the players, as two separate choices. The app knows only your own heading: each phone reads its compass, but the positions it sends carry no direction. So everyone else gets a tag, and YOU gets a mark that points the way your phone faces. Tags always sit over the red; where two overlap, the lower one is on top, and YOU is always on top of everything.", [], [
+    ["hints", "2 · The hints layer", "On S21, only the roads you kept (they follow whichever of S20 and S21 you pick). YOU is Yn on every map, and every white tag is one outlined shape, its pointer included. First the map: how the ruled-out part looks (the tags are the same in both). Then the players, as two separate choices. The app knows only your own heading: each phone reads its compass, but the positions it sends carry no direction. So everyone else gets a tag, and YOU gets a mark that points the way your phone faces. Tags always sit over the red; where two overlap, the lower one is on top, and YOU is always on top of everything.", [], [
         ["The map", 0, [["N2a", "N02: ruled out inverted to black, no line"], ["N3a", "N03: inverted, hand-drawn red line"]]],
         ["Everyone else", 7, [["Ta", "a: the outline runs round the pointer too"], ["Tc", "c: black, as it was"], ["Tf", "f: a black square on the spot, the name beside it"], ["Tg", "g: a red pin on the spot, the name above it"], ["Tk", "k: a's shape, its edge drawn by hand in red"], ["Tk.1", "k with the name written by hand too"], ["Tl", "l: a's shape, coloured in red"]]],
         ["You", 5, [["Yg", "g: the beam, the classic"], ["Yh", "h: the arrow, bigger"], ["Yj", "j: the beam as an outline"], ["Ym", "m: the arrow, its edge drawn by hand in red"], ["Yn", "n: the arrow, coloured in red"]]],
     ]],
-    ["questions", "3 · A question on the map", "Your notes, done. On S20, drawn with the key's rules. YOU is Yn, pointing the way its phone faces, over everything; every white tag has its pointer outlined; NOAH has lost the _B. N08.1, N08.2 and N10 are gone. Every pin and circle sits on its exact spot. N11's WEST and EAST are bolder; N15 has no subtitle.", [[8, "Nearest café: map pins, as they were"], ["N08a", "The map pins filled in, the dot a hole you see the map through"], ["N08.2a", "A café tapped, with the filled pins: its name and building. The real app already opens this box on a tap."], ["N10.1", "Closer than me: no pin, the circle alone in red, the greenhouses in a white tag"], [11, "East or west: WEST and EAST bolder"], [13, "Within 200 m"], [15, "Hider, between questions: one string to the closest stalker; no subtitle"]]],
+    ["questions", "3 · A question on the map", "Your notes, done. On S21, only the roads you kept. YOU is Yn, pointing the way its phone faces, over everything; every white tag has its pointer outlined; NOAH has lost the _B. N08.1, N08.2 and N10 are gone. Every pin and circle sits on its exact spot. N11's WEST and EAST are bolder; N15 has no subtitle.", [[8, "Nearest café: map pins, as they were"], ["N08a", "The map pins filled in, the dot a hole you see the map through"], ["N08.2a", "A café tapped, with the filled pins: its name and building. The real app already opens this box on a tap."], ["N10.1", "Closer than me: no pin, the circle alone in red, the greenhouses in a white tag"], [11, "East or west: WEST and EAST bolder"], [13, "Within 200 m"], [15, "Hider, between questions: one string to the closest stalker; no subtitle"]]],
 ];
-// The map drawn from OpenStreetMap's data (lab/osmdraw.js): S20, picked, with
-// the key's rules. [code, file, what it is]
+// The map drawn from OpenStreetMap's data (lab/osmdraw.js), one look, two sets
+// of roads: S20 every road and path OSM has, S21 only what's kept in the Color
+// Map Editor. Same areas in both. Each pair on its own row. [code, file, what]
 const SKINS = [
-    ["S20", "S31.22b", "A few blocks around YOU: streets and buildings solid black, woods in close dots, grass in sparse ones, the stadium and track hatched"],
-    ["S20a", "S31.22a", "The whole campus, as the map opens"],
+    [["S20", "S31.23b", "Every road and path OpenStreetMap has, a few blocks around YOU"], ["S21", "S31.22b", "Only the roads and paths you kept in the editor, the same few blocks"]],
+    [["S20a", "S31.23a", "Every road and path, the whole campus as the map opens"], ["S21a", "S31.22a", "Only what you kept, the whole campus"]],
 ];
 html += `<section id="maps"><h2>Map</h2><p>Everything you need is computer-drawn: the map, the hints layer, the players and the question. Red is the one thing to look at right now. The map opens on the whole campus, with no auto-zoom.</p></section>`;
 html += `<section id="maps-skins"><h2>1 · Skins: how the map is printed</h2><p>The map is drawn from OpenStreetMap's own data now, not recoloured from its picture tiles: every building, street, path and green is a real shape, so every edge is as straight or as smooth as it was mapped. First the key, which decides what's on the map; then S20, the look you picked, drawn with only what the key keeps. S11 and S14 are gone.</p>`;
 // The key: every kind of line and area in its own colour, to name what should stay, go or change.
-html += `<h3>The key: what's on the map</h3><p class="note">Fourth pass, from your notes. Car parks are off again; parking aisles and driveways are back. The Rouge et Or stadium and the running track are back, as their own colour. Footpaths: only the small and messy is left behind now (small loops, loose bits, knots, stubs; most under 20 m). What follows a street or a bike path, or leaves the campus, stays. Dark is on, light is left behind. To decide road by road, use the <a href="https://claude.ai/artifact/Y6kmr77pJjn1JwPpUyfp9n">Color Map Editor</a>: tap any line to switch it, or a whole group at once. Your choices so far are baked in (1,013 ways, as of 5:37 AM): this map, S20 and every map screen below are drawn with them. Tell me when you've done more and I'll bake again.</p>` + grid(4);
+html += `<h3>The key: what's on the map</h3><p class="note">Fourth pass, from your notes. Car parks are off again; parking aisles and driveways are back. The Rouge et Or stadium and the running track are back, as their own colour. Footpaths: only the small and messy is left behind now (small loops, loose bits, knots, stubs; most under 20 m). What follows a street or a bike path, or leaves the campus, stays. Dark is on, light is left behind. To decide road by road, use the <a href="https://claude.ai/artifact/Y6kmr77pJjn1JwPpUyfp9n">Color Map Editor</a>: tap any line to switch it, or a whole group at once. Your final choices are baked in (1,626 ways): this map, S21 and every map screen below are drawn with them.</p>` + grid(4);
 html += tile("K4", "The colours, and what's behind each", "shots/K04.png");
 html += tile("K4a", "The whole campus", "shots/S30.03a.png");
-html += `</div><h3>The skin: S20</h3>` + grid(4);
-for (const [code, file, what] of SKINS) html += tile(code, what, `shots/${file}.png`);
-html += `</div></section>`;
+html += `</div><h3>S20 or S21: every road, or only yours</h3><p class="note">The same look (streets and buildings solid black, woods in close dots, grass in sparse ones, the stadium and track hatched) and the same areas. S20 draws every road and path OpenStreetMap has: service roads, sidewalks, crossings, aisles, everything (tunnels never). S21 draws only what you kept in the editor. S20 beside S21, then S20a beside S21a.</p>`;
+for (const pair of SKINS) {
+    html += grid(4);
+    for (const [code, file, what] of pair) html += tile(code, what, `shots/${file}.png`);
+    html += `</div>`;
+}
+html += `</section>`;
 for (const [id, title, intro, items, groups] of MAPPART) {
     html += `<section id="maps-${id}"><h2>${title}</h2><p>${intro}</p>`;
     for (const [head, cols, list] of groups ?? [["", 0, items]]) {
