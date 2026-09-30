@@ -736,7 +736,9 @@
             for (const st of g.strokes) {
                 const pts = st.map((p) => rot(p, tilt));
                 all.push(...pts);
-                svg += pathEl(pts, { size: g.weight, color: o.color ?? RED, thinning: 0.2 + 0.12 * mess, taperEnd: r() * 4, wobbleAmp: 0.6 });
+                // o.blunt: stroke ends stay round instead of tapering to a point.
+                const te = r() * 4;
+                svg += pathEl(pts, { size: g.weight, color: o.color ?? RED, thinning: o.blunt ? 0.08 : 0.2 + 0.12 * mess, taperEnd: o.blunt ? 0 : te, wobbleAmp: 0.6 });
             }
         }
         const pad = weight / 2;

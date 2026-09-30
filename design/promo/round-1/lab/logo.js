@@ -218,7 +218,7 @@
     const scrawl = (svg, o = {}) => ink(svg, Ink.write(o.text ?? "STALK", { x: 0, y: 0, size: o.size ?? 84, weight: (o.size ?? 84) * 0.18, seed: o.seed ?? "L1s", mess: o.mess ?? 0.45, tilt: o.tilt ?? -2, spacing: 0.12 }).svg);
 
     /** STALK with its letters tucked together, drawn at the origin, to be placed. */
-    const tucked = (svg, o = {}) => ink(svg, Ink.tuck(o.text ?? "STALK", { size: o.size ?? 84, seed: o.seed ?? "t1", sizeVar: o.sizeVar, riseVar: o.riseVar, sizes: o.sizes, rises: o.rises, tilt: o.tilt ?? -3, mess: o.mess ?? 0.45, gap: o.gap, spin: o.spin, overshoot: o.overshoot, weights: o.weights, pulls: o.pulls, glyphs: o.glyphs }).svg);
+    const tucked = (svg, o = {}) => ink(svg, Ink.tuck(o.text ?? "STALK", { size: o.size ?? 84, seed: o.seed ?? "t1", sizeVar: o.sizeVar, riseVar: o.riseVar, sizes: o.sizes, rises: o.rises, tilt: o.tilt ?? -3, mess: o.mess ?? 0.45, gap: o.gap, spin: o.spin, overshoot: o.overshoot, weights: o.weights, pulls: o.pulls, glyphs: o.glyphs, blunt: o.blunt }).svg);
 
     /** One typeset word at whatever size makes it exactly `width` wide. */
     function fitWord(svg, text, x, top, width, o = {}) {
@@ -595,6 +595,12 @@
         },
         "16.6b"(svg) {
             lockup(svg, P76light, S144({ size: 64, glyphs: { K: K_LONG } }), { at: 0.34, gap: 2 });
+        },
+        // L16.6b, adjusted: a heavier T; S, T and A each nudged right so nothing
+        // touches; the K raised and pulled left to sit inside the L's foot; no
+        // pointed stroke ends.
+        "16.6c"(svg) {
+            lockup(svg, P76light, S144({ size: 64, glyphs: { K: K_LONG }, weights: [1, 1.35, 1, 1, 1], pulls: [-0.06, -0.2, -0.05, -0.06, 0.1], rises: [0.14, -0.02, 0.03, 0, 0.24], blunt: true }), { at: 0.34, gap: 2 });
         },
     });
 
