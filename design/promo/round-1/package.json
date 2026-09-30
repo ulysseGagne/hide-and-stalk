@@ -1,0 +1,15 @@
+{
+  "name": "hns-round-1",
+  "private": true,
+  "type": "module",
+  "scripts": { "shoot": "node tools/shoot.mjs" },
+  "dependencies": {
+    "perfect-freehand": "1.2.2",
+    "leaflet": "1.9.4",
+    "leaflet-contextmenu": "1.4.0",
+    "leaflet.heat": "0.2.0",
+    "@turf/turf": "7.2.0",
+    "qrcode-generator": "1.4.4",
+    "jsqr": "1.4.0"
+  }
+}

@@ -1,0 +1,4 @@
+html, body { margin: 0; background: #fff; }
+body { font-family: Arimo, "Helvetica Neue", Helvetica, Arial, sans-serif; color: #000; }
+#root { position: relative; overflow: hidden; background: #fff; }
+svg { display: block; }

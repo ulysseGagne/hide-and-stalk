@@ -1,0 +1,31 @@
+/* ==========================================================================
+   Direction C — "Swiss". The boring layer turned all the way up: enormous
+   Helvetica, heavy rules, flush left, everything uppercase. The red goes big
+   and blunt to match.
+   ========================================================================== */
+#site-header { border-bottom-width: 6px; }
+.view-tab { border-width: 4px; }
+.status-card { border-bottom-width: 8px; padding-bottom: 22px; }
+.role-badge { font-size: 13px; padding: 5px 10px; }
+.status-title { font-size: 40px; line-height: .92; text-transform: uppercase; letter-spacing: -.035em; margin-top: 12px; }
+.timer-value { font-size: 128px; letter-spacing: -.07em; line-height: .86; }
+.timer-label { font-size: 13px; }
+.status-text { font-size: 18px; font-weight: 700; line-height: 1.25; letter-spacing: -.01em; }
+.big-btn, #auth-submit { height: 76px; background: var(--ink); color: var(--paper); text-shadow: none; font-size: 24px; border-width: 0; }
+.card { border: none; border-top: 6px solid var(--ink); padding: 12px 0 18px; }
+.card-prompt { font-size: 24px; line-height: 1.08; letter-spacing: -.025em; padding-right: 44px; }
+.card-row { gap: 20px; }
+.sent-card, .question-card { border: none; border-top: 6px solid var(--ink); padding: 14px 0; }
+.sent-prompt, .question-prompt { font-size: 26px; line-height: 1.05; letter-spacing: -.025em; }
+.rules-card summary { border-bottom-width: 6px; font-size: 15px; }
+.rules-goal { font-size: 22px; line-height: 1.12; letter-spacing: -.02em; }
+.rules-list li { border-bottom-width: 2px; font-size: 16px; font-weight: 700; }
+.rules-list li strong { text-transform: uppercase; }
+.answer-option { border-width: 3px; font-size: 18px; }
+.discord-btn { border-width: 3px; font-size: 16px; text-transform: uppercase; }
+.modal-head { border-bottom-width: 6px; }
+.modal-head h2 { font-size: 32px; text-transform: uppercase; letter-spacing: -.03em; }
+.history-row { border-bottom-width: 3px; }
+.history-prompt { font-size: 20px; letter-spacing: -.02em; }
+#auth-form input { border-bottom-width: 6px; font-size: 24px; }
+.auth-switch { border-width: 4px; }

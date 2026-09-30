@@ -1,0 +1,6 @@
+/* ==========================================================================
+   Direction D — "Night". A, inverted: white on black, same red. For the
+   screenshots it reads as the dark board; in the sun it's the weaker choice.
+   ========================================================================== */
+:root { --paper: #000; --ink: #fff; }
+.hider-qr-figure { border-color: #fff; }

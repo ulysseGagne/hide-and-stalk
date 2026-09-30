@@ -1,0 +1,525 @@
+/* global L */
+
+// The map, redrawn from the OpenStreetMap tiles pixel by pixel (skins S15-S19).
+//
+// Only the raster tiles are reachable, so instead of filtering them as a
+// whole, every pixel is sorted by its colour in the OSM palette:
+//
+//   road      white road fill, the coloured road types, footways, cycleways,
+//             and the grey road edges            -> black
+//   building  the building fill and its edge      -> white, black outline
+//   green     forest, grass, parks, pitches, water -> white, black outline
+//   ground    campus, residential, parking, land   -> white
+//   label     anything dark or off-palette (text, icons) -> removed: filled
+//             in from what's around it, so a road runs through where its
+//             name was
+//
+// Then the result is printed in pure black and white. Each tile is done on
+// its own canvas as it loads, so this works on a phone too.
+
+(function () {
+    const PALETTE = {
+        road: ["ffffff", "fefefe", "fdfdfd", "f7fabf", "fcd6a4", "f9b29c", "e892a2", "fa8072", "0000ff", "dddde8"],
+        building: ["d9d0c9", "c4b6ab", "c1b3a8", "c6bbb1", "c2b5a9", "c9bdb4", "d5cbc4", "cfc4bb", "bca9a0"],
+        green: ["add19e", "cdebb0", "88e0be", "aacbaf", "c8facc", "dffce2", "bddaa6", "c9e1bf", "aedfa3", "aed1a0", "b5e3b5", "aad3df", "c8d7ab", "def6c0", "88b78e", "96b788", "a7a89a", "8dc56c", "9cc38a"],
+        ground: ["ffffe5", "fffeed", "fffeec", "ffffed", "f2efe9", "e0dfdf", "eeeeee", "ededed", "f2dad9", "e4e3e3", "dedddd", "dcdcdb", "dad9d9", "c7c7b4", "f3f3f3", "fafafa", "ebdbe8", "e6e4e0", "f5e9c6", "ffc0cb"],
+    };
+    const CLASS = { road: 1, building: 2, green: 3, ground: 4 };
+    const LABEL = 5;
+    const PAL = Object.entries(PALETTE).flatMap(([k, list]) => list.map((h) => [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16), CLASS[k]]));
+
+    // One colour -> one class; cached, since a tile has few distinct colours.
+    const cache = new Map();
+    const lumOf = new Map();
+    function classify(r, g, b) {
+        const key = (r << 16) | (g << 8) | b;
+        let c = cache.get(key);
+        if (c !== undefined) return c;
+        let best = 1e9;
+        let bl = -1;
+        c = LABEL;
+        for (const [pr, pg, pb, k] of PAL) {
+            const d = (r - pr) ** 2 + (g - pg) ** 2 + (b - pb) ** 2;
+            if (d < best) {
+                best = d;
+                c = k;
+                bl = (0.3 * pr + 0.59 * pg + 0.11 * pb) / 255;
+            }
+        }
+        lumOf.set(key, best > 22 ** 2 ? -1 : bl);
+        const luma = (0.3 * r + 0.59 * g + 0.11 * b) / 255;
+        const neutral = Math.max(r, g, b) - Math.min(r, g, b) < 10;
+        if (best > 22 ** 2) {
+            // Not a map colour: a road edge (neutral grey), or a label.
+            if (neutral && luma > 0.6 && luma < 0.86) c = CLASS.road;
+            else c = LABEL;
+        }
+        cache.set(key, c);
+        return c;
+    }
+
+    /**
+     * o.roads: "all" (fill and edges) | "fill" (edges white: thinner roads)
+     * o.dots:  which classes get a light dot screen: [] | ["building"] | ["green"]
+     * o.outline: outline weight in tile pixels (1 or 2)
+     */
+    // The grey each class is printed as, where a pixel's own colour is lost (labels).
+    const CLASS_LUMA = { 1: 1, 2: 0.83, 3: 0.84, 4: 0.99 };
+    // Grain that lines up across tiles: a hash of the pixel's place in the world.
+    const grain = (gx, gy) => {
+        let h = Math.imul(gx | 0, 374761393) + Math.imul(gy | 0, 668265263);
+        h = Math.imul(h ^ (h >>> 13), 1274126177);
+        return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+    };
+
+    function process(src, o, coords) {
+        const N = 256;
+        const d = src.data;
+        const cls = new Uint8Array(N * N);
+        for (let i = 0; i < N * N; i++) {
+            let c = classify(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]);
+            if ((o.roads === "fill" || o.thin) && c === CLASS.road) {
+                const r = d[i * 4];
+                const g = d[i * 4 + 1];
+                const b = d[i * 4 + 2];
+                if (Math.max(r, g, b) - Math.min(r, g, b) < 10 && r < 235) c = CLASS.ground;
+            }
+            cls[i] = c;
+        }
+        // Labels and their halos: grow the label mask, then fill it in from
+        // the classes around it, one ring at a time.
+        // Clean mode keeps colours, so it needs a wider cut around each label.
+        const grow = 3;
+        let unknown = new Uint8Array(N * N);
+        for (let i = 0; i < N * N; i++) if (cls[i] === LABEL) unknown[i] = 1;
+        for (let k = 0; k < grow; k++) {
+            const next = unknown.slice();
+            for (let y = 0; y < N; y++)
+                for (let x = 0; x < N; x++) {
+                    const i = y * N + x;
+                    if (unknown[i]) continue;
+                    if ((x > 0 && unknown[i - 1]) || (x < N - 1 && unknown[i + 1]) || (y > 0 && unknown[i - N]) || (y < N - 1 && unknown[i + N])) next[i] = 1;
+                }
+            unknown = next;
+        }
+        // Halo pixels that are clearly a shape keep it; white halo pixels don't.
+        if (o.mode !== "clean") for (let i = 0; i < N * N; i++) if (unknown[i] && (cls[i] === CLASS.building || cls[i] === CLASS.green)) unknown[i] = 0;
+        const wasLabel = unknown.slice();
+        // The pixels' own colours, carried along as labels get filled in ("clean" mode).
+        const col = new Uint32Array(N * N);
+        for (let i = 0; i < N * N; i++) col[i] = (d[i * 4] << 16) | (d[i * 4 + 1] << 8) | d[i * 4 + 2];
+        for (let pass = 0; pass < 40; pass++) {
+            let left = 0;
+            const fill = [];
+            for (let y = 0; y < N; y++)
+                for (let x = 0; x < N; x++) {
+                    const i = y * N + x;
+                    if (!unknown[i]) continue;
+                    // The most common known class among the 8 neighbours; roads win ties.
+                    const votes = [0, 0, 0, 0, 0];
+                    const donor = [0, 0, 0, 0, 0];
+                    for (let dy = -1; dy <= 1; dy++)
+                        for (let dx = -1; dx <= 1; dx++) {
+                            const xx = x + dx;
+                            const yy = y + dy;
+                            if (xx < 0 || yy < 0 || xx >= N || yy >= N) continue;
+                            const j = yy * N + xx;
+                            if (!unknown[j]) {
+                                votes[cls[j]]++;
+                                donor[cls[j]] = col[j];
+                            }
+                        }
+                    let bc = 0;
+                    let bv = 0;
+                    for (let c = 1; c <= 4; c++) if (votes[c] > bv || (votes[c] === bv && c === CLASS.road && bv > 0)) (bc = c), (bv = votes[c]);
+                    if (bv) fill.push([i, bc, donor[bc]]);
+                    else left++;
+                }
+            for (const [i, c, k] of fill) {
+                cls[i] = c;
+                col[i] = k;
+                unknown[i] = 0;
+            }
+            if (!left) break;
+        }
+        for (let i = 0; i < N * N; i++) if (cls[i] === LABEL) cls[i] = CLASS.ground;
+        // Traced maps seen from far (tiles below zoom 17): drop more crumbs.
+        const far = o.mode === "vector" && coords && coords.z <= 16;
+        despeckle(cls, N, o.speck ?? (far ? { 1: 30, 2: 40, 3: 200 } : { 1: 9, 2: 40, 3: 160 }), col);
+
+        const out = new ImageData(N, N);
+        const o4 = out.data;
+        if (o.mode === "vector") {
+            // Traced shapes instead of pixels (see drawVector).
+            const mask = (k) => {
+                const m = new Uint8Array(N * N);
+                for (let i = 0; i < N * N; i++) m[i] = cls[i] === k ? 1 : 0;
+                return m;
+            };
+            // From far, roads are only a few pixels wide: remove only the thinnest paths.
+            if (far && o.open) o = { ...o, open: 1 };
+            let road = mask(CLASS.road);
+            // o.open: drop roads thinner than about 2·open pixels (footpaths, parking aisles).
+            if (o.open) road = opening(road, N, o.open);
+            return {
+                vector: {
+                    roadFill: o.roads === "outline" ? null : contours(road, N, true, o.eps ?? 1.3),
+                    roadLine: o.roads === "outline" ? contours(road, N, false, o.eps ?? 1.3, (o.minLen ?? 0) * (far ? 2 : 1)) : null,
+                    shapes: (o.outlines ?? ["building", "green"]).flatMap((k) => contours(o.minArea ? dropSmall(mask(CLASS[k]), N, o.minArea) : mask(CLASS[k]), N, false, k === "green" ? (o.epsGreen ?? o.eps ?? 1.3) : (o.eps ?? 1.3), (o.minLen ?? 0) * (far ? 2 : 1))),
+                },
+            };
+        }
+        if (o.mode === "clean") {
+            // The tile as it was, minus its text and icons: a filter prints it after.
+            // o.greenAs: every green printed in the buildings' fill colour.
+            const GREEN_AS = { building: 0xd9d0c9, residential: 0xe0dfdf };
+            if (GREEN_AS[o.greenAs]) for (let i = 0; i < N * N; i++) if (cls[i] === CLASS.green) col[i] = GREEN_AS[o.greenAs];
+            // o.shift: each shade takes the next one's place. Buildings get the woods'
+            // colour, woods get the grass colour, grass goes white, roads get the grass colour.
+            if (o.shift) {
+                const WOOD = 0xadd19e;
+                const GRASS = 0xcdebb0;
+                for (let i = 0; i < N * N; i++) {
+                    const c = col[i];
+                    const l = (0.3 * (c >>> 16) + 0.59 * ((c >>> 8) & 255) + 0.11 * (c & 255)) / 255;
+                    if (cls[i] === CLASS.building) col[i] = WOOD;
+                    else if (cls[i] === CLASS.road) col[i] = GRASS;
+                    else if (cls[i] === CLASS.green) col[i] = l < 0.8 ? GRASS : 0xffffff;
+                }
+            }
+            // o.recolor: one flat colour per class (a class left out keeps its own colours).
+            if (o.recolor) for (let i = 0; i < N * N; i++) {
+                const k = Object.keys(CLASS).find((n) => CLASS[n] === cls[i]);
+                if (o.recolor[k] !== undefined) col[i] = o.recolor[k];
+            }
+            for (let i = 0; i < N * N; i++) {
+                o4[i * 4] = col[i] >>> 16;
+                o4[i * 4 + 1] = (col[i] >>> 8) & 255;
+                o4[i * 4 + 2] = col[i] & 255;
+                o4[i * 4 + 3] = 255;
+            }
+            return out;
+        }
+        if (o.mode === "tone") {
+            // No lines anywhere: every shape is a field of grain, darker for
+            // darker map colours; roads are coloured in.
+            const { lo = 0.45, hi = 0.97, gamma = 1 } = o;
+            const tone = (l) => Math.max(0, Math.min(1, (hi - l) / (hi - lo))) ** gamma;
+            for (let y = 0; y < N; y++)
+                for (let x = 0; x < N; x++) {
+                    const i = y * N + x;
+                    const c = cls[i];
+                    let dens;
+                    if (c === CLASS.road && o.road !== "pixel") dens = o.road ?? 1;
+                    else {
+                        const key = (d[i * 4] << 16) | (d[i * 4 + 1] << 8) | d[i * 4 + 2];
+                        let l = o.pixel ? (0.3 * d[i * 4] + 0.59 * d[i * 4 + 1] + 0.11 * d[i * 4 + 2]) / 255 : lumOf.get(key) ?? -1;
+                        // Flat: one grey per shape, so no edge is drawn around it.
+                        if (!o.pixel && c === CLASS.building) l = CLASS_LUMA[2];
+                        if (!o.pixel && (wasLabel[i] || l < 0 || cache.get(key) !== c)) l = CLASS_LUMA[c];
+                        if (o.pixel && wasLabel[i]) l = CLASS_LUMA[c];
+                        dens = tone(l);
+                    }
+                    const v = grain(coords.x * N + x, coords.y * N + y) < dens ? 0 : 255;
+                    o4[i * 4] = o4[i * 4 + 1] = o4[i * 4 + 2] = v;
+                    o4[i * 4 + 3] = 255;
+                }
+            return out;
+        }
+        // Print: roads black; shapes white with a black edge; dots if asked.
+        const lined = new Set((o.outlines ?? ["building", "green"]).map((k) => CLASS[k]));
+        const isShape = (c) => c === CLASS.building || c === CLASS.green;
+        const w = o.outline ?? 1;
+        const dotted = new Set((o.dots ?? []).map((k) => CLASS[k]));
+        const solid = new Set((o.solid ?? []).map((k) => CLASS[k]));
+        // Roads as one line down their middle: the road mask thinned to its skeleton.
+        let centre = null;
+        if (o.roads === "center") {
+            const m = new Uint8Array(N * N);
+            for (let i = 0; i < N * N; i++) m[i] = cls[i] === CLASS.road ? 1 : 0;
+            centre = skeleton(m, N);
+            if (o.lineW > 1) {
+                const g = centre.slice();
+                for (let y = 1; y < N - 1; y++)
+                    for (let x = 1; x < N - 1; x++) if (centre[y * N + x]) for (const j of [y * N + x + 1, (y + 1) * N + x, (y + 1) * N + x + 1]) g[j] = 1;
+                centre = g;
+            }
+        }
+        for (let y = 0; y < N; y++)
+            for (let x = 0; x < N; x++) {
+                const i = y * N + x;
+                const c = cls[i];
+                let black = c === CLASS.road;
+                if (centre) black = !!centre[i];
+                if (solid.has(c)) black = true;
+                // Roads drawn as their two edges only.
+                if (black && o.roads === "outline") {
+                    black = (x > 0 && cls[i - 1] !== c) || (x < N - 1 && cls[i + 1] !== c) || (y > 0 && cls[i - N] !== c) || (y < N - 1 && cls[i + N] !== c);
+                }
+                if (!black && isShape(c) && !lined.has(c)) {
+                    if (dotted.has(c) && x % 4 === 1 && y % 4 === 1) black = true;
+                } else if (!black && isShape(c)) {
+                    // An edge: some pixel within w is not this shape.
+                    edge: for (let dy = -w; dy <= w; dy++)
+                        for (let dx = -w; dx <= w; dx++) {
+                            if (Math.abs(dx) + Math.abs(dy) > w) continue;
+                            const xx = x + dx;
+                            const yy = y + dy;
+                            if (xx < 0 || yy < 0 || xx >= N || yy >= N) continue;
+                            const cc = cls[yy * N + xx];
+                            if (cc !== c && cc !== CLASS.road) {
+                                black = true;
+                                break edge;
+                            }
+                        }
+                    if (!black && dotted.has(c) && x % 4 === 1 && y % 4 === 1) black = true;
+                }
+                const v = black ? 0 : 255;
+                o4[i * 4] = o4[i * 4 + 1] = o4[i * 4 + 2] = v;
+                o4[i * 4 + 3] = 255;
+            }
+        return out;
+    }
+
+    /**
+     * The edges of a mask as polylines: pixel-edge boundaries linked into
+     * chains, then straightened (Douglas-Peucker), so a staircase of pixels
+     * becomes one straight line. `border`: include the tile's own edges
+     * (closed shapes, for filling) or leave them out (open lines, for drawing).
+     */
+    function contours(m, N, border, eps = 1.3, minLen = 0) {
+        const inside = (x, y) => (x < 0 || y < 0 || x >= N || y >= N ? (border ? 0 : -1) : m[y * N + x]);
+        const edges = [];
+        for (let y = 0; y < N; y++)
+            for (let x = 0; x < N; x++) {
+                if (!m[y * N + x]) continue;
+                // Inside on the left of each edge.
+                if (inside(x, y - 1) === 0) edges.push([x, y, x + 1, y]);
+                if (inside(x + 1, y) === 0) edges.push([x + 1, y, x + 1, y + 1]);
+                if (inside(x, y + 1) === 0) edges.push([x + 1, y + 1, x, y + 1]);
+                if (inside(x - 1, y) === 0) edges.push([x, y + 1, x, y]);
+            }
+        const key = (x, y) => y * (N + 2) + x;
+        const from = new Map();
+        const into = new Set();
+        edges.forEach((e, i) => {
+            const k = key(e[0], e[1]);
+            if (!from.has(k)) from.set(k, []);
+            from.get(k).push(i);
+            into.add(key(e[2], e[3]));
+        });
+        const used = new Uint8Array(edges.length);
+        const out = [];
+        const walk = (start) => {
+            const pts = [[edges[start][0], edges[start][1]]];
+            let i = start;
+            while (i !== undefined && !used[i]) {
+                used[i] = 1;
+                const e = edges[i];
+                pts.push([e[2], e[3]]);
+                i = (from.get(key(e[2], e[3])) ?? []).find((j) => !used[j]);
+            }
+            return pts;
+        };
+        // Open chains first (they start where nothing comes in), then loops.
+        edges.forEach((e, i) => {
+            if (!used[i] && !into.has(key(e[0], e[1]))) out.push(walk(i));
+        });
+        edges.forEach((e, i) => {
+            if (!used[i]) out.push(walk(i));
+        });
+        // Drop crumbs: chains shorter than minLen (in tile pixels) aren't drawn.
+        const length = (p) => p.reduce((a, q, i) => (i ? a + Math.hypot(q[0] - p[i - 1][0], q[1] - p[i - 1][1]) : 0), 0);
+        return out.filter((p) => p.length > 3 && length(p) >= minLen).map((p) => simplify(p, eps));
+    }
+    function simplify(pts, eps) {
+        if (pts.length < 3) return pts;
+        const [ax, ay] = pts[0];
+        const [bx, by] = pts[pts.length - 1];
+        const len = Math.hypot(bx - ax, by - ay);
+        let far = 0;
+        let fi = 0;
+        for (let i = 1; i < pts.length - 1; i++) {
+            const [px, py] = pts[i];
+            const d = len ? Math.abs((bx - ax) * (ay - py) - (ax - px) * (by - ay)) / len : Math.hypot(px - ax, py - ay);
+            if (d > far) (far = d), (fi = i);
+        }
+        if (far <= eps) return [pts[0], pts[pts.length - 1]];
+        return simplify(pts.slice(0, fi + 1), eps).slice(0, -1).concat(simplify(pts.slice(fi), eps));
+    }
+    /** Draw a traced tile at twice its size, so the lines stay crisp on a phone. */
+    function drawVector(tile, v, o) {
+        const S = 2;
+        tile.width = tile.height = 256 * S;
+        const ctx = tile.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, tile.width, tile.height);
+        ctx.scale(S, S);
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        const path = (chains, close) => {
+            const p = new Path2D();
+            for (const c of chains) {
+                p.moveTo(c[0][0], c[0][1]);
+                for (let i = 1; i < c.length; i++) p.lineTo(c[i][0], c[i][1]);
+                if (close) p.closePath();
+            }
+            return p;
+        };
+        ctx.fillStyle = "#000";
+        ctx.strokeStyle = "#000";
+        if (v.roadFill) ctx.fill(path(v.roadFill, true), "evenodd");
+        ctx.lineWidth = o.lineW ?? 1.1;
+        if (v.roadLine) ctx.stroke(path(v.roadLine, false));
+        ctx.stroke(path(v.shapes, false));
+    }
+
+    /** Erode then dilate (square, radius r): removes anything narrower than 2r+1. */
+    function opening(m, N, r) {
+        const pass = (src, keep) => {
+            const out = new Uint8Array(N * N);
+            for (let y = 0; y < N; y++)
+                for (let x = 0; x < N; x++) {
+                    let all = true;
+                    let any = false;
+                    for (let dy = -r; dy <= r; dy++)
+                        for (let dx = -r; dx <= r; dx++) {
+                            const xx = Math.min(N - 1, Math.max(0, x + dx));
+                            const yy = Math.min(N - 1, Math.max(0, y + dy));
+                            if (src[yy * N + xx]) any = true;
+                            else all = false;
+                        }
+                    out[y * N + x] = keep === "all" ? (all ? 1 : 0) : any ? 1 : 0;
+                }
+            return out;
+        };
+        return pass(pass(m, "all"), "any");
+    }
+    /** Remove patches smaller than minArea pixels (not touching the tile edge). */
+    function dropSmall(m, N, minArea) {
+        const seen = new Uint8Array(N * N);
+        for (let s0 = 0; s0 < N * N; s0++) {
+            if (!m[s0] || seen[s0]) continue;
+            const stack = [s0];
+            const members = [];
+            let edge = false;
+            seen[s0] = 1;
+            while (stack.length) {
+                const i = stack.pop();
+                members.push(i);
+                const x = i % N;
+                const y = (i - x) / N;
+                if (x === 0 || y === 0 || x === N - 1 || y === N - 1) edge = true;
+                for (const j of [x > 0 ? i - 1 : -1, x < N - 1 ? i + 1 : -1, y > 0 ? i - N : -1, y < N - 1 ? i + N : -1]) if (j >= 0 && m[j] && !seen[j]) (seen[j] = 1), stack.push(j);
+            }
+            if (!edge && members.length < minArea) for (const i of members) m[i] = 0;
+        }
+        return m;
+    }
+
+    /** Zhang-Suen thinning: a binary mask down to 1-pixel lines. */
+    function skeleton(m, N) {
+        const at = (x, y) => (x < 0 || y < 0 || x >= N || y >= N ? 0 : m[y * N + x]);
+        for (let iter = 0; iter < 30; iter++) {
+            let changed = false;
+            for (const step of [0, 1]) {
+                const del = [];
+                for (let y = 0; y < N; y++)
+                    for (let x = 0; x < N; x++) {
+                        if (!m[y * N + x]) continue;
+                        const p = [at(x, y - 1), at(x + 1, y - 1), at(x + 1, y), at(x + 1, y + 1), at(x, y + 1), at(x - 1, y + 1), at(x - 1, y), at(x - 1, y - 1)];
+                        const b = p.reduce((a, v) => a + v, 0);
+                        if (b < 2 || b > 6) continue;
+                        let a = 0;
+                        for (let k = 0; k < 8; k++) if (!p[k] && p[(k + 1) % 8]) a++;
+                        if (a !== 1) continue;
+                        if (step === 0 ? p[0] * p[2] * p[4] || p[2] * p[4] * p[6] : p[0] * p[2] * p[6] || p[0] * p[4] * p[6]) continue;
+                        del.push(y * N + x);
+                    }
+                for (const i of del) m[i] = 0;
+                if (del.length) changed = true;
+            }
+            if (!changed) break;
+        }
+        return m;
+    }
+
+    /**
+     * Crumbs left from icons and tree patterns: any patch of road, building
+     * or green smaller than `min[class]` pixels, not touching the tile's
+     * edge (it may carry on in the next tile), takes the class around it.
+     */
+    function despeckle(cls, N, min, col) {
+        const seen = new Int32Array(N * N).fill(-1);
+        const stack = [];
+        for (let s = 0; s < N * N; s++) {
+            if (seen[s] !== -1) continue;
+            const c = cls[s];
+            const cap = min[c];
+            const members = [];
+            let edge = false;
+            const around = [0, 0, 0, 0, 0];
+            const aroundCol = [0, 0, 0, 0, 0];
+            stack.push(s);
+            seen[s] = s;
+            while (stack.length) {
+                const i = stack.pop();
+                members.push(i);
+                const x = i % N;
+                const y = (i - x) / N;
+                if (x === 0 || y === 0 || x === N - 1 || y === N - 1) edge = true;
+                for (const j of [x > 0 ? i - 1 : -1, x < N - 1 ? i + 1 : -1, y > 0 ? i - N : -1, y < N - 1 ? i + N : -1]) {
+                    if (j < 0) continue;
+                    if (cls[j] === c) {
+                        if (seen[j] === -1) {
+                            seen[j] = s;
+                            stack.push(j);
+                        }
+                    } else {
+                        around[cls[j]]++;
+                        aroundCol[cls[j]] = col ? col[j] : 0;
+                    }
+                }
+            }
+            if (!cap || edge || members.length >= cap) continue;
+            let bc = CLASS.ground;
+            let bv = -1;
+            for (let k = 1; k <= 4; k++) if (around[k] > bv) (bc = k), (bv = around[k]);
+            for (const i of members) {
+                cls[i] = bc;
+                if (col) col[i] = aroundCol[bc];
+            }
+        }
+    }
+
+    function layer(o = {}) {
+        const Layer = L.GridLayer.extend({
+            createTile(coords, done) {
+                const tile = document.createElement("canvas");
+                tile.width = tile.height = 256;
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => {
+                    const ctx = tile.getContext("2d", { willReadFrequently: true });
+                    ctx.drawImage(img, 0, 0);
+                    try {
+                        const res = process(ctx.getImageData(0, 0, 256, 256), o, src);
+                        if (res.vector) drawVector(tile, res.vector, o);
+                        else ctx.putImageData(res, 0, 0);
+                    } catch (e) {
+                        console.error("retrace", e.message);
+                    }
+                    done(null, tile);
+                };
+                img.onerror = () => done(new Error("tile"), tile);
+                // o.sharp: each 256-pixel tile shown at 128, so the map has twice the detail.
+                const src = o.sharp ? { x: coords.x, y: coords.y, z: coords.z + 1 } : coords;
+                img.src = `https://tile.openstreetmap.org/${src.z}/${src.x}/${src.y}.png`;
+                return tile;
+            },
+        });
+        return new Layer({ maxZoom: 19, maxNativeZoom: o.sharp ? 18 : 19, tileSize: o.sharp ? 128 : 256, attribution: "© OpenStreetMap" });
+    }
+
+    window.Retrace = { layer, classify };
+})();

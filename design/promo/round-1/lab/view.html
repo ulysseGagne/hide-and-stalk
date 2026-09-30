@@ -1,0 +1,75 @@
+<!doctype html>
+<!-- One variation per load: view.html?set=logo&v=3&w=375&h=460 -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../fonts/fonts.css" />
+<link rel="stylesheet" href="lab.css" />
+<link rel="stylesheet" href="../node_modules/leaflet/dist/leaflet.css" />
+<body>
+    <div id="root"></div>
+    <script src="../node_modules/@turf/turf/turf.min.js"></script>
+    <script src="../node_modules/leaflet/dist/leaflet.js"></script>
+    <script src="/src/locations.js"></script>
+    <script src="vendor/perfect-freehand.js"></script>
+    <script src="ink.js"></script>
+    <script src="logo.js"></script>
+    <script src="campus.js"></script>
+    <script src="board.js"></script>
+    <script src="board2.js"></script>
+    <script src="welcome.js"></script>
+    <script src="welcome2.js"></script>
+    <script src="wild.js"></script>
+    <script src="wild2.js"></script>
+    <script src="maps.js"></script>
+    <script src="retrace.js"></script>
+    <script src="maps2.js"></script>
+    <script src="arrows.js"></script>
+    <script src="home3.js"></script>
+    <script>
+        (async () => {
+            const q = new URLSearchParams(location.search);
+            const set = q.get("set");
+            const v = set === "logo" || set === "skin" || set === "hint" || set === "tags" || (set === "arrow" && q.get("v").includes(".")) ? q.get("v") : Number(q.get("v"));
+            const W = Number(q.get("w") ?? 375);
+            const H = Number(q.get("h") ?? 460);
+            await document.fonts.load("700 40px Arimo");
+            await document.fonts.load("400 20px Arimo");
+            await document.fonts.load("400 20px 'Shantell Sans'");
+            await (window.Campus?.ready ?? Promise.resolve());
+            const root = document.getElementById("root");
+            root.style.width = `${W}px`;
+            root.style.height = `${H}px`;
+            if (set === "logo") {
+                const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                svg.setAttribute("width", W);
+                svg.setAttribute("height", H);
+                svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+                root.appendChild(svg);
+                Logo.draw(svg, v, W, H);
+            } else if (set === "board") {
+                await Board.draw(root, v, W, H);
+            } else if (set === "welcome") {
+                await Welcome.draw(root, v, W, H);
+            } else if (set === "wild") {
+                Wild.draw(root, v);
+            } else if (set === "arrow") {
+                Arrows.draw(root, v);
+            } else if (set === "tags") {
+                Maps2.tagsOnly(root, String(q.get("v")));
+            } else if (set === "hint") {
+                await Maps2.drawHint(root, v);
+            } else if (set === "skin") {
+                await Maps2.drawSkin(root, v);
+            } else if (set === "map2") {
+                await Maps2.draw(root, v);
+            } else if (set === "map") {
+                await Maps.draw(root, v);
+            } else if (set === "note") {
+                await Home3.note(root, v);
+            } else if (set === "hand") {
+                Welcome.hand(root, v, W, H);
+            }
+            document.body.dataset.ready = "1";
+        })();
+    </script>
+</body>

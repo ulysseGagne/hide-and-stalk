@@ -1,0 +1,313 @@
+/* ==========================================================================
+   Direction E — the merge. Everything from the feedback on A, B and C, and
+   rebuilt as one system rather than stitched together:
+   - one line weight (3px) for every border, rule, input and tab;
+   - text inside a bordered box is bold and big enough to hold its border;
+   - nothing is rounded (the answer radios excepted: round means "pick one");
+   - black and white only; red is drawn ink and never typeset;
+   - buttons: white + border = not yet, black = press this now, drawn red =
+     pressed or picked.
+   Standalone: replaces src/styles.css for the player screens.
+   ========================================================================== */
+:root {
+    --paper: #fff;
+    --ink: #000;
+    --red: #e7191f;
+    --rule: 3px;
+    --font: Arimo, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --mono: var(--font);
+}
+
+[hidden] { display: none !important; }
+
+html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden;
+    background: var(--paper); color: var(--ink);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+}
+body { display: flex; flex-direction: column; }
+button, input { font-family: inherit; }
+
+/* Header ----------------------------------------------------------------- */
+#site-header {
+    position: relative; flex: 0 0 auto; z-index: 1500;
+    background: var(--paper); border-bottom: 3px solid var(--ink);
+    height: 104px;
+}
+#site-title {
+    margin: 0; position: absolute; left: 12px; top: 8px;
+    font-size: 19px; font-weight: 700; letter-spacing: 0; white-space: nowrap; color: var(--ink);
+}
+#site-title svg { display: block; }
+.bell {
+    position: absolute; top: 12px; left: auto; right: 98px; width: 40px; height: 40px; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--paper); color: var(--ink);
+    border: var(--rule) solid var(--ink); border-radius: 0; padding: 0; cursor: pointer;
+}
+.bell svg { width: 20px; height: 20px; stroke-width: 2.5; }
+.bell.ringing { color: var(--ink); animation: none; }
+.bell-count {
+    position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px;
+    box-sizing: border-box; border-radius: 0; background: var(--ink); color: var(--paper);
+    font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;
+}
+/* The camera lives in the page, next to what it is for (see .found-panel). */
+.scan-btn { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+#user-status { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; align-items: center; font-size: 13px; }
+#user-status-name { display: none; }
+#user-status button {
+    background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink);
+    height: 40px; box-sizing: border-box; padding: 0 10px; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+/* Browser tabs: the open one is joined to the page below it (same white,
+   no line between them); the other sits behind, black, a little lower. */
+#view-tabs { position: absolute; left: 12px; bottom: -3px; display: flex; gap: 6px; align-items: flex-end; }
+.view-tab {
+    background: var(--ink); color: var(--paper); border: 3px solid var(--ink); border-bottom: none;
+    border-radius: 0; min-width: 88px; height: 40px; padding: 0 12px; box-sizing: border-box; white-space: nowrap;
+    font-size: 16px; font-weight: 700; letter-spacing: .12em; margin-bottom: 3px;
+}
+/* The open tab is the page: same white, its sides run into the header line
+   at the same 3px, no line underneath. */
+.view-tab.active { background: var(--paper); color: var(--ink); height: 46px; margin-bottom: 0; position: relative; z-index: 1; }
+
+/* Notices ---------------------------------------------------------------- */
+#notices { flex: 0 0 auto; }
+.notice {
+    display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px 10px;
+    padding: 9px 14px; font-size: 13px; line-height: 1.35; text-align: center;
+    background: var(--paper); color: var(--ink); border-bottom: var(--rule) solid var(--ink);
+}
+.notice-offline { background: var(--ink); color: var(--paper); }
+.notice-btn { background: var(--ink); color: var(--paper); border: none; padding: 5px 10px; font-size: 12px; font-weight: 700; }
+.notice-btn-quiet { background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); }
+.debug-strip { padding: 4px 10px; font: 11px/1.4 var(--mono); text-align: center; background: var(--ink); color: var(--paper); }
+
+/* Views ------------------------------------------------------------------ */
+#views { flex: 1 1 auto; min-height: 0; position: relative; }
+.view { width: 100%; height: 100%; }
+#view-menu {
+    display: flex; flex-direction: column; align-items: stretch; gap: 0;
+    padding: 22px 18px 40px; box-sizing: border-box; overflow-y: auto; position: relative;
+}
+.menu-panel { width: 100%; max-width: 440px; margin: 0 auto; padding: 0; background: none; border: none; box-sizing: border-box; }
+.muted { color: var(--ink); font-size: 15px; line-height: 1.4; }
+.auth-error { margin: 0; min-height: 1.2em; color: var(--ink); font-size: 14px; font-weight: 700; }
+
+/* Log in / register ------------------------------------------------------ */
+.auth-switch { display: flex; gap: 0; margin: 8px 0 22px; border: 3px solid var(--ink); }
+.auth-switch-btn { flex: 1; background: var(--paper); color: var(--ink); border: none; padding: 14px; font-size: 18px; font-weight: 700; letter-spacing: .04em; }
+.auth-switch-btn.active { background: var(--ink); color: var(--paper); }
+#auth-form { display: flex; flex-direction: column; gap: 16px; }
+#auth-form label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); }
+#auth-form input {
+    background: var(--paper); color: var(--ink); border: none; border-bottom: 3px solid var(--ink);
+    border-radius: 0; padding: 10px 2px; font-size: 20px; font-weight: 400; letter-spacing: 0; text-transform: none; outline: none;
+}
+#auth-submit { margin-top: 10px; height: 64px; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); font-size: 20px; font-weight: 700; letter-spacing: .06em; }
+
+/* Home: the status card -------------------------------------------------- */
+.whoami { margin: 0 0 16px; font-size: 13px; }
+.status-card {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+    padding: 0 0 18px; text-align: left; background: none; border: none; border-radius: 0;
+    border-bottom: 3px solid var(--ink); position: relative;
+}
+.role-badge {
+    display: inline-block; padding: 5px 10px; border-radius: 0; font-size: 14px; font-weight: 700; letter-spacing: .14em;
+    background: var(--ink); color: var(--paper); text-transform: uppercase;
+}
+.role-badge[data-role] { background: var(--ink); color: var(--paper); }
+.status-title { margin: 10px 0 0; font-size: 36px; line-height: 1.05; letter-spacing: -.02em; font-weight: 700; color: var(--ink); }
+.status-timer { display: flex; flex-direction: column; align-items: flex-start; margin: 6px 0 0; }
+.timer-value { font-size: 112px; font-weight: 700; line-height: .95; letter-spacing: -.04em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.timer-label { margin-top: 4px; font-size: 15px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); }
+.status-timer.expiring .timer-value { color: var(--ink); }
+.status-text { margin: 10px 0 0; font-size: 18px; line-height: 1.35; color: var(--ink); }
+.status-team { margin: 4px 0 0; font-size: 13px; }
+.big-btn {
+    position: relative; width: 100%; margin-top: 14px; height: 62px; padding: 0;
+    border: 3px solid var(--ink); border-radius: 0; background: var(--paper) no-repeat center / 100% 100%; color: var(--ink);
+    font-size: 21px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+}
+/* Button logic: white with a border = not yet; black = the app wants you to
+   press it now; red (drawn) = pressed or picked. */
+.big-btn.cta, #auth-submit.cta { background: var(--ink); color: var(--paper); }
+.discord-btn {
+    display: block; margin-top: 16px; padding: 13px; text-align: center; text-decoration: none;
+    background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); font-weight: 700; font-size: 18px;
+}
+.discord-btn::before { content: "\2192\00a0"; }
+
+/* Rules ------------------------------------------------------------------ */
+.rules-card { margin-top: 22px; padding: 0; background: none; border: none; }
+.rules-card summary { font-size: 15px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; list-style: none; padding: 10px 0; border-bottom: var(--rule) solid var(--ink); }
+.rules-card summary::-webkit-details-marker { display: none; }
+.rules-goal { margin: 14px 0 10px; font-size: 20px; line-height: 1.3; font-weight: 700; }
+.rules-list { margin: 0; padding-left: 0; list-style: none; counter-reset: r; font-size: 17px; line-height: 1.4; }
+.rules-list li { counter-increment: r; position: relative; padding: 12px 0 12px 34px; border-bottom: var(--rule) solid var(--ink); margin: 0; }
+.rules-list li::before { content: counter(r); position: absolute; left: 0; top: 12px; font-weight: 700; font-size: 17px; width: 22px; }
+.rules-list strong { color: var(--ink); }
+#location-status { margin-top: 16px; }
+
+/* Stalker: the three cards ----------------------------------------------- */
+.cards-panel { margin: 20px 0 0; padding: 0; background: none; border: none; position: relative; }
+.cards-title { margin: 0 0 6px; font-size: 15px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.card-row { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.card {
+    position: relative; display: flex; flex-direction: column; gap: 10px; min-height: 0; padding: 14px 16px 14px;
+    text-align: left; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); border-radius: 0; box-shadow: none; font: inherit;
+}
+.card:disabled { opacity: 1; }
+.card-category { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--ink); }
+.card-prompt { font-size: 22px; line-height: 1.2; font-weight: 700; letter-spacing: -.01em; }
+/* The badges told you little (every card narrows the map): gone. */
+.card-foot { display: none; }
+.card-badge { display: inline-block; padding: 3px 7px; border-radius: 0; background: var(--paper); border: var(--rule) solid var(--ink); font-size: 11px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.card-badge.hint { background: var(--paper); color: var(--ink); border-color: var(--ink); }
+.card-note { margin: 12px 0 0; text-align: left; font-size: 16px; }
+.cards-actions { display: flex; justify-content: flex-start; margin-top: 14px; }
+.hint-status { margin: 10px 0 0; text-align: left; font-size: 13px; color: var(--ink); }
+.cards-panel .card-note:empty, .cards-panel .hint-status:empty, .cards-panel .auth-error:empty, .status-card .auth-error:empty { display: none; }
+
+/* After a pick */
+.sent-card { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--paper); border: 3px solid var(--ink); border-radius: 0; }
+.sent-stamp { visibility: hidden; height: 14px; padding: 0 !important; border: none !important; align-self: flex-start; padding: 4px 10px; border: 3px solid var(--ink); color: var(--ink); font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; transform: rotate(-2deg); }
+.sent-prompt { margin: 0; font-size: 23px; line-height: 1.2; font-weight: 700; text-align: left; letter-spacing: -.01em; }
+.sent-answer { margin: 0; min-height: 58px; font-size: 17px; text-align: left; color: var(--ink); }
+.sent-card[data-state="answered"] .sent-answer { padding: 0; background: none; color: transparent; font-weight: 700; }
+.sent-photo { max-width: 100%; border: 3px solid var(--ink); border-radius: 0; }
+.changed-mark { display: inline-block; margin-left: 4px; padding: 0 6px; background: var(--ink); color: var(--paper); font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+
+/* Buttons that aren't the big one */
+.admin-btn {
+    background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); border-radius: 0;
+    padding: 12px 16px; font-size: 16px; font-weight: 700; cursor: pointer;
+}
+.admin-btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.admin-btn.danger { background: var(--paper); color: var(--ink); }
+
+/* Hider: answering ------------------------------------------------------- */
+.question-card { position: relative; display: flex; flex-direction: column; gap: 10px; margin-top: 12px; padding: 16px; background: var(--paper); border: 3px solid var(--ink); border-radius: 0; }
+.question-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.question-meta { font-size: 14px; color: var(--ink); }
+.question-prompt { margin: 0; font-size: 23px; line-height: 1.2; font-weight: 700; color: var(--ink); letter-spacing: -.01em; }
+.answer-widget { display: flex; flex-direction: column; gap: 8px; }
+.answer-option {
+    position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 12px; min-height: 24px;
+    background: var(--paper); border: var(--rule) solid var(--ink); border-radius: 0; font-size: 18px; font-weight: 700; cursor: pointer;
+}
+.answer-option input { appearance: none; -webkit-appearance: none; margin: 0; width: 24px; height: 24px; border: var(--rule) solid var(--ink); border-radius: 0; flex: 0 0 auto; background: var(--paper); }
+.answer-option input[type="radio"] { border-radius: 50%; }
+.answer-option input:checked { background: var(--paper); box-shadow: none; }
+.answer-distance { margin-left: auto; padding-left: 8px; font-size: 15px; font-weight: 400; color: var(--ink); font-variant-numeric: tabular-nums; }
+.answer-more { padding: 10px; background: var(--paper); border: var(--rule) solid var(--ink); color: var(--ink); font-size: 16px; font-weight: 700; }
+.answer-input { background: var(--paper); color: var(--ink); border: none; border-bottom: 3px solid var(--ink); border-radius: 0; padding: 10px 2px; font-size: 20px; }
+.question-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.question-actions .admin-btn.primary { flex: 1; height: 60px; font-size: 19px; letter-spacing: .04em; text-transform: uppercase; }
+.asker-location { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 4px; padding: 10px; border: var(--rule) solid var(--ink); background: none; border-radius: 0; }
+.asker-location-text { flex: 1 1 100%; font: 700 14px var(--mono); }
+.answer-row { display: flex; align-items: center; gap: 12px; margin-top: 0; padding: 12px 0; background: none; border: none; border-bottom: var(--rule) solid var(--ink); border-radius: 0; position: relative; }
+.answer-row-text { flex: 1 1 auto; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.answer-row-prompt { font-size: 15px; }
+.answer-row-answer { font-size: 18px; font-weight: 700; }
+.answer-row .admin-btn { padding: 9px 12px; font-size: 15px; }
+.hider-qr { margin-top: 22px; padding: 0; background: none; border: none; }
+.hider-qr-figure { background: #fff; border: 3px solid #000; margin: 12px 0 0; max-width: 100%; line-height: 0; }
+.hider-qr-figure svg { width: 100%; height: auto; display: block; }
+.hider-qr-text { text-align: left; }
+.hider-qr-text code { font: 700 16px var(--mono); letter-spacing: .06em; color: var(--ink); }
+.found-panel { margin-top: 24px; padding-top: 14px; border-top: 3px solid var(--ink); }
+.found-panel p { margin: 0 0 10px; }
+#found-btn { width: 100%; height: 60px; font-size: 16px; text-transform: uppercase; letter-spacing: .04em; border-width: 3px; white-space: nowrap; }
+
+/* Modals: solid paper behind, never a see-through wash ------------------- */
+.modal { position: fixed; inset: 0; z-index: 2500; display: flex; align-items: stretch; justify-content: center; padding: 0; background: var(--paper); }
+.modal-card { width: 100%; max-width: 560px; max-height: 100%; display: flex; flex-direction: column; background: var(--paper); border: none; border-radius: 0; overflow: hidden; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 14px; border-bottom: 3px solid var(--ink); }
+.modal-head h2 { margin: 0; font-size: 28px; letter-spacing: -.01em; }
+.modal-close { background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); border-radius: 0; width: 44px; height: 44px; font-size: 22px; line-height: 1; }
+.history-list { flex: 1 1 auto; overflow-y: auto; padding: 4px 18px 24px; position: relative; }
+.history-row { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 14px 0 44px; margin: 0; background: none; border: none; border-bottom: var(--rule) solid var(--ink); border-radius: 0; }
+.history-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.history-prompt { margin: 0; font-size: 19px; font-weight: 700; color: var(--ink); line-height: 1.25; }
+.history-answer { margin: 0; font-size: 15px; font-weight: 700; color: transparent; position: absolute; bottom: 12px; }
+.history-answer.pending { color: var(--ink); font-style: italic; font-weight: 400; }
+.history-row .card-badge { display: none; }
+.history-photo { max-width: 60%; border: 3px solid var(--ink); }
+.scan-stage { position: relative; background: #000; aspect-ratio: 1; overflow: hidden; }
+.scan-reticle { position: absolute; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: 62%; aspect-ratio: 1; border: 3px solid #fff; }
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 14px; font-size: 14px; font-weight: 700; z-index: 2000; opacity: 0; transition: opacity .2s; }
+#toast.visible { opacity: 1; }
+
+/* The map view (styled properly in the map round) */
+#map-modal-dialog-container-leaflet, #map { width: 100%; height: 100%; }
+.leaflet-tile-pane { filter: grayscale(1) contrast(1.25); }
+
+/* The drawn layer sits on top of whatever it marks. */
+.ink-layer { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; z-index: 40; }
+
+/* A photo answer has no text answer: no gap between question and photo. */
+.sent-card:has(.sent-photo:not([hidden])) .sent-answer { display: none; }
+.sent-photo { margin-top: 4px; }
+/* Stalkers: the scanner sits in the page, where the round ends. */
+.found-panel p { display: none; }
+/* Round 1 mock of "pick, then send": the Send button. */
+.send-btn { margin-top: 18px; }
+/* Card numbers, typeset: 1 OF 3. */
+.card-count { font-weight: 700; }
+
+/* First launch: the two permissions, one button each ---------------------- */
+.perm-body { padding: 8px 18px 24px; overflow-y: auto; }
+.perm-intro { margin: 10px 0 6px; font-size: 17px; }
+.perm-row { display: flex; align-items: center; gap: 14px; padding: 18px 0; border-bottom: var(--rule) solid var(--ink); }
+.perm-icon { flex: none; color: var(--ink); line-height: 0; }
+.perm-text { flex: 1 1 auto; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.perm-text b { font-size: 21px; line-height: 1.15; }
+.perm-text span { font-size: 15px; line-height: 1.35; }
+.perm-btn { flex: none; min-width: 112px; height: 52px; box-sizing: border-box; padding: 0 12px; background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); font-size: 16px; font-weight: 700; }
+.perm-btn.next { background: var(--ink); color: var(--paper); }
+.perm-on { flex: none; margin-right: 40px; font-size: 18px; font-weight: 700; }
+#perm-done { margin-top: 22px; }
+.perm-foot { margin-top: 12px; }
+
+/* Before the game: the rules, one at a time ------------------------------ */
+.modal-head .rule-count { font-size: 15px; font-weight: 700; letter-spacing: .12em; }
+.rules-body { flex: 1 1 auto; overflow-y: auto; padding: 4px 18px 28px; }
+.rule-row { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; border-bottom: var(--rule) solid var(--ink); }
+.rule-row p { margin: 0; flex: 1 1 auto; font-size: 16px; line-height: 1.35; }
+.rule-n { flex: none; width: 22px; font-size: 16px; font-weight: 700; }
+.rule-sign { flex: none; width: 64px; height: 34px; border-bottom: var(--rule) solid var(--ink); }
+.rule-row.current { border-bottom: none; padding: 26px 0 8px; }
+.rule-row.current p { font-size: 24px; line-height: 1.25; }
+.rule-row.current .rule-n { font-size: 24px; width: 30px; }
+.rule-ok { margin-top: 18px; }
+
+/* The end: the round as a receipt ---------------------------------------- */
+.receipt { margin: 24px auto 0; width: 86%; filter: drop-shadow(0 0 0 #000); }
+.rc-paper {
+    position: relative; padding: 18px 18px 30px; background: var(--paper); border: var(--rule) solid var(--ink); border-bottom: none;
+    /* the torn bottom edge */
+}
+.rc-title { font-size: 22px; font-weight: 700; letter-spacing: -.01em; text-align: center; }
+.rc-head { margin-top: 4px; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-align: center; }
+.rc-rule { margin: 12px 0; border-top: 1.5px solid var(--ink); }
+.rc-code { margin-top: 18px; }
+.rc-num { margin-top: 4px; font-size: 11px; font-weight: 700; letter-spacing: .32em; text-align: center; }
+/* The torn bottom: its line is the sides' line, zigzagging across. */
+.rc-tear { display: block; margin-top: -1px; overflow: visible; }
+.rc-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; font-size: 15px; }
+.rc-row b { text-align: right; white-space: nowrap; }
+.rc-redact { display: inline-block; width: 110px; height: 15px; background: var(--ink); vertical-align: -2px; }
+.rc-bar { margin-top: 8px; height: 30px; box-sizing: border-box; border: var(--rule) solid var(--ink); }
+
+/* Third pass ------------------------------------------------------------- */
+/* Later: there, but small, so nobody presses it by mistake. */
+.small-btn { display: block; margin: 26px 0 0; height: 34px; padding: 0 14px; background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); font-size: 13px; font-weight: 700; letter-spacing: .06em; }
+/* Buildings: the code first, heavy and bigger, then the whole name. */
+.opt-code { display: inline-block; min-width: 52px; font-size: 20px; font-weight: 700; letter-spacing: .02em; }
+/* More room between the answers and the tag code, for the checks and the note. */
+#hider-qr { margin-top: 72px; }

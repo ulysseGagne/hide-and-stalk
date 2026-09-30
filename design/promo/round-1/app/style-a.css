@@ -1,0 +1,242 @@
+/* ==========================================================================
+   Direction A — "Marker". The neutral one.
+   Pure #000 and #fff, not one grey; one red, and only as drawn ink (ink.js).
+   Secondary text is set smaller or lighter, never paler. Built for sunlight.
+   Replaces src/styles.css for the player screens (admin left alone).
+   ========================================================================== */
+:root {
+    --paper: #fff;
+    --ink: #000;
+    --red: #e7191f;
+    --rule: 2px;
+    --font: Arimo, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --mono: var(--font);
+}
+
+[hidden] { display: none !important; }
+
+html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden;
+    background: var(--paper); color: var(--ink);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+}
+body { display: flex; flex-direction: column; }
+button, input { font-family: inherit; }
+
+/* Header ----------------------------------------------------------------- */
+#site-header {
+    position: relative; flex: 0 0 auto; z-index: 1500;
+    background: var(--paper); border-bottom: 3px solid var(--ink);
+    height: 96px;
+}
+#site-title {
+    margin: 0; position: absolute; left: 12px; top: 8px;
+    font-size: 19px; font-weight: 700; letter-spacing: 0; white-space: nowrap; color: var(--ink);
+}
+#site-title svg { display: block; }
+.bell {
+    position: absolute; top: 14px; left: auto; right: 84px; width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--paper); color: var(--ink);
+    border: var(--rule) solid var(--ink); border-radius: 50%; padding: 0; cursor: pointer;
+}
+.bell svg { width: 15px; height: 15px; }
+.bell.ringing { color: var(--ink); animation: none; }
+.bell-count {
+    position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px;
+    box-sizing: border-box; border-radius: 9px; background: var(--ink); color: var(--paper);
+    font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;
+}
+.scan-btn { left: auto; right: 120px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+#user-status { position: absolute; top: 12px; right: 12px; display: flex; gap: 8px; align-items: center; font-size: 13px; }
+#user-status-name { display: none; }
+#user-status button {
+    background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink);
+    padding: 7px 10px; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+/* Browser tabs: the open one is joined to the page below it (same white,
+   no line between them); the other sits behind, black, a little lower. */
+#view-tabs { position: absolute; left: 12px; bottom: -3px; display: flex; gap: 6px; align-items: flex-end; }
+.view-tab {
+    background: var(--ink); color: var(--paper); border: 3px solid var(--ink); border-bottom: none;
+    border-radius: 12px 12px 0 0; min-width: 118px; height: 38px; padding: 0 22px;
+    font-size: 16px; font-weight: 700; letter-spacing: .12em; margin-bottom: 3px;
+}
+.view-tab.active { background: var(--paper); color: var(--ink); height: 44px; margin-bottom: 0; position: relative; z-index: 1; }
+
+/* Notices ---------------------------------------------------------------- */
+#notices { flex: 0 0 auto; }
+.notice {
+    display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px 10px;
+    padding: 9px 14px; font-size: 13px; line-height: 1.35; text-align: center;
+    background: var(--paper); color: var(--ink); border-bottom: var(--rule) solid var(--ink);
+}
+.notice-offline { background: var(--ink); color: var(--paper); }
+.notice-btn { background: var(--ink); color: var(--paper); border: none; padding: 5px 10px; font-size: 12px; font-weight: 700; }
+.notice-btn-quiet { background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); }
+.debug-strip { padding: 4px 10px; font: 11px/1.4 var(--mono); text-align: center; background: var(--ink); color: var(--paper); }
+
+/* Views ------------------------------------------------------------------ */
+#views { flex: 1 1 auto; min-height: 0; position: relative; }
+.view { width: 100%; height: 100%; }
+#view-menu {
+    display: flex; flex-direction: column; align-items: stretch; gap: 0;
+    padding: 22px 18px 40px; box-sizing: border-box; overflow-y: auto; position: relative;
+}
+.menu-panel { width: 100%; max-width: 440px; margin: 0 auto; padding: 0; background: none; border: none; box-sizing: border-box; }
+.muted { color: var(--ink); font-size: 13px; }
+.auth-error { margin: 0; min-height: 1.2em; color: var(--ink); font-size: 14px; font-weight: 700; }
+
+/* Log in / register ------------------------------------------------------ */
+.auth-switch { display: flex; gap: 0; margin: 8px 0 22px; border: 3px solid var(--ink); }
+.auth-switch-btn { flex: 1; background: var(--paper); color: var(--ink); border: none; padding: 11px; font-size: 15px; font-weight: 700; letter-spacing: .04em; }
+.auth-switch-btn.active { background: var(--ink); color: var(--paper); }
+#auth-form { display: flex; flex-direction: column; gap: 16px; }
+#auth-form label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); }
+#auth-form input {
+    background: var(--paper); color: var(--ink); border: none; border-bottom: 3px solid var(--ink);
+    border-radius: 0; padding: 10px 2px; font-size: 20px; font-weight: 400; letter-spacing: 0; text-transform: none; outline: none;
+}
+#auth-submit { margin-top: 10px; height: 60px; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); font-size: 20px; font-weight: 700; letter-spacing: .06em; }
+
+/* Home: the status card -------------------------------------------------- */
+.whoami { margin: 0 0 16px; font-size: 13px; }
+.status-card {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+    padding: 0 0 18px; text-align: left; background: none; border: none; border-radius: 0;
+    border-bottom: 3px solid var(--ink); position: relative;
+}
+.role-badge {
+    display: inline-block; padding: 3px 8px; border-radius: 0; font-size: 11px; font-weight: 700; letter-spacing: .14em;
+    background: var(--ink); color: var(--paper); text-transform: uppercase;
+}
+.role-badge[data-role] { background: var(--ink); color: var(--paper); }
+.status-title { margin: 8px 0 0; font-size: 31px; line-height: 1.05; letter-spacing: -.02em; font-weight: 700; color: var(--ink); }
+.status-timer { display: flex; flex-direction: column; align-items: flex-start; margin: 6px 0 0; }
+.timer-value { font-size: 84px; font-weight: 700; line-height: .95; letter-spacing: -.04em; font-variant-numeric: tabular-nums; color: var(--ink); }
+.timer-label { margin-top: 4px; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); }
+.status-timer.expiring .timer-value { color: var(--ink); }
+.status-text { margin: 8px 0 0; font-size: 17px; line-height: 1.35; color: var(--ink); }
+.status-team { margin: 4px 0 0; font-size: 13px; }
+.big-btn {
+    position: relative; width: 100%; margin-top: 14px; height: 62px; padding: 0;
+    border: 3px solid var(--ink); border-radius: 0; background: var(--paper) no-repeat center / 100% 100%; color: var(--ink);
+    font-size: 21px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+}
+/* Button logic: white with a border = not yet; black = the app wants you to
+   press it now; red (drawn) = pressed or picked. */
+.big-btn.cta, #auth-submit.cta { background: var(--ink); color: var(--paper); }
+.discord-btn {
+    display: block; margin-top: 16px; padding: 13px; text-align: center; text-decoration: none;
+    background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); font-weight: 700; font-size: 15px;
+}
+.discord-btn::before { content: "\2192\00a0"; }
+
+/* Rules ------------------------------------------------------------------ */
+.rules-card { margin-top: 22px; padding: 0; background: none; border: none; }
+.rules-card summary { font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; list-style: none; padding: 10px 0; border-bottom: var(--rule) solid var(--ink); }
+.rules-card summary::-webkit-details-marker { display: none; }
+.rules-goal { margin: 14px 0 10px; font-size: 18px; line-height: 1.3; font-weight: 700; }
+.rules-list { margin: 0; padding-left: 0; list-style: none; counter-reset: r; font-size: 15px; line-height: 1.4; }
+.rules-list li { counter-increment: r; position: relative; padding: 9px 0 9px 34px; border-bottom: 1px solid var(--ink); margin: 0; }
+.rules-list li::before { content: counter(r); position: absolute; left: 0; top: 9px; font-weight: 700; font-size: 15px; width: 22px; }
+.rules-list strong { color: var(--ink); }
+#location-status { margin-top: 16px; }
+
+/* Stalker: the three cards ----------------------------------------------- */
+.cards-panel { margin: 20px 0 0; padding: 0; background: none; border: none; position: relative; }
+.cards-title { margin: 0 0 4px; font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.card-row { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.card {
+    position: relative; display: flex; flex-direction: column; gap: 10px; min-height: 0; padding: 14px 16px 14px;
+    text-align: left; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); border-radius: 0; box-shadow: none; font: inherit;
+}
+.card:disabled { opacity: 1; }
+.card-category { font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--ink); }
+.card-prompt { font-size: 19px; line-height: 1.2; font-weight: 700; letter-spacing: -.01em; }
+.card-foot { display: flex; flex-wrap: wrap; gap: 6px; }
+.card-badge { display: inline-block; padding: 3px 7px; border-radius: 0; background: var(--paper); border: var(--rule) solid var(--ink); font-size: 11px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.card-badge.hint { background: var(--paper); color: var(--ink); border-color: var(--ink); }
+.card-note { margin: 12px 0 0; text-align: left; font-size: 14px; }
+.cards-actions { display: flex; justify-content: flex-start; margin-top: 14px; }
+.hint-status { margin: 10px 0 0; text-align: left; font-size: 13px; color: var(--ink); }
+.cards-panel .card-note:empty, .cards-panel .hint-status:empty, .cards-panel .auth-error:empty, .status-card .auth-error:empty { display: none; }
+
+/* After a pick */
+.sent-card { position: relative; display: flex; flex-direction: column; gap: 10px; padding: 16px; background: var(--paper); border: 3px solid var(--ink); border-radius: 0; }
+.sent-stamp { align-self: flex-start; padding: 4px 10px; border: 3px solid var(--ink); color: var(--ink); font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; transform: rotate(-2deg); }
+.sent-prompt { margin: 0; font-size: 21px; line-height: 1.2; font-weight: 700; text-align: left; letter-spacing: -.01em; }
+.sent-answer { margin: 0; min-height: 58px; font-size: 15px; text-align: left; color: var(--ink); }
+.sent-card[data-state="answered"] .sent-answer { padding: 0; background: none; color: transparent; font-weight: 700; }
+.sent-photo { max-width: 100%; border: 3px solid var(--ink); border-radius: 0; }
+.changed-mark { display: inline-block; margin-left: 4px; padding: 0 5px; background: var(--ink); color: var(--paper); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+
+/* Buttons that aren't the big one */
+.admin-btn {
+    background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); border-radius: 0;
+    padding: 10px 14px; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.admin-btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.admin-btn.danger { background: var(--paper); color: var(--ink); }
+
+/* Hider: answering ------------------------------------------------------- */
+.question-card { position: relative; display: flex; flex-direction: column; gap: 10px; margin-top: 12px; padding: 16px; background: var(--paper); border: 3px solid var(--ink); border-radius: 0; }
+.question-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.question-meta { font-size: 12px; color: var(--ink); }
+.question-prompt { margin: 0; font-size: 21px; line-height: 1.2; font-weight: 700; color: var(--ink); letter-spacing: -.01em; }
+.answer-widget { display: flex; flex-direction: column; gap: 8px; }
+.answer-option {
+    position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 12px; min-height: 24px;
+    background: var(--paper); border: var(--rule) solid var(--ink); border-radius: 0; font-size: 16px; font-weight: 700; cursor: pointer;
+}
+.answer-option input { appearance: none; -webkit-appearance: none; margin: 0; width: 20px; height: 20px; border: var(--rule) solid var(--ink); border-radius: 0; flex: 0 0 auto; background: var(--paper); }
+.answer-option input[type="radio"] { border-radius: 50%; }
+.answer-option input:checked { background: var(--paper); box-shadow: none; }
+.answer-distance { margin-left: auto; padding-left: 8px; font-size: 13px; font-weight: 400; color: var(--ink); font-variant-numeric: tabular-nums; }
+.answer-more { padding: 10px; background: var(--paper); border: var(--rule) dashed var(--ink); color: var(--ink); font-size: 14px; font-weight: 700; }
+.answer-input { background: var(--paper); color: var(--ink); border: none; border-bottom: 3px solid var(--ink); border-radius: 0; padding: 10px 2px; font-size: 20px; }
+.question-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.question-actions .admin-btn.primary { flex: 1; height: 52px; font-size: 17px; letter-spacing: .04em; text-transform: uppercase; }
+.asker-location { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 4px; padding: 10px; border: var(--rule) dashed var(--ink); background: none; border-radius: 0; }
+.asker-location-text { flex: 1 1 100%; font: 700 14px var(--mono); }
+.answer-row { display: flex; align-items: center; gap: 12px; margin-top: 0; padding: 12px 0; background: none; border: none; border-bottom: var(--rule) solid var(--ink); border-radius: 0; position: relative; }
+.answer-row-text { flex: 1 1 auto; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.answer-row-prompt { font-size: 14px; }
+.answer-row-answer { font-size: 16px; font-weight: 700; }
+.answer-row .admin-btn { padding: 7px 10px; font-size: 13px; }
+.hider-qr { margin-top: 22px; padding: 0; background: none; border: none; }
+.hider-qr-figure { background: #fff; border: 3px solid #000; margin: 12px 0 0; max-width: 100%; line-height: 0; }
+.hider-qr-figure svg { width: 100%; height: auto; display: block; }
+.hider-qr-text { text-align: left; }
+.hider-qr-text code { font: 700 13px var(--mono); letter-spacing: .06em; color: var(--ink); }
+.found-panel { margin-top: 24px; padding-top: 14px; border-top: 3px solid var(--ink); }
+.found-panel p { margin: 0 0 10px; }
+#found-btn { width: 100%; height: 54px; font-size: 16px; text-transform: uppercase; letter-spacing: .06em; border-width: 3px; }
+
+/* Modals: solid paper behind, never a see-through wash ------------------- */
+.modal { position: fixed; inset: 0; z-index: 2500; display: flex; align-items: stretch; justify-content: center; padding: 0; background: var(--paper); }
+.modal-card { width: 100%; max-width: 560px; max-height: 100%; display: flex; flex-direction: column; background: var(--paper); border: none; border-radius: 0; overflow: hidden; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 14px; border-bottom: 3px solid var(--ink); }
+.modal-head h2 { margin: 0; font-size: 24px; letter-spacing: -.01em; }
+.modal-close { background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); border-radius: 0; width: 36px; height: 36px; font-size: 22px; line-height: 1; }
+.history-list { flex: 1 1 auto; overflow-y: auto; padding: 4px 18px 24px; position: relative; }
+.history-row { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 14px 0 44px; margin: 0; background: none; border: none; border-bottom: var(--rule) solid var(--ink); border-radius: 0; }
+.history-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.history-prompt { margin: 0; font-size: 17px; font-weight: 700; color: var(--ink); line-height: 1.25; }
+.history-answer { margin: 0; font-size: 15px; font-weight: 700; color: transparent; position: absolute; bottom: 12px; }
+.history-answer.pending { color: var(--ink); font-style: italic; font-weight: 400; }
+.history-row .card-badge { display: none; }
+.history-photo { max-width: 60%; border: 3px solid var(--ink); }
+.scan-stage { position: relative; background: #000; aspect-ratio: 1; overflow: hidden; }
+.scan-reticle { position: absolute; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: 62%; aspect-ratio: 1; border: 3px solid #fff; }
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 14px; font-size: 14px; font-weight: 700; z-index: 2000; opacity: 0; transition: opacity .2s; }
+#toast.visible { opacity: 1; }
+
+/* The map view (styled properly in the map round) */
+#map-modal-dialog-container-leaflet, #map { width: 100%; height: 100%; }
+.leaflet-tile-pane { filter: grayscale(1) contrast(1.25); }
+
+/* The drawn layer sits on top of whatever it marks. */
+.ink-layer { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; z-index: 40; }
