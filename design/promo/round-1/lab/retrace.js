@@ -174,6 +174,19 @@
             // o.greenAs: every green printed in the buildings' fill colour.
             const GREEN_AS = { building: 0xd9d0c9, residential: 0xe0dfdf };
             if (GREEN_AS[o.greenAs]) for (let i = 0; i < N * N; i++) if (cls[i] === CLASS.green) col[i] = GREEN_AS[o.greenAs];
+            // o.shift: each shade takes the next one's place. Buildings get the woods'
+            // colour, woods get the grass colour, grass goes white, roads get the grass colour.
+            if (o.shift) {
+                const WOOD = 0xadd19e;
+                const GRASS = 0xcdebb0;
+                for (let i = 0; i < N * N; i++) {
+                    const c = col[i];
+                    const l = (0.3 * (c >>> 16) + 0.59 * ((c >>> 8) & 255) + 0.11 * (c & 255)) / 255;
+                    if (cls[i] === CLASS.building) col[i] = WOOD;
+                    else if (cls[i] === CLASS.road) col[i] = GRASS;
+                    else if (cls[i] === CLASS.green) col[i] = l < 0.8 ? GRASS : 0xffffff;
+                }
+            }
             // o.recolor: one flat colour per class (a class left out keeps its own colours).
             if (o.recolor) for (let i = 0; i < N * N; i++) {
                 const k = Object.keys(CLASS).find((n) => CLASS[n] === cls[i]);

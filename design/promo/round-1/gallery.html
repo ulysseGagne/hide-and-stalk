@@ -179,7 +179,6 @@ const MAPPART = [
 // Renumbered 1, 2, 3… best first. Each entry: [number, the file it's drawn from, name, note].
 const SKINS = [
     "Lines: the hints layer's map",
-    [1, "16.2", "Real lines: roads filled black, buildings outlined", "The map you liked in the hints layer looked messy because it was the map's own pixels sorted into black and white, so every edge was a staircase and nothing was straight. S1–S3 trace each road and building into a line, straighten it, drop the crumbs, and draw it crisp from sharper map tiles. No greens."],
     [2, "16.3", "Real lines: roads as outlines", "S1 with every road drawn as its two edges"],
     ["2.1", "16.31", "S2, simpler", "no footpaths or parking-lot aisles, no small shapes, straighter lines"],
     ["2.2", "16.32", "S2, simplest", "also drops narrow side roads and mid-size shapes; lines straightened hardest"],
@@ -187,10 +186,11 @@ const SKINS = [
     "Grain",
     [6, "27.2", "Toner grain, greens light", "woods and grass in the light speckle of the housing areas"],
     [9, "27", "Toner grain, as it was", "the original grain print with the text taken out; its greens are the darkest thing on the map"],
+    [10, "27.4", "Toner grain, every shade moved one step", "buildings in the woods' dark grain, woods in the grass's light grain, grass white, roads filled in the grass's light grain"],
 ];
 const ZOOM = { a: "whole campus", b: "a few blocks", c: "a few buildings" };
 html += `<section id="maps"><h2>Map</h2><p>Everything you need is computer-drawn: the map, the hints layer, the players (name tags, you in black) and the question. Red is the one thing to look at right now. The map opens on the whole campus, with no auto-zoom.</p></section>`;
-html += `<section id="maps-skins"><h2>1 · Skins: how the tiles are printed</h2><p>Best first, left to right, each at the same zoom (a few blocks around YOU). No text on any of them. S1–S3 are the hints layer's map in real lines; S6 and S9 are toner grain. S2.1 and S2.2 are S2 simplified. Why the original map is so messy: OpenStreetMap is drawn by volunteers who map everything, every footpath, parking aisle, shed and patch of grass, so there's far more on it than a game needs. S2.1 and S2.2 throw out whatever is thinner or smaller than a set size and straighten what's left. From the whole-campus zoom the roads themselves are only a few pixels wide, so less can be removed there without losing them; that view stays busier.</p>`;
+html += `<section id="maps-skins"><h2>1 · Skins: how the tiles are printed</h2><p>Best first, left to right, each at the same zoom (a few blocks around YOU). No text on any of them. S2 and S3 are the hints layer's map in real lines; S6, S9 and S10 are toner grain. S2.1 and S2.2 are S2 simplified. Why the original map is so messy: OpenStreetMap is drawn by volunteers who map everything, every footpath, parking aisle, shed and patch of grass, so there's far more on it than a game needs. S2.1 and S2.2 throw out whatever is thinner or smaller than a set size and straighten what's left. From the whole-campus zoom the roads themselves are only a few pixels wide, so less can be removed there without losing them; that view stays busier.</p>`;
 // Only the "a few blocks" view (b) of each, all side by side in one row.
 html += `<div class="grid">`;
 for (const e of SKINS) {
