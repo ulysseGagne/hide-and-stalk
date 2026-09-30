@@ -310,7 +310,8 @@ export const SCREENS = {
             head: "TEAM 3 · MON 5 OCT · 13:32",
             lines: [["Q1 North or south?", "NORTH"], ["Q2 Within 500 m?", "NO"], ["Q3 Closest café?", "P'TIT CAAF"], ["Q4 Closer to the greenhouses?", "YES"]],
             totals: [["Hide", "10:00"], ["Hunt", "23:14"], ["Found by", "jules"]],
-            left: 4,
+            asked: 4,
+            of: 6,
         },
         state: (() => {
             const p = plays(4);
@@ -330,7 +331,8 @@ export const SCREENS = {
             head: "TEAM 3 · MON 5 OCT · 13:39",
             lines: [["Q1 North or south?", "NORTH"], ["Q2 Within 500 m?", "NO"], ["Q3 Closest café?", "P'TIT CAAF"], ["Q4 Closer to the greenhouses?", "YES"], ["Q5 Nearest door", "PHOTO"], ["Q6 Nearest building?", "ABP"]],
             totals: [["Hide", "10:00"], ["Hunt", "30:00"], ["Where", "REDACTED"]],
-            left: 2,
+            asked: 6,
+            of: 6,
         },
         state: (() => {
             const p = plays(4);

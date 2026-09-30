@@ -12,9 +12,16 @@
     const bx = BELL.x + BELL.w / 2;
     const by = BELL.y + BELL.h + 6;
 
+    // The header's STALK (the logo's), black: the arrow is the red on this screen.
+    function stalk() {
+        const st = Ink.tuck("STALK", { size: 74, seed: "w13", mess: 1.15, tilt: -4, sizes: [1.06, 0.94, 1.02, 0.95, 1.0], rises: [0.02, -0.02, 0.03, 0, 0.02], spin: 5, overshoot: 0.05, color: "#000" });
+        const k = 27 / st.box.h;
+        return `<svg width="120" height="44" style="position:absolute;left:0;top:0;overflow:visible"><g transform="translate(${83 - st.box.x * k} ${43 - (st.box.y + st.box.h) * k}) scale(${k})">${st.svg}</g></svg>`;
+    }
+
     function header() {
         return `<div style="position:absolute;left:0;top:0;width:${W}px;height:104px;border-bottom:3px solid #000;box-sizing:border-box;background:#fff">
-            <div style="position:absolute;left:12px;top:16px;font:700 19px ${FONT}">HIDE &amp; SEEK STALK</div>
+            <div style="position:absolute;left:12px;top:16px;font:700 19px ${FONT}">HIDE &amp;</div>${stalk()}
             <div style="position:absolute;left:${BELL.x}px;top:${BELL.y}px;width:40px;height:40px;box-sizing:border-box;border:3px solid #000;display:flex;align-items:center;justify-content:center">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#000" stroke-width="2.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
                 <div style="position:absolute;top:-8px;right:-8px;width:18px;height:18px;background:#000;color:#fff;font:700 11px/18px ${FONT};text-align:center">1</div></div>
@@ -39,13 +46,30 @@
         ["From the other side", () => Ink.bigArrow(W - 40, T[1], bx + 10, by + 10, { seed: "r8", weight: 7, bend: 0.2 })],
     ];
 
+    // Second round: short and wide (R2's straightness, R1's head, bigger),
+    // NEW beside the arrow in big heavy letters, never at its tail.
+    const tip = [bx - 6, by + 6];
+    const from = (dx, dy) => [tip[0] + dx, tip[1] + dy];
+    const S = [
+        ["Short, from below left", from(-78, 96), { weight: 13 }, [14, 84]],
+        ["Straight up from below", from(-6, 112), { weight: 14 }, [20, 96]],
+        ["Wider head", from(-80, 92), { weight: 13, spread: 0.78 }, [14, 84]],
+        ["Heaviest, shortest", from(-62, 78), { weight: 17 }, [14, 76]],
+        ["From below right", from(56, 100), { weight: 14 }, [-150, 110]],
+        ["A bit longer, same width", from(-100, 132), { weight: 14, head: 58 }, [16, 96]],
+    ];
+    S.forEach(([name, t, o, nw], i) => {
+        V.push([name, () => Ink.stubArrow(t[0], t[1], tip[0], tip[1], { seed: `s${i}`, ...o }), [tip[0] + nw[0], tip[1] + nw[1]]]);
+    });
+
     window.Arrows = {
         list: V.map(([name], i) => ({ n: i + 1, name })),
         draw(root, v) {
             root.style.cssText += `;width:${W}px;height:${H}px;background:#fff`;
-            const [, fn] = V[v - 1];
-            const tail = v === 8 ? [W - 118, T[1] + 38] : [T[0] - 20, T[1] + 44];
-            root.innerHTML = header() + `<svg width="${W}" height="${H}" style="position:absolute;left:0;top:0;overflow:visible;z-index:5">${fn()}${Ink.write("NEW", { x: tail[0], y: tail[1], size: 32, seed: `new${v}`, tilt: -8, importance: "key" }).svg}</svg>`;
+            const [, fn, beside] = V[v - 1];
+            const tail = beside ?? (v === 8 ? [W - 118, T[1] + 38] : [T[0] - 20, T[1] + 44]);
+            const nw = beside ? Ink.write("NEW", { x: tail[0], y: tail[1], size: 44, weight: 9, seed: `new${v}`, tilt: -8, importance: "key" }) : Ink.write("NEW", { x: tail[0], y: tail[1], size: 32, seed: `new${v}`, tilt: -8, importance: "key" });
+            root.innerHTML = header() + `<svg width="${W}" height="${H}" style="position:absolute;left:0;top:0;overflow:visible;z-index:5">${fn()}${nw.svg}</svg>`;
         },
     };
 })();

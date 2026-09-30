@@ -67,8 +67,8 @@ button, input { font-family: inherit; }
 #view-tabs { position: absolute; left: 12px; bottom: -3px; display: flex; gap: 6px; align-items: flex-end; }
 .view-tab {
     background: var(--ink); color: var(--paper); border: 3px solid var(--ink); border-bottom: none;
-    border-radius: 0; min-width: 124px; height: 40px; padding: 0 22px; box-sizing: border-box;
-    font-size: 17px; font-weight: 700; letter-spacing: .12em; margin-bottom: 3px;
+    border-radius: 0; min-width: 88px; height: 40px; padding: 0 12px; box-sizing: border-box; white-space: nowrap;
+    font-size: 16px; font-weight: 700; letter-spacing: .12em; margin-bottom: 3px;
 }
 /* The open tab is the page: same white, its sides run into the header line
    at the same 3px, no line underneath. */
@@ -291,13 +291,23 @@ button, input { font-family: inherit; }
 .rc-paper {
     position: relative; padding: 18px 18px 30px; background: var(--paper); border: var(--rule) solid var(--ink); border-bottom: none;
     /* the torn bottom edge */
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 95% calc(100% - 10px), 90% 100%, 85% calc(100% - 10px), 80% 100%, 75% calc(100% - 10px), 70% 100%, 65% calc(100% - 10px), 60% 100%, 55% calc(100% - 10px), 50% 100%, 45% calc(100% - 10px), 40% 100%, 35% calc(100% - 10px), 30% 100%, 25% calc(100% - 10px), 20% 100%, 15% calc(100% - 10px), 10% 100%, 5% calc(100% - 10px), 0 100%);
-    box-shadow: inset 0 -3px 0 0 var(--paper);
 }
 .rc-title { font-size: 22px; font-weight: 700; letter-spacing: -.01em; text-align: center; }
 .rc-head { margin-top: 4px; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-align: center; }
-.rc-rule { margin: 12px 0; border-top: var(--rule) dashed var(--ink); }
+.rc-rule { margin: 12px 0; border-top: 1.5px solid var(--ink); }
+.rc-code { margin-top: 18px; }
+.rc-num { margin-top: 4px; font-size: 11px; font-weight: 700; letter-spacing: .32em; text-align: center; }
+/* The torn bottom: its line is the sides' line, zigzagging across. */
+.rc-tear { display: block; margin-top: -1px; overflow: visible; }
 .rc-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; font-size: 15px; }
 .rc-row b { text-align: right; white-space: nowrap; }
 .rc-redact { display: inline-block; width: 110px; height: 15px; background: var(--ink); vertical-align: -2px; }
 .rc-bar { margin-top: 8px; height: 30px; box-sizing: border-box; border: var(--rule) solid var(--ink); }
+
+/* Third pass ------------------------------------------------------------- */
+/* Later: there, but small, so nobody presses it by mistake. */
+.small-btn { display: block; margin: 26px 0 0; height: 34px; padding: 0 14px; background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); font-size: 13px; font-weight: 700; letter-spacing: .06em; }
+/* Buildings: the code first, heavy and bigger, then the whole name. */
+.opt-code { display: inline-block; min-width: 52px; font-size: 20px; font-weight: 700; letter-spacing: .02em; }
+/* More room between the answers and the tag code, for the checks and the note. */
+#hider-qr { margin-top: 72px; }

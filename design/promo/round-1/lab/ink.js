@@ -839,6 +839,21 @@
         return stroke([[x, y + s * 0.5], [x + s * 0.35, y + s * r.range(0.85, 1)], [x + s * 1.1, y - s * r.range(0.1, 0.3)]], { weight: o.weight ?? s * 0.2, color: o.color }, { taperEnd: 8 });
     }
 
+    /** A check mark done fast and big: a hooked start, a heavy bottom, a long leg flung past the top. */
+    function bigCheck(x, y, s, o = {}) {
+        const r = rng(o.seed ?? "bigCheck");
+        const pts = [
+            [x - s * 0.04, y + s * r.range(0.4, 0.5)],
+            [x + s * 0.1, y + s * r.range(0.5, 0.58)],
+            [x + s * 0.3, y + s * r.range(0.9, 1.0)],
+            [x + s * 0.52, y + s * r.range(0.5, 0.6)],
+            [x + s * 0.8, y + s * r.range(0.08, 0.16)],
+            [x + s * r.range(1.1, 1.2), y - s * r.range(0.22, 0.32)],
+        ];
+        const bottom = 0.34;
+        return pressed(spline(pts, 10), (u) => (u < bottom ? 0.55 + 0.45 * (u / bottom) : 1 - 0.55 * ((u - bottom) / (1 - bottom)) ** 1.4), { size: o.weight ?? s * 0.16, color: o.color, thinning: 0.6, taperStart: 6, taperEnd: 26, wobbleAmp: o.wobbleAmp ?? 2.4 });
+    }
+
     /** Proofreader's caret: insert here. */
     function caret(x, y, s, o = {}) {
         return stroke([[x - s * 0.5, y + s * 0.4], [x, y - s * 0.4], [x + s * 0.52, y + s * 0.38]], { weight: o.weight ?? s * 0.18, color: o.color, seed: o.seed });
@@ -1012,6 +1027,46 @@
         return (
             pressed(shaft, (u) => 0.45 + 0.5 * Math.sin(Math.PI * Math.min(1, u * 1.2)), { size: w * 1.5, color: o.color, thinning: 0.55, taperStart: 8, taperEnd: 2, wobbleAmp: o.wobbleAmp ?? 1.8 }) +
             pressed(spline(flick, 6), (u) => 0.4 + 0.6 * Math.sin(Math.PI * u), { size: w * 1.4, color: o.color, thinning: 0.55, taperStart: 3, taperEnd: 8 })
+        );
+    }
+
+    /**
+     * The stumpy arrow: short, nearly straight, heavy, and most of it is
+     * head. The head is one flick (R1's), thinnest at the turn so the point
+     * stays sharp, drawn as heavy as the shaft.
+     * o.weight: shaft width; o.head: head length (default ~55% of the arrow);
+     * o.spread: half-angle of the head, radians.
+     */
+    function stubArrow(x1, y1, x2, y2, o = {}) {
+        const r = rng(o.seed ?? "stub");
+        const len = Math.hypot(x2 - x1, y2 - y1);
+        const ang = Math.atan2(y2 - y1, x2 - x1);
+        const w = o.weight ?? 12;
+        const head = o.head ?? len * 0.55;
+        const bow = (o.bend ?? r.range(-0.04, 0.04)) * len;
+        const mx = (x1 + x2) / 2 - Math.sin(ang) * bow;
+        const my = (y1 + y2) / 2 + Math.cos(ang) * bow;
+        // The shaft stops a little short of the point, inside the head.
+        const ex = x2 - Math.cos(ang) * w * 0.6;
+        const ey = y2 - Math.sin(ang) * w * 0.6;
+        const shaft = [];
+        for (let i = 0; i <= 16; i++) {
+            const t = i / 16;
+            shaft.push([(1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * mx + t * t * ex, (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * my + t * t * ey]);
+        }
+        const spread = o.spread ?? 0.62;
+        const wing = (sgn) => {
+            const a = ang + Math.PI + sgn * spread * r.range(0.9, 1.1);
+            const k = head * r.range(0.9, 1.08);
+            return [x2 + Math.cos(a) * k, y2 + Math.sin(a) * k];
+        };
+        const A = wing(1);
+        const B = wing(-1);
+        const tip = [x2 + Math.cos(ang) * 2, y2 + Math.sin(ang) * 2];
+        const flick = [A, [(A[0] * 0.45 + tip[0] * 0.55), (A[1] * 0.45 + tip[1] * 0.55)], tip, [(B[0] * 0.45 + tip[0] * 0.55), (B[1] * 0.45 + tip[1] * 0.55)], B];
+        return (
+            pressed(shaft, (u) => 0.82 + 0.18 * Math.sin(Math.PI * u), { size: w, color: o.color, thinning: 0.35, taperStart: 3, taperEnd: 1, wobbleAmp: 0.7 }) +
+            pressed(densify(flick, 8), (u) => 0.42 + 0.58 * Math.abs(u - 0.5) * 2, { size: w * 1.08, color: o.color, thinning: 0.5, taperStart: 2, taperEnd: 3, wobbleAmp: 0.4 })
         );
     }
 
@@ -1208,6 +1263,8 @@
         colorIn,
         handArrow,
         bigArrow,
+        stubArrow,
+        bigCheck,
         mapPin,
         tuck,
         blackout,

@@ -140,16 +140,15 @@ const SETS = [
 
 const SCREENS = [
     ["01", "login", "Log in"], ["02", "loginfilled", "Both fields typed: Log in turns black"],
-    ["03", "permask", "Before you start: location to turn on (black = now)"], ["04", "permasking", "Asking: choose Allow in the iPhone's popup"],
-    ["05", "permhalf", "Location on (ticked); the compass is next"], ["06", "permdone", "Both on: Done"], ["07", "permblocked", "Location blocked: How to fix"],
-    ["08", "lobby", "Waiting for a team: Discord and rules, before the game only"],
-    ["09", "rules1", "The rules, one at a time: rule 1, OK"], ["10", "rules5", "Four initialled, rule 5 up"], ["11", "rulesdone", "All eight initialled: Done"],
+    ["03", "permask", "Before you start: the arrow at Turn on, Later made small"], ["04", "permasking", "Asking: choose Allow in the iPhone's popup"],
+    ["05", "permhalf", "Location on; the arrow moves to the compass"], ["06", "permdone", "Both on: one big check, Done"], ["07", "permblocked", "Location blocked: How to fix"],
+    ["08", "lobby", "Waiting for a team: shorter rules, rule 4 is Touch nothing"],
     ["12", "ready", "Ready: role stamped, Start in black"],
     ["13", "hiding", "Hider: go hide"], ["14", "cards", "Stalker: three cards, numbered, pick just one"],
-    ["15", "selected", "Picked, not sent: Send in black"], ["16", "waiting", "Sent, locked in"], ["17", "sent", "Answered"],
-    ["18", "photo", "Photo answer: no gap, nothing on the photo"], ["19", "question", "Hider: new question, the bell arrow"],
-    ["20", "choice", "Hider: which pavilion"], ["21", "tagcode", "Hider: tag code"], ["22", "history", "Questions so far"],
-    ["23", "found", "Stalkers win: the round's receipt"], ["24", "win", "Hider wins: the receipt, where she was redacted"],
+    ["15", "selected", "Picked, not sent: Send in black"], ["16", "waiting", "Sent, locked in"], ["17", "sent", "Answered: no stamp"],
+    ["18", "photo", "Photo answer: no stamp"], ["19", "question", "Hider: new question, the short arrow, NEW beside it"],
+    ["20", "choice", "Hider: which pavilion, code first"], ["21", "tagcode", "Hider: tag code, the note in the gap above it"], ["22", "history", "Questions so far, as a tab"],
+    ["23", "found", "Stalkers win: GOTCHA on top"], ["23b", "found", "The receipt, scrolled to its end"], ["24", "win", "Hider wins"], ["24b", "win", "The receipt, where she was redacted"],
 ];
 const STYLES = [
     ["E", "The app", "One direction, rebuilt from every note on A, B and C."],
@@ -170,15 +169,15 @@ for (const s of SETS) {
     for (const [code, cap] of s.items) html += tile(code, cap, `shots/${code}.png`);
     html += `</div></section>`;
 }
-html += `<section id="styles"><h2>App</h2><p>One direction, rebuilt from all your notes.<br>• One line weight (3 px), nothing rounded.<br>• White button = not yet, black = press this now, drawn red = pressed or picked.<br>• At most two red marks per screen; the header's STALK turns black when anything else is red.<br>• Anything not useful at that moment is gone.<br>New: the first-launch permissions (03–07), the rules signed one by one (09–11), and the receipt on both end screens (23–24).</p></section>`;
+html += `<section id="styles"><h2>App</h2><p>One direction, rebuilt from all your notes.<br>• One line weight (3 px), nothing rounded.<br>• White button = not yet, black = press this now, drawn red = pressed or picked.<br>• At most two red marks per screen; the header's STALK turns black when anything else is red.<br>• Anything not useful at that moment is gone.<br>This pass: the header is HIDE &amp; plus the logo's STALK (no SEEK, no scribble); something red always points at what to do next; shorter copy everywhere; Questions so far is a tab; the old rules screens (09–11) are gone.</p></section>`;
 for (const [k, name, intro] of STYLES) {
     html += `<section id="style-${k.toLowerCase()}"><h2>${k} · ${name}</h2><p>${intro}</p><div class="grid">`;
     for (const [n, slug, cap] of SCREENS) html += tile(`${k}/${n}`, cap, `shots/${k}-${n}-${slug}.png`);
     html += `</div></section>`;
 }
-const ARROWS = ["Long curve, one flick, sharp point", "Straighter and heavier", "Coloured-in head", "Open head, long sides", "Double shaft", "Curl at the tail", "Dashed shaft", "From the other side"];
-html += `<section id="arrows"><h2>Notification arrow</h2><p>Options for the one thing that must never be missed. Each points at the bell from low on the screen, with NEW at its tail and no circle. The screens above use R01; say which one to keep.</p><div class="grid">`;
-ARROWS.forEach((cap, i) => (html += tile(`R${String(i + 1).padStart(2, "0")}`, cap, `shots/R${String(i + 1).padStart(2, "0")}.png`)));
+const ARROWS = [[1, "R1 (for reference): the head you liked"], [2, "R2 (for reference): straight"], [9, "Short, from below left"], [10, "Straight up from below"], [11, "Wider head"], [12, "Heaviest, shortest"], [13, "From below right"], [14, "A bit longer, same width"]];
+html += `<section id="arrows"><h2>Notification arrow</h2><p>Second round, from your notes on R1 and R2: short and wide, straight, R1's pointy head made much bigger, NEW big and heavy beside the arrow instead of at its tail. E19 and E20 use R09.</p><div class="grid">`;
+ARROWS.forEach(([n, cap]) => (html += tile(`R${String(n).padStart(2, "0")}`, cap, `shots/R${String(n).padStart(2, "0")}.png`)));
 html += `</div></section>`;
 const MAPPART = [
     ["hints", "2 · The hints layer", "Where she can still be, after two answers, with nothing waiting. This is the one red thing on the stalker's map between questions. Pick a treatment.", [[1, "The map unchanged; a hand-drawn red line"], [2, "Ruled out inverted to black, no line"], [3, "Inverted, hand-drawn red line"], [4, "Inverted, a computer line"], [5, "Ruled out deleted, a computer line"], [6, "Deleted, hand-drawn red line"], [7, "Deleted, no line"]]],

@@ -85,6 +85,18 @@ for (const style of styles) {
         const out = path.join(ROUND, "shots", `${style.toUpperCase()}-${String(ORDER.indexOf(name) + 1).padStart(2, "0")}-${name}.png`);
         await page.screenshot({ path: out });
         console.log("wrote", path.basename(out));
+        // The receipt runs past the fold: a second shot, scrolled to its end.
+        if ((name === "found" || name === "win") && style === "e") {
+            await page.evaluate(() => {
+                const m = document.getElementById("view-menu");
+                m.scrollTop = m.scrollHeight;
+                document.querySelectorAll("body > svg").forEach((s) => (s.style.display = "none"));
+            });
+            await page.waitForTimeout(100);
+            const outB = out.replace(`-${name}.png`, `b-${name}.png`);
+            await page.screenshot({ path: outB });
+            console.log("wrote", path.basename(outB));
+        }
         await ctx.close();
     }
 }

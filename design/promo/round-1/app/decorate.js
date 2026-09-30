@@ -47,26 +47,29 @@
         btn.style.backgroundImage = svgUrl(w, h, Ink.scribbleFill(-2, -2, w + 4, h + 4, { seed, weight: 11, overshoot: 0, misses: 0.07 }));
     }
 
-    /** The in-app header: the lockup, small. */
+    /**
+     * The in-app header: HIDE & in type, then the logo's STALK right after
+     * it. No SEEK and no scribble: at this size a scribble over black type
+     * is just a smudge. STALK is the one from the chosen lockup (L13.1's).
+     */
     function headerLogo(dark, red = Ink.RED) {
         const t = $("#site-title");
         if (!t) return;
         const ink = dark ? "#fff" : "#000";
         const w = 200;
         const h = 42;
-        const probe = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        probe.setAttribute("width", w);
-        probe.setAttribute("height", h);
-        probe.innerHTML = `<text id="p1" x="0" y="26" font-family="${FONT}" font-weight="700" font-size="19" letter-spacing="-0.3">HIDE &amp;</text>`;
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", w);
+        svg.setAttribute("height", h);
+        svg.style.overflow = "visible";
+        svg.innerHTML = `<text id="p1" x="0" y="28" font-family="${FONT}" font-weight="700" font-size="19" letter-spacing="-0.3" fill="${ink}">HIDE &amp;</text>`;
         t.textContent = "";
-        t.appendChild(probe);
-        const a = probe.querySelector("#p1").getBBox();
-        const sx = a.width + 6;
-        probe.innerHTML += `<text x="${sx}" y="26" font-family="${FONT}" font-weight="700" font-size="19" letter-spacing="-0.3" fill="${ink}">SEEK</text>`;
-        probe.querySelector("#p1").setAttribute("fill", ink);
-        const sw = 52;
-        probe.innerHTML += Ink.scribbleOut(sx + 1, 12, sw - 2, 15, { seed: "hdr", passes: 3, weight: 3.4, color: red });
-        probe.innerHTML += Ink.write("STALK", { x: sx + sw + 6, y: 33, size: 21, weight: 4.2, seed: "hdrs", tilt: -7, spacing: 0.1, mess: 0.45, color: red }).svg;
+        t.appendChild(svg);
+        const a = svg.querySelector("#p1").getBBox();
+        const st = Ink.tuck("STALK", { size: 74, seed: "w13", mess: 1.15, tilt: -4, sizes: [1.06, 0.94, 1.02, 0.95, 1.0], rises: [0.02, -0.02, 0.03, 0, 0.02], spin: 5, overshoot: 0.05, color: red });
+        const k = 27 / st.box.h;
+        const x = a.x + a.width + 7;
+        svg.innerHTML += `<g transform="translate(${x - st.box.x * k} ${31 - (st.box.y + st.box.h) * k}) scale(${k})">${st.svg}</g>`;
     }
 
     const noteAt = (L, text, x, y, o = {}) => L.add(Ink.note(text, { x, y, size: o.size ?? 17, maxWidth: o.maxWidth ?? 160, seed: o.seed ?? text, tilt: o.tilt ?? -4, mess: o.mess, importance: o.importance ?? "aside", color: o.color, weight: o.weight }).svg);
@@ -102,8 +105,19 @@
     }
 
     // The rules, most important first (the Discord call and the timings last).
-    const RULE_ORDER = ["Hide near a path.", "The hider walks.", "No tunnels.", "Nothing to open.", "Answer truthfully.", "Found?", "One hider", "Discord call."];
-    const UNDERLINE = ["Hide near a path.", "Nothing to open."];
+    const RULE_ORDER = ["Hide near a path.", "The hider walks.", "No tunnels.", "Touch nothing.", "Answer truthfully.", "Found?", "One hider", "Discord call."];
+    const UNDERLINE = ["Hide near a path.", "Touch nothing."];
+    // As short as they can be (round 2 puts these in src/index.html).
+    const RULE_TEXT = {
+        "Hide near a path.": ["Hide near a path.", "Within 20 m of one."],
+        "The hider walks.": ["The hider walks.", "Stalkers can run."],
+        "No tunnels.": ["No tunnels.", ""],
+        "Nothing to open.": ["Touch nothing.", "Don't open, move or climb anything."],
+        "Answer truthfully.": ["Answer truthfully.", ""],
+        "Found?": ["Found?", "Show your code. Stalkers win."],
+        "One hider": ["One hider.", "10 min to hide, a question every 5 min."],
+        "Discord call.": ["Discord call.", "Stay in it all game."],
+    };
 
     // -------------------------------------------------------------------
     // Styles
@@ -139,6 +153,35 @@
         // The scanner lives here now, not in the header.
         const found = $("#found-btn");
         if (found) found.textContent = "Found them? Scan their code";
+        // Shorter copy.
+        const goal = $(".rules-goal");
+        if (goal) goal.textContent = "Stalkers win if they find the hider before question 7.";
+        for (const li of $$(".rules-list li")) {
+            const k = $("strong", li)?.textContent.trim();
+            const t = RULE_TEXT[k];
+            if (t) li.innerHTML = `<strong>${t[0]}</strong>${t[1] ? ` ${t[1]}` : ""}`;
+        }
+        const st = $("#status-text");
+        if (st && screen === "lobby") {
+            // The app re-renders this line every tick; keep the short one.
+            const short = "You'll be put in a team. Read the rules while you wait.";
+            st.textContent = short;
+            new MutationObserver(() => st.textContent !== short && (st.textContent = short)).observe(st, { childList: true, characterData: true, subtree: true });
+        }
+        // Questions so far: a tab up top, not a button in the page.
+        const hb = $("#history-btn");
+        if (hb && (visible(hb) || screen === "history")) {
+            hb.style.display = "none";
+            const tabs = $("#view-tabs");
+            if (tabs && !$(".view-tab.q-tab", tabs)) {
+                tabs.insertAdjacentHTML("beforeend", `<button type="button" class="view-tab q-tab" role="tab">QUESTIONS</button>`);
+            }
+        }
+        // Buildings: the code first, heavy, then the whole name.
+        for (const sp of $$(".answer-option > span:not(.answer-distance)")) {
+            const m = sp.textContent.match(/^(.*?)\s*\(([A-Z]{2,6})\)$/);
+            if (m) sp.innerHTML = `<b class="opt-code">${m[2]}</b> ${m[1]}`;
+        }
         // Cards are numbered, so you can tell there are three.
         const cards = $$("#card-row .card");
         cards.forEach((c, i) => {
@@ -152,11 +195,11 @@
     // "Before you start" card). Round 2 builds this into src/.
     // ---------------------------------------------------------------------
     const PIN_ICON = `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-7.6 7-13a7 7 0 0 0-14 0c0 5.4 7 13 7 13Z"/><circle cx="12" cy="9" r="2.6"/></svg>`;
-    const COMPASS_ICON = `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19"/><path d="M12 5.5 15 12h-6Z" fill="currentColor"/><path d="M12 18.5 9 12h6Z"/></svg>`;
+    const COMPASS_ICON = `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.6"/><path d="M12 5.8 15 13H9Z" fill="currentColor" stroke="none"/></svg>`;
     function permSheet(perm) {
         const row = (n, key, icon, name, state, notes) => {
             const btn =
-                state === "on" ? `<span class="perm-on">On</span>`
+                state === "on" ? (perm.loc === "on" && perm.compass === "on" ? `<span class="perm-on"></span>` : `<span class="perm-on">On</span>`)
                 : state === "asking" ? `<button type="button" class="perm-btn" disabled>Asking…</button>`
                 : state === "blocked" ? `<button type="button" class="perm-btn">How to fix</button>`
                 : `<button type="button" class="perm-btn${notes.next ? " next" : ""}">Turn on</button>`;
@@ -166,11 +209,10 @@
         const html = `<div id="perm-sheet" class="modal"><div class="modal-card">
             <div class="modal-head"><h2>Before you start</h2></div>
             <div class="perm-body">
-                <p class="muted perm-intro">Two things to turn on. Tap a button, then choose <b>Allow</b> when the iPhone asks.</p>
-                ${row(1, "loc", PIN_ICON, "Location", perm.loc, { off: "Needed. Puts you on the map, for your team and the game.", asking: "Choose Allow in the iPhone’s popup (“While Using the App”).", on: "On: GPS ±6 m.", blocked: "Blocked. How to fix shows how to allow it again on this phone.", next: perm.loc === "off" })}
-                ${row(2, "compass", COMPASS_ICON, "Compass", perm.compass, { off: "Optional. Shows which way you’re facing on the map. The iPhone calls it “motion and orientation”.", on: "On.", next: perm.loc === "on" && perm.compass === "off" })}
-                <button type="button" id="perm-done" class="big-btn${all ? " cta" : ""}">${all ? "Done" : "Later"}</button>
-                <p class="muted perm-foot">Later on: the notices at the top of the screen.</p>
+                <p class="muted perm-intro">Tap <b>Turn on</b>, then <b>Allow</b>.</p>
+                ${row(1, "loc", PIN_ICON, "Location", perm.loc, { off: "Puts you on the map.", asking: "Choose Allow.", on: "Puts you on the map.", blocked: "Blocked. Tap How to fix.", next: perm.loc === "off" })}
+                ${row(2, "compass", COMPASS_ICON, "Compass", perm.compass, { off: "Shows which way you face.", on: "Shows which way you face.", next: perm.loc === "on" && perm.compass === "off" })}
+                ${all ? `<button type="button" id="perm-done" class="big-btn cta">Done</button>` : `<button type="button" id="perm-later" class="small-btn">Later</button>`}
             </div></div></div>`;
         document.body.insertAdjacentHTML("beforeend", html);
     }
@@ -199,6 +241,26 @@
     // till slip; the only drawn thing is the campus-left bar, coloured in,
     // and it stays inside the paper.
     // ---------------------------------------------------------------------
+    /** A till-slip barcode: black bars, typeset (not drawn). */
+    function barcode(seed) {
+        const r = Ink.rng(`bc${seed}`);
+        let x = 0;
+        let bars = "";
+        while (x < 236) {
+            const w = r.pick([1.5, 1.5, 3, 4.5]);
+            bars += `<rect x="${x}" y="0" width="${w}" height="44" fill="#000"/>`;
+            x += w + r.pick([1.5, 3, 3, 4.5]);
+        }
+        return `<svg viewBox="0 0 ${x} 44" preserveAspectRatio="none" width="100%" height="44" style="display:block">${bars}</svg><div class="rc-num">5 051005 133208</div>`;
+    }
+    /** The torn bottom: the same 3px line as the sides, zigzagging across. */
+    function tear() {
+        let d = "M1.5 0";
+        const n = 20;
+        for (let i = 0; i <= n; i++) d += ` L${(1.5 + (i / n) * 97).toFixed(2)} ${i % 2 ? 1.5 : 10.5}`;
+        d += " L98.5 0";
+        return `<svg class="rc-tear" viewBox="0 0 100 12" preserveAspectRatio="none" width="100%" height="12"><path d="${d} Z" fill="#fff" stroke="none"/><path d="${d}" fill="none" stroke="#000" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linejoin="miter"/></svg>`;
+    }
     function receiptEl(rc) {
         const row = ([a, b]) => `<div class="rc-row"><span>${a}</span><b>${b === "REDACTED" ? '<i class="rc-redact"></i>' : b}</b></div>`;
         const html = `<div class="receipt"><div class="rc-paper">
@@ -207,9 +269,10 @@
             <div class="rc-rule"></div>${rc.lines.map(row).join("")}
             <div class="rc-rule"></div>${rc.totals.map(row).join("")}
             <div class="rc-rule"></div>
-            <div class="rc-row"><span>Campus left</span><b>${rc.left}%</b></div>
+            <div class="rc-row"><span>Questions asked</span><b>${rc.asked} of ${rc.of}</b></div>
             <div class="rc-bar"></div>
-        </div></div>`;
+            <div class="rc-code">${barcode(rc.head)}</div>
+        </div>${tear()}</div>`;
         const btn = $("#team-again-btn");
         btn.insertAdjacentHTML("afterend", html);
     }
@@ -260,15 +323,23 @@
             receiptEl(extra.receipt);
             const bar = $(".rc-bar");
             const b = L.box(bar);
-            const w = (b.w - 6) * (1 - extra.receipt.left / 100);
+            const w = (b.w - 16) * (extra.receipt.asked / extra.receipt.of);
             // Ruled out, coloured in by hand; stays inside the bar.
             L.add(Ink.colorIn([[[b.x + 8, b.y + 8], [b.x + 3 + w, b.y + 8], [b.x + 3 + w, b.y + b.h - 8], [b.x + 8, b.y + b.h - 8]]], { seed: `bar${screen}`, weight: 7, overshoot: 0 }));
         }
         if (perm) {
             permSheet(perm);
-            for (const on of $$("#perm-sheet .perm-on")) {
-                const b = P.box(on);
-                P.add(Ink.check(b.x + b.w + 4, b.y - 6, 26, { seed: `pc${b.y}`, weight: 5 }));
+            // The one thing to do next gets the arrow; what's done needs nothing.
+            const next = $("#perm-sheet .perm-btn.next");
+            if (next) {
+                const b = P.box(next);
+                P.add(Ink.stubArrow(b.x - 50, b.y + b.h + 62, b.x + 8, b.y + b.h + 6, { seed: `pa${perm.loc}`, weight: 13 }));
+            }
+            if (perm.loc === "on" && perm.compass === "on") {
+                const rows = $$("#perm-sheet .perm-row").map((r) => P.box(r));
+                const top = rows[0].y;
+                const bot = rows[rows.length - 1].y + rows[rows.length - 1].h;
+                P.add(Ink.bigCheck(innerWidth - 124, top + 14, Math.min(96, bot - top - 24), { seed: "pdone", weight: 16 }));
             }
             const fix = $("#perm-sheet .perm-row[data-perm=loc] .perm-btn");
             if (perm.loc === "blocked" && fix) {
@@ -284,9 +355,11 @@
             const cx = bb.x + bb.w / 2;
             const cy = bb.y + bb.h / 2;
             if (S.prune) {
-                // Never a circle as well: one long arrow from low on the screen.
-                P.add(Ink.bigArrow(64, innerHeight * 0.5, cx - 12, bb.y + bb.h + 8, { seed: `bella${screen}`, weight: 7, bend: -0.22 }));
-                P.add(Ink.write("NEW", { x: 30, y: innerHeight * 0.5 + 46, size: 32, seed: `belln${screen}`, tilt: -8, importance: "key" }).svg);
+                // Short and wide, NEW beside it (the R set's second round).
+                const tip = [cx - 6, bb.y + bb.h + 6];
+                P.add(Ink.stubArrow(tip[0] - 78, tip[1] + 96, tip[0], tip[1], { seed: `bella${screen}`, weight: 13 }));
+                // Beside the arrow, in the empty end of the badge row.
+                P.add(Ink.write("NEW", { x: tip[0] + 8, y: tip[1] + 82, size: 44, weight: 9, seed: `belln${screen}`, tilt: -8, importance: "key" }).svg);
             } else {
                 P.add(Ink.circle(cx, cy, bb.w / 2 + 8, bb.h / 2 + 7, { seed: "bell", weight: 4.5 }));
                 P.add(Ink.handArrow(cx - 150, cy + 96, cx - 16, cy + 18, { seed: `bella${screen}`, weight: 7, head: 26, bend: -0.18 }));
@@ -299,7 +372,7 @@
         if (S.stampRole && visible(badge) && (S.stampRole !== "reveal" || screen === "ready" || screen === "hiding")) {
             const b = L.box(badge);
             badge.style.visibility = "hidden";
-            const res = Ink.write(badge.textContent, { x: b.x + 10, y: b.y + b.h + 8, size: 17, weight: 3.4, seed: "stamp", tilt: -6 });
+            const res = Ink.write(badge.textContent, { x: b.x + 10, y: b.y + b.h + 8, size: 17, weight: 3.4, seed: "stamp", tilt: -6, spacing: 0.34, even: true });
             L.add(Ink.box(b.x, b.y - 6, res.width + 22, b.h + 20, { seed: "stampbox", weight: 3.2, jitter: 2 }));
             L.add(res.svg);
         }
@@ -339,7 +412,10 @@
                     L.add(Ink.write(String(i + 1), { x: b.x + b.w - 40, y: b.y + 46, size: 34, seed: `n${i}`, weight: 7 }).svg);
                 });
             } else if (styleKey !== "b") {
-                if (S.prune && screen !== "selected") noteAt(L, "PICK JUST ONE.", first.x + first.w - 206, first.y + 4, { maxWidth: 220, size: 22, tilt: -4, importance: "key" });
+                if (S.prune && screen !== "selected") {
+                    // Above the rule, over the end of UNTIL QUESTION, running out of room and curling up.
+                    L.add(Ink.write("PICK JUST ONE.", { x: first.x + 118, y: first.y - 22, size: 34, weight: 7, seed: "pick1", tilt: -5, maxWidth: first.w - 120, importance: "key" }).svg);
+                }
                 else if (!S.prune) noteAt(L, "PICK JUST ONE.", first.x + first.w - 190, first.y + 30, { maxWidth: 200, size: 22, tilt: -5, importance: "key" });
             }
             if (screen === "selected") {
@@ -370,8 +446,8 @@
                     L.add(res.svg);
                     L.add(Ink.write(`— ${ans.textContent.split(":")[0].toUpperCase()}`, { x: a.x + Math.min(res.width, a.w - 110) + 12, y: a.y + 56, size: 12, seed: "who", weight: 2.2, color: ink, importance: "key" }).svg);
                 }
-                // Halfway over the question, never on the photo.
-                stamp(L, "ANSWERED", prompt.x + prompt.w - 150, prompt.y - 30, { size: 20, tilt: -7 });
+                // No stamp: the answer (or the photo) already says it.
+                void prompt;
             } else {
                 // Over the card's edge, a little unhinged.
                 const w = Ink.write("SENT · LOCKED IN", { x: st.x - 6, y: st.y + st.h - 10, size: 22, seed: "sent", tilt: -6, importance: "key" });
@@ -384,11 +460,11 @@
             const input = $("input", opt);
             if (!input?.checked) continue;
             const b = L.box(input);
-            L.add(Ink.check(b.x - 5, b.y - 4, b.w + 10, { seed: `chk${opt.textContent.trim()}`, weight: 5 }));
+            L.add(Ink.check(b.x - 8, b.y - 10, b.w + 18, { seed: `chk${opt.textContent.trim()}`, weight: 8 }));
         }
         for (const row of $$(".answer-row").filter(visible)) {
             const sAns = L.box($(".answer-row-answer", row));
-            L.add(Ink.check(sAns.x - 2 + Math.min(sAns.w, 190) + 10, sAns.y - 2, 16, { seed: `rc${sAns.y}`, weight: 3.6 }));
+            L.add(Ink.check(sAns.x + Math.min(sAns.w, 190) + 22, sAns.y - 8, 26, { seed: `rc${sAns.y}`, weight: 6 }));
         }
 
         // The tag code: what to do with it, plainly.
@@ -398,16 +474,23 @@
             if (S.prune) {
                 // Beside the heading, the top of it just over the code's frame.
                 const hd = L.box($("#hider-qr .cards-title"));
-                noteAt(L, "SHOW THIS TO THE STALKER", hd.x + 136, hd.y + 6, { size: 20, maxWidth: 200, tilt: -4, importance: "key" });
+                // In the gap above the heading, one line, clear of the code.
+                noteAt(L, "SHOW THIS TO THE STALKER", hd.x, hd.y - 16, { size: 21, maxWidth: 350, tilt: -3, importance: "key", weight: 5.2 });
             } else noteAt(L, "SHOW THIS TO THE STALKER", q.x + 4, q.y + q.h + 70, { size: 21, maxWidth: 320, tilt: -3, importance: "key" });
         }
 
         // Per-screen notes.
         const tb = visible(title) ? L.box(title) : null;
-        if (screen === "login" || screen === "loginfilled") {
+        // Only until they start typing (or press Register).
+        if (screen === "login") {
             const reg = L.box($$(".auth-switch-btn")[1]);
-            noteAt(L, "NEW? THIS ONE", innerWidth - 246, reg.y + reg.h + 58, { size: 27, tilt: -5, maxWidth: 240, importance: "info" });
-            L.add(Ink.handArrow(reg.x + 70, reg.y + reg.h + 20, reg.x + 88, reg.y + reg.h - 4, { seed: "reg", weight: 4, head: 13 }));
+            const cx = reg.x + reg.w / 2;
+            // In the empty username field, the arrow up from it to Register.
+            const user = L.box($("#auth-username") ?? $$("#view-menu input")[0]);
+            const nw = Ink.write("NEW? CLICK HERE", { x: 0, y: 0, size: 24, seed: "NEW? CLICK HERE", tilt: -4, importance: "info", weight: 5 }).width;
+            const base = user.y + user.h - 12;
+            noteAt(L, "NEW? CLICK HERE", innerWidth - 24 - nw, base, { size: 24, tilt: -4, maxWidth: 320, importance: "info", weight: 5 });
+            L.add(Ink.stubArrow(cx + 6, base - 34, cx - 2, reg.y + reg.h + 7, { seed: "reg", weight: 11, head: 24 }));
         }
         // Black = press me now: only once there's something to log in with.
         if (screen === "loginfilled") $("#auth-submit").classList.add("cta");
@@ -422,10 +505,9 @@
         }
         if (screen === "lobby") {
             const d = L.box($("#view-menu .discord-btn"));
-            noteAt(L, "READ THESE ↓", d.x + d.w - 262, d.y + d.h + 30, { size: 30, tilt: -6, maxWidth: 270, importance: "key", weight: 6.2 });
+            noteAt(L, "READ THESE ↓", d.x + d.w - 262, d.y + d.h + 46, { size: 30, tilt: -6, maxWidth: 270, importance: "key", weight: 6.2 });
         }
         if (screen === "ready") {
-            if (tb) noteAt(L, "WAIT FOR EVERYONE", tb.x + 160, tb.y - 14, { size: 15, maxWidth: 170 });
 
         }
         if (screen === "hiding" && tb) {
@@ -434,10 +516,24 @@
         if ((screen === "found" || screen === "win") && tb) {
             if (S.prune) {
                 // Above the title, just catching its top edge.
-                if (screen === "found") noteAt(L, "GOTCHA.", innerWidth - 268, tb.y + 10, { size: 46, tilt: -7, maxWidth: 260, importance: "vibe" });
+                if (screen === "found") {
+                    // On the top layer, so nothing typeset cuts it; the G big.
+                    const t = P.box(title);
+                    const g = Ink.tuck("GOTCHA", { size: 44, seed: "gotcha", mess: 1.2, tilt: -7, sizes: [1.5, 1, 0.98, 1.02, 0.96, 1.04], rises: [0.12, 0, 0.02, -0.02, 0.03, 0], spin: 4 });
+                    P.add(`<g transform="translate(${innerWidth - 24 - g.box.w - g.box.x} ${t.y + 8 - (g.box.y + g.box.h)})">${g.svg}</g>`);
+                }
                 else noteAt(L, "HOW ABOUT THAT.", innerWidth - 300, tb.y + 8, { size: 26, tilt: -6, maxWidth: 300, importance: "vibe" });
             } else if (screen === "found") noteAt(L, "GOTCHA.", tb.x + 150, tb.y + 26, { size: 52, tilt: -9, maxWidth: 260, importance: "vibe" });
             else noteAt(L, "HOW ABOUT THAT.", tb.x + 90, tb.y + 22, { size: 34, tilt: -8, maxWidth: 280, importance: "vibe" });
+        }
+        // Questions so far is a tab now: the page sits under the header, its tab open.
+        const hm = $("#history-modal");
+        if (S.prune && hm && !hm.hidden) {
+            const hdr = $("#view-tabs").getBoundingClientRect();
+            hm.style.top = `${hdr.bottom}px`;
+            $$(".view-tab").forEach((t) => t.classList.toggle("active", t.classList.contains("q-tab")));
+            const head = $(".modal-head", hm);
+            if (head) head.style.display = "none";
         }
         L.done();
         P.done();
@@ -445,7 +541,6 @@
         // red, it steps back to black so the red means "look here".
         const quiet = S.quietHeader && (L.has() || P.has() || screen === "history");
         headerLogo(S.dark, quiet ? ink : Ink.RED);
-        if (S.prune) $("#site-title svg").style.cssText = "transform:scale(0.88);transform-origin:0 0";
 
         // History modal: answers written in.
         const hist = $("#history-list");

@@ -218,7 +218,7 @@
     const scrawl = (svg, o = {}) => ink(svg, Ink.write(o.text ?? "STALK", { x: 0, y: 0, size: o.size ?? 84, weight: (o.size ?? 84) * 0.18, seed: o.seed ?? "L1s", mess: o.mess ?? 0.45, tilt: o.tilt ?? -2, spacing: 0.12 }).svg);
 
     /** STALK with its letters tucked together, drawn at the origin, to be placed. */
-    const tucked = (svg, o = {}) => ink(svg, Ink.tuck(o.text ?? "STALK", { size: o.size ?? 84, seed: o.seed ?? "t1", sizeVar: o.sizeVar, riseVar: o.riseVar, sizes: o.sizes, rises: o.rises, tilt: o.tilt ?? -3, mess: o.mess ?? 0.45, gap: o.gap }).svg);
+    const tucked = (svg, o = {}) => ink(svg, Ink.tuck(o.text ?? "STALK", { size: o.size ?? 84, seed: o.seed ?? "t1", sizeVar: o.sizeVar, riseVar: o.riseVar, sizes: o.sizes, rises: o.rises, tilt: o.tilt ?? -3, mess: o.mess ?? 0.45, gap: o.gap, spin: o.spin, overshoot: o.overshoot }).svg);
 
     /** One typeset word at whatever size makes it exactly `width` wide. */
     function fitWord(svg, text, x, top, width, o = {}) {
