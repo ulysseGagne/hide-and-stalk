@@ -117,7 +117,17 @@
         datadotsclean: { look: "dots", drop: "detail", prune: 60 },
         // Revived from the tile days, redrawn from the data.
         datablackroads: "blackroads", datablackdots: "blackdots", datafigure: "figure",
+        // The three looks left (S11, S20, S14), showing only what the key keeps.
+        dataoutlinekey: { look: "outline", key: 3 }, datablackdotskey: { look: "blackdots", key: 3 }, datadotskey: { look: "dots", key: 3 },
+        // The key's fourth pass, and S20 drawn with it (hand edits from the key editor included).
+        datakey4: "key4", datablackdotskey4: { look: "blackdots", key: 4 },
+        // The same, with every road and path OpenStreetMap has: the gallery's S20 (S21 is the editor's).
+        datablackdotsall: { look: "blackdots", key: 4, roads: "all" },
     };
+    // The map under every screen that doesn't name its own skin (the hints
+    // layer, the questions): S20, decided: every road and path OpenStreetMap
+    // has, with the key's areas.
+    const MAP_SKIN = "datablackdotsall";
 
     // The app around the map (direction E): header with MAP open, the question box.
     function chrome(box) {
@@ -182,6 +192,12 @@
         }
         if (part === "lead") return moved ? `<div style="position:absolute;left:${x - 1.5}px;top:${top + h}px;width:3px;height:${y - top - h}px;background:#000;box-shadow:0 0 0 2px #fff"></div>` : "";
         const dark = TAGS === "ink" ? !self : self;
+        // A white tag is one outlined shape, box and pointer together (Ta's
+        // bubble): no filled triangle under a white box.
+        if (TAGS === "base" && !dark && !moved) {
+            const bb = bubble(x, y, label, w, h);
+            return `<svg width="${W}" height="${H}" style="position:absolute;left:0;top:0;overflow:visible"><path d="M${bb.pts.map((p) => p.join(" ")).join("L")}Z" fill="#fff" stroke="#000" stroke-width="3" stroke-linejoin="miter"/>${tagText(bb.cx, bb.cy, label)}</svg>`;
+        }
         // Every style but the original gets a 3px white ring, so it reads on black too.
         const ring = plain(t) ? "" : ";box-shadow:0 0 0 3px #fff";
         const border = TAGS === "ink" && self ? "border:3px solid #000;outline:3px solid #fff;box-shadow:0 0 0 6px #000,0 0 0 9px #fff" : `border:3px solid #000${ring}`;
@@ -193,9 +209,9 @@
         if (TAGS === "big" || TAGS === "sticker" || TAGS === "shadow" || moved) out += `<div style="position:absolute;left:${x - 5}px;top:${y - 5}px;width:10px;height:10px;background:#000;box-shadow:0 0 0 3px #fff"></div>`;
         return out;
     }
-    /** A player: queued, so the tags can be spread out before drawing. */
-    function tag(x, y, label, self) {
-        PENDING.push({ x, y, label, self, dy: 0 });
+    /** A player (or, with place, a landmark): queued, so the tags can be spread out before drawing. */
+    function tag(x, y, label, self, place = false) {
+        PENDING.push({ x, y, label, self, place, dy: 0 });
         return "";
     }
     /** Draw every queued tag; any that would overlap one already placed moves up. */
@@ -213,8 +229,10 @@
         }
         // Leaders first, so no line crosses over a tag. Then the tags from the
         // top of the screen down: where two overlap, the lower one is on top.
-        // YOU goes last, over everything, so it is never hidden.
-        const order = [...list].sort((a, b) => a.self - b.self || boxes.get(a).y + a.dy - (boxes.get(b).y + b.dy));
+        // A landmark's tag goes over the players'; YOU goes last, over
+        // everything, so it is never hidden.
+        const lvl = (t) => (t.self ? 2 : t.place ? 1 : 0);
+        const order = [...list].sort((a, b) => lvl(a) - lvl(b) || boxes.get(a).y + a.dy - (boxes.get(b).y + b.dy));
         for (const t of order) html += tagHtml(t, boxes.get(t), "lead");
         for (const t of order) html += tagHtml(t, boxes.get(t), "body");
         PENDING = [];
@@ -249,29 +267,39 @@
     const VARIANTS = {
         "8.1": { pins: "push" },
         "8.2": { pins: "push", popup: true },
-        "10.1": { pins: "push" },
+        // No pin: the circle is the one red thing; the landmark gets a white tag.
+        "10.1": { mark: "tag" },
+        // The hints layer with one player tapped: her name shows above her pin.
+        "3a.1": { tapped: "camille" },
+        // N08 with the map pins filled in, the dot a hole; and a café tapped.
+        "8a": { pins: "filled" },
+        // N08 with the glossy map pin (G1: the pins' look, the map through its hole).
+        "8b": { pins: "gloss", gloss: 1 },
+        "8.2a": { pins: "filled", popup: true },
     };
 
     async function draw(root, code) {
-        const v = Math.floor(code);
-        const o = { ...LIST[v - 1], ...(VARIANTS[String(code)] ?? {}) };
+        const v = parseInt(String(code), 10);
+        // "08.2a" and "8.2a" are the same variant.
+        const o = { ...LIST[v - 1], ...(VARIANTS[String(code).replace(/^0+(?=\d)/, "")] ?? {}) };
+        const skin = o.skin ?? MAP_SKIN;
         TAGS = o.tags ?? "base";
         const g = state(o.game, o.upTo);
         root.style.background = "#fff";
         root.insertAdjacentHTML("beforeend", FILTER);
         // The colour-coded key map is shown bare: the whole screen is map, no app around it.
-        const bare = ["datakey", "datakey2", "datakey3"].includes(o.skin);
+        const bare = ["datakey", "datakey2", "datakey3", "datakey4"].includes(skin);
         const mapEl = document.createElement("div");
         mapEl.style.cssText = `position:absolute;left:0;top:${bare ? 0 : HEAD}px;width:${W}px;height:${bare ? H : H - HEAD}px;z-index:0;background:#fff`;
         root.appendChild(mapEl);
         const map = L.map(mapEl, { zoomControl: false, attributionControl: true, zoomSnap: 0, fadeAnimation: false, zoomAnimation: false });
         map.attributionControl.setPrefix(false);
-        const redraw = RETRACE[o.skin];
-        const data = DATA_SKINS[o.skin];
+        const redraw = RETRACE[skin];
+        const data = DATA_SKINS[skin];
         // Redrawn tiles are stretched a pixel so no seam shows between them.
         if (redraw) mapEl.insertAdjacentHTML("beforeend", `<style>.leaflet-tile{width:${redraw.sharp ? 129 : 257}px!important;height:${redraw.sharp ? 129 : 257}px!important}</style>`);
         const tiles = data ? null : (redraw ? Retrace.layer(redraw) : L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" })).addTo(map);
-        if (tiles) mapEl.querySelector(".leaflet-tile-pane").style.filter = redraw ? redraw.filter ?? "none" : SKINS[o.skin ?? "xerox"];
+        if (tiles) mapEl.querySelector(".leaflet-tile-pane").style.filter = redraw ? redraw.filter ?? "none" : SKINS[skin];
         else map.attributionControl.addAttribution("© OpenStreetMap");
         // The whole campus, below the question box: no auto-zoom.
         const ring = Campus.layers.campus.ring;
@@ -319,7 +347,7 @@
         // The question on the table, and only that, in red.
         const q = o.ask;
         // A pin on an exact spot: the map pin's point, or B29's pushpin centred on it.
-        const pinAt = (x, y, size, seed) => (o.pins === "push" ? Ink.pin(x, y, { size: size * 0.55 }) : Ink.mapPin(x, y, { size, seed, color: R }));
+        const pinAt = (x, y, size, seed) => (o.pins === "push" ? Ink.pin(x, y, { size: size * 0.55 }) : o.pins === "gloss" ? Ink.glossPin(x, y, { size, seed, ...GPINS[o.gloss ?? 1] }) : Ink.mapPin(x, y, { size, seed, color: R, fill: o.pins === "filled" }));
         let popup = "";
         if (q) {
             const who = g.pos[q.by];
@@ -329,9 +357,9 @@
                 // little further out than EAST: its T reads closer to the line.
                 red += dashed([c[0], HEAD + 110], [c[0], H + 10], `m2d${v}`, 6.2);
                 const y = HEAD + 340;
-                const west = { size: 26, seed: `w${v}`, tilt: -3, importance: "key" };
+                const west = { size: 26, seed: `w${v}`, tilt: -3, importance: "key", weight: 26 * 0.21 };
                 red += Ink.write("WEST", { ...west, x: c[0] - 30 - Ink.write("WEST", west).width, y }).svg;
-                red += Ink.write("EAST", { x: c[0] + 28, y, size: 26, seed: `e${v}`, tilt: -3, importance: "key" }).svg;
+                red += Ink.write("EAST", { x: c[0] + 28, y, size: 26, seed: `e${v}`, tilt: -3, importance: "key", weight: 26 * 0.21 }).svg;
             } else if (q.radius) {
                 // Circles are exact (centre and radius), only drawn by hand.
                 const rp = q.radius * pxPerM;
@@ -360,7 +388,9 @@
                 const lm = Campus.at("landmarks", q.closer);
                 const [lx, ly] = P(lm);
                 const rp = dist(lm, who) * pxPerM;
-                red += Ink.ring(lx, ly, rp, { seed: `m2k${v}`, weight: 4.5 }) + pinAt(lx, ly, 15, "m2lm");
+                red += Ink.ring(lx, ly, rp, { seed: `m2k${v}`, weight: 4.5 });
+                if (o.mark === "tag") tag(lx, ly, q.closer.toUpperCase(), false, true);
+                else red += pinAt(lx, ly, 15, "m2lm");
             }
         }
 
@@ -388,14 +418,28 @@
             red += Ink.cross(e[0], e[1], 10, { seed: "m2x", weight: 5 });
         }
 
-        // People: computer-drawn name tags.
-        const me = o.view === "hider" ? null : g.me;
+        // People: everyone else is one of B29's pushpins on their exact spot,
+        // no name (a tap shows it: o.tapped); YOU is Yp, B29's pin look on Yn's
+        // arrow, pointing the way your phone faces (a stalker's toward the
+        // hider, the hider's toward the closest stalker), over everything.
+        const bearing = (a, b) => (turf.bearing(turf.point(a), turf.point(b)) + 360) % 360;
+        let you = "";
+        let pins = "";
+        const other = (n, p) => {
+            const [px, py] = P(p);
+            pins += Ink.pin(px, py, { size: 8 });
+            if (o.tapped === n) tag(px, py - 7, n.toUpperCase(), false);
+        };
         if (o.view === "hider") {
             const hp = P(g.hider);
-            html += tag(hp[0], hp[1], "YOU", true);
-            for (const [n, p] of Object.entries(g.pos)) html += tag(...P(p), n.toUpperCase(), false);
+            const [, near] = Object.entries(g.pos).sort((a, b) => dist(g.hider, a[1]) - dist(g.hider, b[1]))[0];
+            you = youMark(hp[0], hp[1], "p.6.5", bearing(g.hider, near));
+            for (const [n, p] of Object.entries(g.pos)) other(n, p);
         } else {
-            for (const [n, p] of Object.entries(g.pos)) html += tag(...P(p), n === me ? "YOU" : n.toUpperCase(), n === me);
+            for (const [n, p] of Object.entries(g.pos)) {
+                if (n !== g.me) other(n, p);
+                else you = youMark(...P(p), "p.6.5", bearing(p, g.hider));
+            }
         }
 
         // Design rule: the players' names are the one thing drawn over the red.
@@ -405,7 +449,9 @@
         layer(4, under, true);
         layer(6, html.split("<!--tags-->")[0]);
         layer(40, red, true);
+        layer(49, pins, true);
         layer(50, tagsHtml);
+        layer(52, you, true);
         layer(55, popup);
         layer(60, c.html);
         layer(65, c.ink, true);
@@ -426,15 +472,15 @@
         { game: G, upTo: 2, view: "stalker", hints: { out: "delete", edge: "hand" }, box: next(3, "3:12", "The map only shows where she can be."), name: "Hints: deleted, red line by hand" },
         { game: G, upTo: 2, view: "stalker", hints: { out: "delete" }, box: next(3, "3:12", "The map only shows where she can be."), name: "Hints: deleted, no line" },
         // A question waiting: only what it needs is red; the hints step aside.
-        { game: G, upTo: 2, view: "stalker", ask: { nearest: "cafe", by: "noah_b" }, box: asked(3, "noah_b", "Which café on campus are you closest to?", "1:02"), name: "Q3 nearest café: the cafés, pinned in red (stalker)" },
-        { game: G, upTo: 2, view: "hider", ask: { nearest: "cafe", by: "noah_b" }, box: asked(3, "noah_b", "Which café on campus are you closest to?", "1:02"), name: "Same question, the hider's map" },
-        { game: G, upTo: 3, view: "stalker", ask: { closer: "greenhouses", by: "noah_b" }, box: asked(4, "noah_b", "Are you closer to the greenhouses than I am?", "0:48"), name: "Q4 closer than me: the circle through noah_b" },
+        { game: G, upTo: 2, view: "stalker", ask: { nearest: "cafe", by: "noah" }, box: asked(3, "noah", "Which café on campus are you closest to?", "1:02"), name: "Q3 nearest café: the cafés, pinned in red (stalker)" },
+        { game: G, upTo: 2, view: "hider", ask: { nearest: "cafe", by: "noah" }, box: asked(3, "noah", "Which café on campus are you closest to?", "1:02"), name: "Same question, the hider's map" },
+        { game: G, upTo: 3, view: "stalker", ask: { closer: "greenhouses", by: "noah" }, box: asked(4, "noah", "Are you closer to the greenhouses than I am?", "0:48"), name: "Q4 closer than me: the circle through noah" },
         { game: G, upTo: 4, view: "stalker", ask: { ew: true, by: "camille" }, box: asked(5, "camille", "Are you east or west of me?", "2:40"), name: "Q5 east or west: the line, which side is which" },
         { game: G, upTo: 4, view: "hider", ask: { ew: true, by: "camille" }, box: asked(5, "camille", "Are you east or west of me?", "2:40"), name: "Same question, the hider's map" },
         { game: "pubu", upTo: 3, view: "stalker", ask: { radius: 200, by: "lea" }, box: asked(4, "lea", "Are you within 200 m of me?", "4:05"), name: "Game 2, within 200 m: the circle (stalker)" },
         { game: "pubu", upTo: 3, view: "hider", ask: { radius: 200, by: "lea" }, box: asked(4, "lea", "Are you within 200 m of me?", "4:05"), name: "Same question, the hider's map" },
         // The hider between questions: one string, to the closest stalker.
-        { game: G, upTo: 2, view: "hider", tether: true, box: next(3, "3:12", "Closest stalker, as the crow flies."), name: "Hider between questions: one string, the closest stalker" },
+        { game: G, upTo: 2, view: "hider", tether: true, box: next(3, "3:12"), name: "Hider between questions: one string, the closest stalker" },
         // For the receipt: her walk, and where they got her.
         { game: G, upTo: 4, view: "hider", path: true, box: { kicker: "FOUND · 13:32", text: "Your walk, from the start to the X." }, name: "For the receipt: her walk, the X where they found her" },
         // The skins, on the same moment (nothing waiting, no hints): just the map and the players.
@@ -448,7 +494,7 @@
     // Skin samples: every skin at three zoom levels (a: whole campus, b: a few buildings, c: close up).
     const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold", "dotsonly", "tone", "tonelight", "tonegrey", "dotsclean", "streetsclean", "grainclean", "grainnotext", "blackbuildings"];
     // Variants numbered after the skin they come from.
-    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "27.1": "grainsamegreen", "27.2": "grainlightgreen", "1.1": "xeroxnotext", "2.1": "xeroxdarknotext", "11.1": "greynotext", "27.3": "grainreorder", "27.4": "grainshift", "2.2": "xeroxsolid", "16.2": "vector16", "16.3": "vector161", "16.31": "vector161s", "16.32": "vector161ss", "16.4": "vector16g", "24.1": "dotsgreen", "30.2": "dataoutline", "30.3": "datasolid", "30.9": "datagrain", "30.5": "datadots", "30.0": "datakey", "30.01": "datakey2", "30.02": "datakey3", "30.21": "dataoutlinenopaths", "30.22": "dataoutlinepruned", "30.23": "dataoutlineclean", "30.51": "datadotsclean", "31.1": "datablackroads", "31.2": "datablackdots", "31.3": "datafigure" };
+    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "27.1": "grainsamegreen", "27.2": "grainlightgreen", "1.1": "xeroxnotext", "2.1": "xeroxdarknotext", "11.1": "greynotext", "27.3": "grainreorder", "27.4": "grainshift", "2.2": "xeroxsolid", "16.2": "vector16", "16.3": "vector161", "16.31": "vector161s", "16.32": "vector161ss", "16.4": "vector16g", "24.1": "dotsgreen", "30.2": "dataoutline", "30.3": "datasolid", "30.9": "datagrain", "30.5": "datadots", "30.0": "datakey", "30.01": "datakey2", "30.02": "datakey3", "30.21": "dataoutlinenopaths", "30.22": "dataoutlinepruned", "30.23": "dataoutlineclean", "30.51": "datadotsclean", "31.1": "datablackroads", "31.2": "datablackdots", "31.3": "datafigure", "30.24": "dataoutlinekey", "31.21": "datablackdotskey", "30.52": "datadotskey", "30.03": "datakey4", "31.22": "datablackdotskey4", "31.23": "datablackdotsall" };
     const ZOOMS = { a: null, b: 16.6, c: 18.2 };
     function drawSkin(root, code) {
         const [, n, z] = /^([\d.]+)([abc])$/.exec(code);
@@ -456,13 +502,13 @@
         return draw(root, LIST.length);
     }
 
-    // The hints layer, third pass: N01-N03 only, on S16 (no text), each with
-    // the five ways of making the players visible.
+    // The hints layer, third pass: N01-N03 only, each with the five ways of
+    // making the players visible. On S20 now (it was S16, the traced tiles).
     const TAG_LIST = ["base", "big", "ink", "sticker", "shadow", "marker"];
     function drawHint(root, code) {
         const [, n, t] = /^(\d)([a-f])$/.exec(code);
         const base = LIST[Number(n) - 1];
-        LIST.push({ ...base, skin: "tracedthin", tags: TAG_LIST["abcdef".indexOf(t)] });
+        LIST.push({ ...base, skin: MAP_SKIN, tags: TAG_LIST["abcdef".indexOf(t)] });
         return draw(root, LIST.length);
     }
 
@@ -491,6 +537,15 @@
         return { pts, left, cx: x, cy: top + h / 2 };
     }
     function otherTag(t, x, y, label) {
+        // p: B29's pushpin as everyone else is shown: no name, and (right) tapped,
+        // the name above it. p.1: the tapped pin alone.
+        if (t === "p" || t === "p.1") {
+            const tapped = (px) => {
+                const bb = bubble(px, y - 7, label);
+                return `${Ink.pin(px, y, { size: 8 })}<path d="M${bb.pts.map((q) => q.join(" ")).join("L")}Z" fill="#fff" stroke="#000" stroke-width="3" stroke-linejoin="miter"/>${tagText(bb.cx, bb.cy, label)}`;
+            };
+            return t === "p" ? Ink.pin(x - 62, y, { size: 8 }) + tapped(x + 44) : tapped(x);
+        }
         if (t === "a" || t === "k" || t === "k.1" || t === "l") {
             // k.1: k with the name written by hand too, in red like its edge; the tag fits the handwriting.
             const hand = { size: 15, seed: `tk1${label}`, tilt: -2, importance: "info" };
@@ -528,15 +583,92 @@
         const edge = (seed) => Ink.wobble([...pts, pts[0], pts[1]].map((p, i, all) => (i === all.length - 1 ? [(p[0] + all[i - 1][0]) / 2, (p[1] + all[i - 1][1]) / 2] : p)), { seed, weight: 3.4, amp: 0.7 });
         if (kind === "m") return `<polygon points="${poly}" fill="#fff"/>${edge("youm")}`;
         if (kind === "n") return `<polygon points="${poly}" fill="${R}"/>${edge("youn")}`;
+        if (kind === "p" || kind.startsWith("p.")) {
+            // Yn in B29's pin look: the pin's red, its thin black edge (a touch
+            // uneven, as the pin's is), and its white shine, kept inside the
+            // arrow. p: an oval streak along the left side; p.1 a straight
+            // line; p.2 a small triangle, a facet at the front; p.3 a blade
+            // along the left edge; p.4 the fold down the middle; p.5 two strokes;
+            // p.6 the blade turned around; p.7 and p.8 that, further down.
+            const n = Ink.noise1(Ink.rng(`yp${Math.round(x)},${Math.round(y)}`));
+            const ring = [];
+            pts.forEach((q, i) => {
+                const nx = pts[(i + 1) % pts.length];
+                for (let k = 0; k < 6; k++) ring.push([q[0] + ((nx[0] - q[0]) * k) / 6, q[1] + ((nx[1] - q[1]) * k) / 6]);
+            });
+            const cx = pts.reduce((t, q) => t + q[0], 0) / 4;
+            const cy = pts.reduce((t, q) => t + q[1], 0) / 4;
+            const d = `M${ring.map(([px, py], i) => {
+                // Corners stay put; between them the edge moves by up to 0.7 px.
+                const k = i % 6 === 0 ? 0 : n(i * 0.45) * 0.7;
+                const l = Math.hypot(px - cx, py - cy) || 1;
+                return `${(px + ((px - cx) / l) * k).toFixed(1)} ${(py + ((py - cy) / l) * k).toFixed(1)}`;
+            }).join("L")}Z`;
+            const id = `yp${Math.round(x)}x${Math.round(y)}`;
+            // The shine, drawn in the arrow's own frame (tip up) and turned with it.
+            const S = ([px, py]) => [x + px * Math.cos(r) - py * Math.sin(r), y + px * Math.sin(r) + py * Math.cos(r)];
+            const f = (q) => S(q).map((v) => v.toFixed(1)).join(" ");
+            const T = [0, -21];
+            const Lw = [-15, 15];
+            const N = [0, 6];
+            const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+            // In from the left edge, toward the middle.
+            const inset = (t, k) => {
+                const q = lerp(T, Lw, t);
+                return [q[0] + (36 / 39) * k, q[1] + (15 / 39) * k];
+            };
+            const line = (a, b, w) => `<path d="M${f(a)}L${f(b)}" stroke="#fff" stroke-width="${w}" stroke-linecap="round" fill="none"/>`;
+            const tri = (a, b, c) => `<path d="M${f(a)}L${f(b)}L${f(c)}Z" fill="#fff"/>`;
+            const [sx, sy] = S([-5, 0]);
+            const sa = (Math.atan2(36, -15) * 180) / Math.PI + deg;
+            const shine = {
+                p: `<ellipse cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" rx="5.2" ry="1.9" fill="#fff" transform="rotate(${sa.toFixed(1)} ${sx.toFixed(1)} ${sy.toFixed(1)})"/>`,
+                "p.1": line(inset(0.22, 2.4), inset(0.6, 2.4), 2.1),
+                "p.2": tri(inset(0.2, 2), inset(0.5, 2), [-1.2, -8.8]),
+                "p.3": tri(inset(0.18, 1.8), inset(0.66, 1.8), inset(0.27, 4.4)),
+                "p.4": line([-0.9, -15.6], lerp(T, N, 0.75).map((v, i) => (i ? v : v - 0.9)), 1.9),
+                "p.5": line(inset(0.24, 2.2), inset(0.5, 2.2), 1.9) + line(inset(0.4, 4.6), inset(0.52, 4.6), 1.9),
+                // p.3 turned around: widest toward the back, a point toward the tip.
+                "p.6": tri(inset(0.14, 1.8), inset(0.66, 1.8), inset(0.56, 4.4)),
+                // p.6 further down: stopping about 2 px short of the back edge (p.7),
+                // or running into it, cut by the edge itself (p.8).
+                "p.7": tri(inset(0.14, 1.8), inset(0.86, 1.8), inset(0.76, 4.6)),
+                "p.8": tri(inset(0.14, 1.8), inset(1.08, 1.8), inset(0.9, 5.6)),
+                // Between p.6 and p.7: the one decided, on every map.
+                "p.6.5": tri(inset(0.14, 1.8), inset(0.76, 1.8), inset(0.66, 4.5)),
+            }[kind];
+            return `<defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="${R}"/><g clip-path="url(#${id})">${shine}</g><path d="${d}" fill="none" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/>`;
+        }
         return `<polygon points="${poly}" fill="#000" stroke="#fff" stroke-width="5" stroke-linejoin="round" paint-order="stroke"/>`;
+    }
+
+    // The map pin in the pins' look, six ways (Ink.glossPin): G1 ... G6.
+    const GPINS = {
+        1: { dot: "cut", shine: "oval" },
+        2: { dot: "none", shine: "oval" },
+        3: { dot: "white", shine: "oval" },
+        4: { dot: "cut", shine: "arc" },
+        5: { dot: "cut", shine: "blade" },
+        6: { dot: "none", shine: "line" },
+    };
+    /** One glossy map pin alone, enlarged 3x: its point near the bottom. */
+    function pinOnly(root, code) {
+        root.style.background = "#fff";
+        root.innerHTML = `<svg width="240" height="175" style="position:absolute;left:0;top:0;overflow:visible"><g transform="translate(120 140) scale(3)">${Ink.glossPin(0, 0, { size: 13, seed: `g${code}`, ...GPINS[code] })}</g></svg>`;
+    }
+
+    /** YOU alone, enlarged (3x, same proportions), to compare the shines: p, p.1 ... p.5. */
+    function youOnly(root, kind, zoom = 3) {
+        root.style.background = "#fff";
+        root.innerHTML = `<svg width="240" height="175" style="position:absolute;left:0;top:0;overflow:visible"><g transform="translate(120 90) scale(${zoom})">${youMark(0, 0, kind, 35)}</g></svg>`;
     }
 
     /** One mark alone on white: another player's tag (a, c, f, g, k, l) or YOU (Yg, Yh, Yj, Ym, Yn). */
     function tagsOnly(root, t) {
         root.style.background = "#fff";
-        const inner = t.startsWith("Y") ? youMark(120, 92, t[1], 35) : otherTag(t, 120, 108, "CAMILLE");
+        const inner = t.startsWith("Y") ? youMark(120, 92, t.slice(1), 35) : otherTag(t, 120, 108, "CAMILLE");
         root.innerHTML = `<svg width="240" height="175" style="position:absolute;left:0;top:0;overflow:visible">${inner}</svg>`;
     }
 
-    window.Maps2 = { tagsOnly, list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, drawHint, SKIN_LIST };
+    window.Maps2 = { tagsOnly, youOnly, pinOnly, list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, drawHint, SKIN_LIST };
 })();

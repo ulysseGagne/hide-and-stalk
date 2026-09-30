@@ -28,7 +28,7 @@
     const GAMES = {
         // The same round as the app screenshots: maelle by the greenhouses.
         greenhouses: () => {
-            const pos = { jules: [-71.2692303, 46.779163], noah_b: [-71.2768114, 46.7803276], camille: [-71.2748, 46.7814], theo: [-71.2731, 46.7797] };
+            const pos = { jules: [-71.2692303, 46.779163], noah: [-71.2768114, 46.7803276], camille: [-71.2748, 46.7814], theo: [-71.2731, 46.7797] };
             return {
                 hider: [-71.2789, 46.7806],
                 hiderName: "maelle",
@@ -37,8 +37,8 @@
                 qs: [
                     { ns: true, at: at("building", "pav_pol") ?? pos.jules, by: "jules", label: "N / S?" },
                     { radius: 500, at: at("building", "pav_pol") ?? pos.jules, by: "jules", label: "WITHIN 500 M?" },
-                    { nearest: "cafe", by: "noah_b", label: "NEAREST CAFÉ?" },
-                    { closer: "greenhouses", at: pos.noah_b, by: "noah_b", label: "CLOSER TO THE GREENHOUSES?" },
+                    { nearest: "cafe", by: "noah", label: "NEAREST CAFÉ?" },
+                    { closer: "greenhouses", at: pos.noah, by: "noah", label: "CLOSER TO THE GREENHOUSES?" },
                 ],
                 pending: { ew: true, at: pos.camille, by: "camille", label: "Q5: EAST OR WEST OF ME?" },
                 q: 5,

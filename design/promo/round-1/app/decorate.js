@@ -373,8 +373,9 @@
         if (S.stampRole && visible(badge) && (S.stampRole !== "reveal" || screen === "ready" || screen === "hiding")) {
             const b = L.box(badge);
             badge.style.visibility = "hidden";
-            const res = Ink.write(badge.textContent, { x: b.x + 10, y: b.y + b.h + 8, size: 17, weight: 3.4, seed: "stamp", tilt: -6, spacing: 0.34, even: true });
-            L.add(Ink.box(b.x, b.y - 6, res.width + 22, b.h + 20, { seed: "stampbox", weight: 3.2, jitter: 2 }));
+            // A little bolder, box and word, like WALK. DON'T RUN. and PICK JUST ONE.
+            const res = Ink.write(badge.textContent, { x: b.x + 10, y: b.y + b.h + 8, size: 17, weight: 4.3, seed: "stamp", tilt: -6, spacing: 0.34, even: true });
+            L.add(Ink.box(b.x, b.y - 6, res.width + 22, b.h + 20, { seed: "stampbox", weight: 4.3, jitter: 2 }));
             L.add(res.svg);
         }
 
@@ -430,7 +431,9 @@
             } else {
                 // More cards below the fold.
                 const last = cards[cards.length - 1].getBoundingClientRect();
-                if (last.bottom > innerHeight - 10) P.add(Ink.handArrow(innerWidth - 34, innerHeight - 150, innerWidth - 40, innerHeight - 40, { seed: "scroll", weight: 5, head: 20, bend: 0.1 }) + Ink.write("MORE", { x: innerWidth - 110, y: innerHeight - 120, size: 20, seed: "more", tilt: -8, importance: "aside" }).svg);
+                // E19's arrow, pointing down: bulky, a big pointed head; MORE where
+                // it was, as bold as PICK JUST ONE.
+                if (last.bottom > innerHeight - 10) P.add(Ink.stubArrow(innerWidth - 40, innerHeight - 150, innerWidth - 46, innerHeight - 40, { seed: "scroll2", weight: 11, head: 34 }) + Ink.write("MORE", { x: innerWidth - 116, y: innerHeight - 120, size: 21, weight: 4.8, spacing: 0.3, seed: "more", tilt: -8, importance: "key" }).svg);
             }
         }
 
@@ -463,11 +466,15 @@
             const input = $("input", opt);
             if (!input?.checked) continue;
             const b = L.box(input);
-            L.add(Ink.check(b.x - 8, b.y - 10, b.w + 18, { seed: `chk${opt.textContent.trim()}`, weight: 8 }));
+            // On the circle: the tick's box centred on it, its corner at the circle's lower edge.
+            const s = 28;
+            const cx = b.x + b.w / 2;
+            const cy = b.y + b.h / 2;
+            L.add(Ink.check(cx - 0.55 * s + 2, cy - 0.4 * s - 1, s, { seed: `chk${opt.textContent.trim()}`, weight: 7 }));
         }
         for (const row of $$(".answer-row").filter(visible)) {
             const sAns = L.box($(".answer-row-answer", row));
-            L.add(Ink.check(sAns.x + Math.min(sAns.w, 190) + 22, sAns.y - 8, 26, { seed: `rc${sAns.y}`, weight: 6 }));
+            L.add(Ink.sharpCheck(sAns.x + Math.min(sAns.w, 190) + 22, sAns.y - 8, 28, { seed: `rc${sAns.y}`, weight: 8 }));
         }
 
         // The tag code: what to do with it, plainly.
@@ -494,7 +501,9 @@
             const base = reg.y + reg.h + 50;
             const nx = innerWidth - 22 - nw;
             noteAt(L, "NEW? CLICK HERE", nx, base, { size: 21, tilt: -4, maxWidth: 320, importance: "info", weight: 4.6 });
-            L.add(Ink.stubArrow(nx - 20, base - 4, reg.x + 22, reg.y + reg.h + 6, { seed: "reg", weight: 6, head: 18 }));
+            // E02's and E19's arrow: it starts just above NEW and curves up a
+            // little to the middle of Register, clear of the words.
+            L.add(Ink.stubArrow(nx + 12, base - 30, cx + 8, reg.y + reg.h + 5, { seed: "reg2", weight: 8, head: 20, bend: -0.16 }));
             void cx;
         }
         // Black = press me now: only once there's something to log in with.

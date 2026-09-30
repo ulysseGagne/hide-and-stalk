@@ -15,9 +15,9 @@ const styles = (process.argv[2] ?? "a,b,c,d").split(",");
 const only = process.argv[3] && process.argv[3] !== "all" ? process.argv[3].split(",") : Object.keys(SCREENS);
 const ORDER = ["login", "loginfilled", "permask", "permasking", "permhalf", "permdone", "permblocked", "lobby", "rules1", "rules5", "rulesdone", "ready", "hiding", "cards", "selected", "waiting", "sent", "photo", "question", "choice", "tagcode", "history", "found", "win"];
 
-// A stand-in for the hider's photo of "the nearest door" (real photos later).
-const DOOR = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 60 80"><rect width="60" height="80" fill="#000"/><rect x="14" y="12" width="32" height="66" fill="none" stroke="#fff" stroke-width="2"/><rect x="19" y="18" width="22" height="22" fill="none" stroke="#fff" stroke-width="1"/><circle cx="40" cy="48" r="1.8" fill="#fff"/><rect x="21" y="5" width="18" height="5" fill="#fff"/><text x="30" y="9.2" font-family="Arial" font-weight="700" font-size="3.6" text-anchor="middle">SORTIE</text><path d="M0 78 L14 77 M46 77 L60 78" stroke="#fff" stroke-width="1"/></svg>`;
-const DOOR_URL = `data:image/svg+xml;base64,${Buffer.from(DOOR).toString("base64")}`;
+// A stand-in for the hider's photo of "the nearest place to sit": the bench
+// from B29's Polaroid (app/bench.svg, from tools/export-bench.mjs).
+const BENCH_URL = `data:image/svg+xml;base64,${fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "../app/bench.svg")).toString("base64")}`;
 
 function css(style) {
     // E stands alone; B-D are layered over A.
@@ -39,6 +39,12 @@ for (const style of styles) {
         page.on("pageerror", (e) => console.error(`[${style}/${name}] pageerror:`, e.message));
         await page.clock.setFixedTime(new Date(NOW));
         if (screen.token !== false) await page.addInitScript(() => localStorage.setItem("hns.token", "demo"));
+        // As on an iPhone (and as the Mac's Chrome has always shot these): the
+        // compass waits for a tap, so the app shows its compass notice.
+        await page.addInitScript(() => {
+            if (typeof DeviceOrientationEvent === "undefined") window.DeviceOrientationEvent = class DeviceOrientationEvent extends Event {};
+            if (typeof DeviceOrientationEvent.requestPermission !== "function") DeviceOrientationEvent.requestPermission = () => new Promise(() => {});
+        });
         await page.route("**/src/config.js", (r) => r.fulfill({ contentType: "text/javascript", body: `window.HNS_CONFIG = { apiBase: location.origin + "/api", locationPollIntervalMs: 600000, adminPollIntervalMs: 600000 };` }));
         await page.route("**/src/styles.css", (r) => r.fulfill({ contentType: "text/css", body: css(style) }));
         await page.route("**/src/index.html", async (r) => {
@@ -55,7 +61,7 @@ for (const style of styles) {
             if (p === "/state") return json(screen.state);
             if (p === "/cards/catalog") return json(catalogJson);
             if (p === "/cards/history") return json({ plays: screen.history ? screen.history() : [] });
-            if (p === "/cards/photo") return json({ photo: DOOR_URL });
+            if (p === "/cards/photo") return json({ photo: BENCH_URL });
             return json({ ok: true });
         });
         await page.goto(`${base}/src/index.html`);

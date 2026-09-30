@@ -91,28 +91,44 @@ body.only-kept .tile:not(.kept):not(.settled-tile) { display: none; }
 
 <script>
 const SETS = [
-    { id: "decided", title: "Decided", settled: true, intro: "Settled, nothing to choose here: the rest of the page is built from these. L16.6b is the logo. H06 is the rule all handwriting follows, 30% to 70% of the way from calm to unhinged. B29 is the board: the file with 500 m underlined by hand, the hider's profile, the bench Polaroid, the north-or-south card. C19 is the three ransom notes. R10.3 is the notification arrow.", wide: false, items: [
+    { id: "decided", title: "Decided", settled: true, intro: "Settled, nothing to choose here: the rest of the page is built from these. L16.6b is the logo. H06 is the rule all handwriting follows, 30% to 70% of the way from calm to unhinged. B29 is the board, updated from W53: the file (500 m underlined by hand, the closest café; where exactly is gone), the hider's profile, the Polaroid with the coordinates, and the north-or-south card with NORTH big. C19 is the three ransom notes. R10.3 is the notification arrow. S20 is the map: drawn from OpenStreetMap's data, every road and path it has (tunnels never), streets and buildings solid black, woods in close dots, grass in sparse ones, the stadium and track hatched; S20a, S20b and S20c are the whole campus, a few blocks and a few buildings. Tp is everyone else on the map: B29's pushpin on their exact spot, no name; tapped, the name shows above it. Yp.6.5 is YOU: Yn's arrow in the pin's look (red, a thin black edge, a white blade of shine), pointing the way your phone faces, on every map.", wide: false, items: [
         ["L16.6b", "Logo"],
         ["H06", "Handwriting"],
         ["B29", "Board"],
         ["C19", "Ransom notes"],
         ["R10.3", "Notification arrow"],
+        ["S20a", "The map: the whole campus, as it opens", "shots/S31.23a.png"],
+        ["S20b", "The map: a few blocks", "shots/S31.23b.png"],
+        ["S20c", "The map: a few buildings", "shots/S31.23c.png"],
+        ["Tp", "Everyone else: the pushpin, no name; tapped, the name above it"],
+        ["Yp.6.5", "YOU (shown 3×)"],
     ]},
-    { id: "welcome2", title: "Home screen", cols: 4, intro: "Mostly done. W51 with your last notes: the file keeps only \"Are you north or south of me?\", bigger and bold, above a bigger NORTH; the Polaroid's coordinates are in red and written heavier, so the thin strokes hold up at that size.", wide: false, items: [
-        ["W53", "The file and the Polaroid, finished"],
+    { id: "welcome2", title: "Home screen", cols: 4, intro: "From W54.1, your pick. One margin, 30 px, everywhere: under the title, round and between the cards, at the bottom; B29's rows closer, the bottom row off the bottom. a: HIDE, AND and SEEK each centred, the red keeping its place against SEEK (past this size STALK would come closer than 30 px to the edge). b: the whole title centred as it is; b1 to b3, the same with the whole board shrunk (85%, 75%, 65%), nothing rearranged, centred under the title. c: the cards overlapping a little, pinned together, no strings. d: the top cards tucked under the title's bottom edge. e: a with LET ME IN. W55 splits the screen in two steps: the title alone as the app opens, then the board under the app's header, with LET ME IN. W54.2 to W54.6 are off the page (still in the repo). File Nº 005 reads HIDER LOCATION everywhere.", wide: false, items: [
+        ["W54.1", "The starting point"],
+        ["W54.1a", "The black lines centred; 30 px margins; rows closer"],
+        ["W54.1b", "The whole title centred as it is; the same margins"],
+        ["W54.1b1", "b with the whole board shrunk to 85%, as it is"],
+        ["W54.1b2", "b with the board at 75%"],
+        ["W54.1b3", "b with the board at 65%"],
+        ["W54.1c", "The cards overlapping a little, pinned together"],
+        ["W54.1d", "The top cards tucked under the title"],
+        ["W54.1e", "a with LET ME IN"],
+        ["W55.1", "Two steps, 1: the title alone, as the app opens"],
+        ["W55.2", "Two steps, 2: the board, the app's header, LET ME IN"],
+        ["W53", "Before: the file and the Polaroid"],
     ]},
 ];
 
 const SCREENS = [
-    ["01", "login", "Log in"], ["02", "loginfilled", "Both fields typed: Log in turns black"],
+    ["01", "login", "Log in: the arrow starts above NEW and curves up to Register"], ["02", "loginfilled", "Both fields typed: Log in turns black"],
     ["03", "permask", "Before you start: the arrow at Turn on, Later made small"], ["04", "permasking", "Asking: choose Allow in the iPhone's popup"],
     ["05", "permhalf", "Location on; the arrow moves to the compass"], ["06", "permdone", "Both on: one big check, Done"], ["07", "permblocked", "Location blocked: How to fix"],
     ["08", "lobby", "Waiting for a team: shorter rules, rule 4 is Touch nothing"],
-    ["12", "ready", "Ready: role stamped, Start in black"],
-    ["13", "hiding", "Hider: go hide"], ["14", "cards", "Stalker: three cards, numbered, pick just one"],
+    ["12", "ready", "Ready: role stamped, box and word a little bolder; Start in black"],
+    ["13", "hiding", "Hider: go hide (the stamp bolder)"], ["14", "cards", "Stalker: three cards, pick just one; E19's arrow for MORE, MORE bolder"],
     ["15", "selected", "Picked, not sent: Send in black"], ["16", "waiting", "Sent, locked in"], ["17", "sent", "Answered: no stamp"],
-    ["18", "photo", "Photo answer: no stamp"], ["19", "question", "Hider: new question, the short arrow, NEW beside it"],
-    ["20", "choice", "Hider: which pavilion, code first"], ["21", "tagcode", "Hider: tag code, the note in the gap above it"], ["22", "history", "Questions so far, as a tab"],
+    ["18", "photo", "Photo answer: the nearest place to sit, the Polaroid's bench"], ["19", "question", "Hider: new question, NEW at the bell; the tick on its circle"],
+    ["20", "choice", "Hider: which pavilion, code first; the tick on its circle"], ["21", "tagcode", "Hider: tag code; the answered tick sharp"], ["22", "history", "Questions so far, as a tab"],
     ["23", "found", "Stalkers win: GOTCHA on top"], ["23b", "found", "The receipt, scrolled to its end"], ["24", "win", "Hider wins"], ["24b", "win", "The receipt, where she was redacted"],
 ];
 const STYLES = [
@@ -137,41 +153,26 @@ for (const s of SETS) {
     for (const [title, items] of s.groups ?? [["", s.items]]) {
         if (title) html += `<h3>${title}</h3>`;
         html += grid(s.cols, s.wide ? " wide" : "");
-        for (const [code, cap] of items) html += tile(code, cap, `shots/${code}.png`, s.settled);
+        for (const [code, cap, file] of items) html += tile(code, cap, file ?? `shots/${code}.png`, s.settled);
         html += `</div>`;
     }
     html += `</section>`;
 }
-html += `<section id="styles"><h2>App</h2><p>Pretty much done. This pass: the header's STALK is now L16.6b's, on every screen. One direction, rebuilt from all your notes.<br>• One line weight (3 px), nothing rounded.<br>• White button = not yet, black = press this now, drawn red = pressed or picked.<br>• At most two red marks per screen; the header's STALK turns black when anything else is red.<br>• Anything not useful at that moment is gone.<br>From the last pass: the header is HIDE &amp; plus the logo's STALK (no SEEK, no scribble); something red always points at what to do next; shorter copy everywhere; Questions so far is a tab; the old rules screens (09–11) are gone.</p></section>`;
+html += `<section id="styles"><h2>App</h2><p>Pretty much done. This pass, from your notes: E01's arrow above NEW; E12 and E13's stamps bolder; E14's arrow bulkier with a pointed head, MORE bolder; E18 asks for the nearest place to sit; the ticks on E19 and E20 sit on their circles; E21's tick is sharp. The header's STALK is L16.6b's, on every screen. One direction, rebuilt from all your notes.<br>• One line weight (3 px), nothing rounded.<br>• White button = not yet, black = press this now, drawn red = pressed or picked.<br>• At most two red marks per screen; the header's STALK turns black when anything else is red.<br>• Anything not useful at that moment is gone.<br>From the last pass: the header is HIDE &amp; plus the logo's STALK (no SEEK, no scribble); something red always points at what to do next; shorter copy everywhere; Questions so far is a tab; the old rules screens (09–11) are gone.</p></section>`;
 for (const [k, name, intro] of STYLES) {
     html += `<section id="style-${k.toLowerCase()}"><h2>${k} · ${name}</h2><p>${intro}</p><div class="grid">`;
     for (const [n, slug, cap] of SCREENS) html += tile(`${k}/${n}`, cap, `shots/${k}-${n}-${slug}.png`);
     html += `</div></section>`;
 }
 const MAPPART = [
-    ["hints", "2 · The hints layer", "Two separate choices. First the map: how the ruled-out part looks (the tags are the same in both). Then the players, as two separate choices. The app knows only your own heading: each phone reads its compass, but the positions it sends carry no direction. So everyone else gets a tag, and YOU gets a mark that points the way your phone faces. Tags always sit over the red; where two overlap, the lower one is on top, and YOU is always on top of everything.", [], [
-        ["The map", 0, [["N2a", "N02: ruled out inverted to black, no line"], ["N3a", "N03: inverted, hand-drawn red line"]]],
-        ["Everyone else", 7, [["Ta", "a: the outline runs round the pointer too"], ["Tc", "c: black, as it was"], ["Tf", "f: a black square on the spot, the name beside it"], ["Tg", "g: a red pin on the spot, the name above it"], ["Tk", "k: a's shape, its edge drawn by hand in red"], ["Tk.1", "k with the name written by hand too"], ["Tl", "l: a's shape, coloured in red"]]],
-        ["You", 5, [["Yg", "g: the beam, the classic"], ["Yh", "h: the arrow, bigger"], ["Yj", "j: the beam as an outline"], ["Ym", "m: the arrow, its edge drawn by hand in red"], ["Yn", "n: the arrow, coloured in red"]]],
+    ["hints", "1 · The hints layer", "On S20, with the players as decided (Tp, Yp.6.5, at the top). Ruled out inverted to black, the red line by hand.", [], [
+        ["The map", 0, [["N3a", "Ruled out inverted to black, the hand-drawn red line"], ["N3a.1", "The same with CAMILLE tapped: her name above her pin"]]],
     ]],
-    ["questions", "3 · A question on the map", "Your notes, done. Where tags overlap, the lower one is on top; YOU always goes on top of everything, so it's never hidden. Every pin and circle sits on its exact spot: a map pin's point, a pushpin's centre, a circle's centre and radius. Circles are drawn by hand now but stay within about 2 px of the true line. N08 and N10 keep the map pins; N08.1 and N10.1 use B29's pushpins instead. N11 has no arrows, and the words sit further from a bolder line. The red text on N13 and N15 is bigger. The map under these is still the old tile print; they move to the new map once you pick a skin.", [[8, "Nearest café: map pins"], ["N08.1", "Nearest café: B29's pushpins"], ["N08.2", "A café tapped: its name and building. The real app already opens this box on a tap."], [10, "Closer than me: the circle through the asker, map pin"], ["N10.1", "The same with a pushpin"], [11, "East or west: a bolder line whose dashes have round ends, no arrows, the words further out"], [13, "Within 200 m: 200 M bigger and further from the circle"], [15, "Hider, between questions: one string to the closest stalker, 162 M bigger"]]],
+    ["questions", "2 · A question on the map", "Your notes, done. On S20. Everyone else is a pushpin with no name, YOU is Yp.6.5, over everything; the white tag (GREENHOUSES, a tapped name) has its pointer outlined; NOAH has lost the _B. N08.1, N08.2 and N10 are gone. Every pin and circle sits on its exact spot. N11's WEST and EAST are bolder; N15 has no subtitle.", [[8, "Nearest café: map pins, as they were"], ["N08a", "The map pins filled in, the dot a hole you see the map through"], ["N08b", "The cafés with G1, the map pin in the pins' look, at real size"], ["N08.2a", "A café tapped, with the filled pins: its name and building. The real app already opens this box on a tap."], ["N10.1", "Closer than me: no pin, the circle alone in red, the greenhouses in a white tag"], [11, "East or west: WEST and EAST bolder"], [13, "Within 200 m"], [15, "Hider, between questions: one string to the closest stalker; no subtitle"]]],
+    ["gpins", "3 · The map pin, in the pins' look", "The café pin, drawn like B29's pushpins and Yp: the pin's red, a thin black edge, a white shine. A little less clean now, like the round pin: the head in facets, each a little in or out, the sides with a little give. Six ways, shown 3× (N08b above has G1 at real size). G1: a hole you see the map through, the pushpin's oval shine. G2: no dot, the oval. G3: a white dot, the oval. G4: the hole, an arc round the head. G5: the hole, a blade down the left side. G6: no dot, a line down the left side. On white, G1's hole looks like G3's dot; on the map it shows the map.", [["G1", "A hole, the pushpin's oval shine"], ["G2", "No dot, the oval"], ["G3", "A white dot, the oval"], ["G4", "A hole, an arc round the head"], ["G5", "A hole, a blade down the left side"], ["G6", "No dot, a line down the left side"]]],
 ];
-// The map drawn from OpenStreetMap's data (lab/osmdraw.js): the three looks
-// left, at a few blocks around YOU. [number, its lab code, what it is]
-const SKINS = [
-    [11, "30.2", "Streets and paths as outlines, buildings outlined. S15, S16 and S17 are merged into it: how much detail it shows comes from the key"],
-    [20, "31.2", "Streets and buildings solid black, greens dotted"],
-    [14, "30.5", "Streets as single lines, buildings outlined, greens dotted"],
-];
-html += `<section id="maps"><h2>Map</h2><p>Everything you need is computer-drawn: the map, the hints layer, the players and the question. Red is the one thing to look at right now. The map opens on the whole campus, with no auto-zoom.</p></section>`;
-html += `<section id="maps-skins"><h2>1 · Skins: how the map is printed</h2><p>The map is drawn from OpenStreetMap's own data now, not recoloured from its picture tiles: every building, street, path and green is a real shape, so every edge is as straight or as smooth as it was mapped. First the key, which decides what's on the map; then the three looks left, each at a few blocks around YOU. S12, S13, S18, S19 and S21 are gone.</p>`;
-// The key: every kind of line and area in its own colour, to name what should stay, go or change.
-html += `<h3>The key: what's on the map</h3><p class="note">Third pass, from your notes. Pedestrian streets are streets; footpaths and trails are one kind, and every path is drawn smoothed now. Dark is kept, light is left behind. Bike paths: every one is kept but tiny bits. Footpaths and trails: only the small and messy is left behind (stubs to a door, loose bits under 60 m, knots like the swirl on the central square), plus those that just follow a street or a bike path, and those off campus. Every sports field and court is grass and parks; the running track round the football field is plain ground (dashed here only so you can find it). Car parks are back. Everything the key leaves off the map is listed at the bottom of its legend, for a sanity check.</p>` + grid(4);
-html += tile("K3", "The colours, and what's behind each", "shots/K03.png");
-html += tile("K3a", "The whole campus", "shots/S30.02a.png");
-html += `</div><h3>The skins</h3>` + grid(4);
-for (const [num, file, what] of SKINS) html += tile(`S${num}`, what, `shots/S${file}b.png`);
-html += `</div></section>`;
+html += `<section id="maps"><h2>Map</h2><p>The map itself is S20, in Decided at the top; what's left is what goes over it. Everything you need is computer-drawn: the map, the hints layer, the players and the question. The map opens on the whole campus, with no auto-zoom.</p></section>`;
+
 for (const [id, title, intro, items, groups] of MAPPART) {
     html += `<section id="maps-${id}"><h2>${title}</h2><p>${intro}</p>`;
     for (const [head, cols, list] of groups ?? [["", 0, items]]) {

@@ -19,9 +19,13 @@
 
 (function () {
     let DATA = null;
-    const ready = fetch("data/osm-campus.json")
-        .then((r) => r.json())
-        .then((d) => {
+    // The ways turned on or off by hand in the key editor (fourth pass).
+    const overrides = fetch("data/key-overrides.json")
+        .then((r) => (r.ok ? r.json() : {}))
+        .catch(() => ({}));
+    const ready = Promise.all([fetch("data/osm-campus.json").then((r) => r.json()), overrides])
+        .then(([d, o]) => {
+            OVERRIDES = o;
             DATA = d.features.map(prepare).filter(Boolean);
             sortPaths(DATA);
             for (const f of DATA) if ((f.kind === "road" || f.kind === "tunnel") && f.rank === "path") f.draw = [smoothLine(f.rings[0])];
@@ -78,7 +82,7 @@
         const bbox = [Math.min(...pts.map((q) => q[0])), Math.min(...pts.map((q) => q[1])), Math.max(...pts.map((q) => q[0])), Math.max(...pts.map((q) => q[1]))];
         const layer = Number(p.layer ?? 0);
         const up = p.bridge !== undefined && p.bridge !== "no" ? 1 : layer > 0 ? 1 : 0;
-        const base = { id: p.id, rings, bbox, up };
+        const base = { id: p.id, rings, bbox, up, name: p.name, leisure: p.leisure };
         if (p.building && p.building !== "no" && area) return p.location === "underground" ? null : { ...base, kind: "building" };
         if (p.highway && !area) {
             // The house rules say no tunnels: underground paths are kept apart
@@ -181,12 +185,15 @@
     }
     /** The key itself, as HTML: a swatch, the name, the OSM tags behind it. */
     function legend(which = 1) {
-        const table = which === 3 ? KEY3 : which === 2 ? KEY2 : KEY;
-        const row = ([, color, name, tags, how, sw]) => {
-            const swatch = how === "area" ? `<svg width="34" height="16"><rect x="1" y="1" width="32" height="14" fill="${color}" stroke="#000" stroke-width="0.6"/></svg>` : how === "outline" ? `<svg width="34" height="16"><rect x="1.5" y="1.5" width="31" height="13" fill="none" stroke="${color}" stroke-width="1.4" stroke-dasharray="3 2"/></svg>` : `<svg width="34" height="16"><path d="M2 8H32" stroke="${color}" stroke-width="${Math.max(2.4, sw)}"${how === "dash" ? ' stroke-dasharray="5 3"' : ""}/></svg>`;
+        const table = which === 4 ? KEY4 : which === 3 ? KEY3 : which === 2 ? KEY2 : KEY;
+        const row = ([, color, name, tags, how, sw, off]) => {
+            const line = (c, w) => `<path d="M2 8H${off ? 15 : 32}" stroke="${c}" stroke-width="${Math.max(2.4, w)}"${how === "dash" ? ' stroke-dasharray="5 3"' : ""}/>`;
+            // A kind with an "off" colour shows both: on, then left behind.
+            const swatch = how === "area" ? `<svg width="34" height="16"><rect x="1" y="1" width="32" height="14" fill="${color}" stroke="#000" stroke-width="0.6"/></svg>` : how === "outline" ? `<svg width="34" height="16"><rect x="1.5" y="1.5" width="31" height="13" fill="none" stroke="${color}" stroke-width="1.4" stroke-dasharray="3 2"/></svg>` : `<svg width="34" height="16">${line(color, sw)}${off ? `<g transform="translate(17 0)">${line(off, sw)}</g>` : ""}</svg>`;
             return `<div style="display:flex;gap:8px;align-items:center;padding:2.5px 0">${swatch}<div style="line-height:1.15"><b>${name}</b><br><span style="font-size:11px">${tags}</span></div></div>`;
         };
-        const gone = which === 3 ? `<div style="margin-top:10px;padding-top:8px;border-top:2px solid #000"><b>Left off the map</b>${GONE3.map(([name, tags]) => `<div style="line-height:1.15;padding:2px 0"><span style="text-decoration:line-through">${name}</span> <span style="font-size:11px">${tags}</span></div>`).join("")}</div>` : "";
+        const goneList = which === 4 ? GONE4 : which === 3 ? GONE3 : null;
+        const gone = goneList ? `<div style="margin-top:10px;padding-top:8px;border-top:2px solid #000"><b>Left off the map</b>${goneList.map(([name, tags]) => `<div style="line-height:1.15;padding:2px 0"><span style="text-decoration:line-through">${name}</span> <span style="font-size:11px">${tags}</span></div>`).join("")}</div>` : "";
         return `<div style="padding:14px 16px;font:13px Arimo, Helvetica, Arial, sans-serif;columns:1">${table.map(row).join("")}${gone}</div>`;
     }
 
@@ -221,10 +228,12 @@
         ["Other land use", "commercial, industrial, construction"],
     ];
     const KEY3_OF = Object.fromEntries(KEY3.map((k) => [k[0], k]));
+    // What the key puts on the map; the skins drawn { key: 3 } show only these.
+    const KEY3_ON = new Set(["street", "pathkeep", "bikekeep", "building", "wood", "grass", "parking"]);
     function keyOf3(f) {
         if (f.kind === "road") {
             if (["major", "medium", "minor"].includes(f.rank) || f.hw === "pedestrian") return "street";
-            if (f.keep !== undefined) return (f.hw === "cycleway" ? "bike" : "path") + (f.keep ? "keep" : "drop");
+            if (f.keep3 !== undefined) return (f.hw === "cycleway" ? "bike" : "path") + (f.keep3 ? "keep" : "drop");
             return null;
         }
         if (f.kind === "building") return "building";
@@ -235,6 +244,63 @@
             if (f.sub === "pitch") return f.leisure === "track" ? "hard" : "grass";
             return "grass";
         }
+        return null;
+    }
+
+    // The key, fourth pass, from your notes on the third: car parks off again,
+    // parking aisles and driveways back, the stadium and the running track
+    // back, and every footpath kept but the small and messy. Each line is on
+    // or off: by the rules for its kind, then by hand in the key editor
+    // (data/key-overrides.json, OSM way id -> on). [key, colour, name, what,
+    // line | area, width, colour when off]
+    const KEY4 = [
+        ["street", "#e65100", "Streets", "big roads, main streets, side streets and pedestrian streets", "line", 3.2],
+        ["foot", "#c2185b", "Footpaths and trails", "footway, path, steps. Light: left behind (small loops, loose bits, knots, stubs)", "line", 2.6, "#f8bbd0"],
+        ["bike", "#1565c0", "Bike paths", "cycleway. Light: left behind (tiny bits)", "line", 2.8, "#90caf9"],
+        ["aisle", "#6d4c41", "Parking aisles and driveways", "service=parking_aisle, driveway: back by request", "line", 1.8, "#d7ccc8"],
+        ["service", "#00897b", "Service roads", "highway=service: off unless turned on in the editor", "line", 2.4],
+        ["sidewalk", "#7b1fa2", "Sidewalks and crosswalks", "footway=sidewalk, crossing: off unless turned on", "line", 1.8],
+        ["tracks", "#827717", "Tracks and platforms", "highway=track, platform: off unless turned on", "line", 2],
+        ["building", "#9e9e9e", "Buildings", "building=*", "area"],
+        ["wood", "#2e7d32", "Woods and scrub", "natural=wood, scrub; landuse=forest", "area"],
+        ["grass", "#c5e1a5", "Grass and parks", "and every sports field and court", "area"],
+        ["sport", "#d84315", "Stadium and track", "leisure=stadium, track: the Rouge et Or stadium and the running track, back", "area"],
+    ];
+    const KEY4_OF = Object.fromEntries(KEY4.map((k) => [k[0], k]));
+    const GONE4 = [
+        ["Car parks", "amenity=parking: off again, by request"],
+        ["Tunnels", "tunnel=yes, or below ground: never"],
+        ["Railway", "railway=rail"],
+        ["Water and pools", "natural=water, leisure=swimming_pool"],
+        ["Squares", "highway=pedestrian areas"],
+        ["Housing areas", "landuse=residential"],
+        ["Campus and schools", "amenity=university, school"],
+        ["Other land use", "commercial, industrial, construction"],
+    ];
+    let OVERRIDES = {};
+    /** A road's kind in the fourth pass (tunnels are never on the map). */
+    function kindOf4(f) {
+        if (f.kind === "tunnel") return "tunnel";
+        if (f.kind !== "road") return null;
+        if (["major", "medium", "minor"].includes(f.rank) || f.hw === "pedestrian") return "street";
+        if (f.sv === "parking_aisle" || f.sv === "driveway") return "aisle";
+        if (f.rank === "service") return "service";
+        if (f.detail) return "sidewalk";
+        if (f.hw === "track" || f.hw === "platform") return "tracks";
+        return f.hw === "cycleway" ? "bike" : "foot";
+    }
+    // On by the rules, before any hand edit.
+    const ON4 = { street: () => true, foot: (f) => f.keep, bike: (f) => f.keep, aisle: () => true, service: () => false, sidewalk: () => false, tracks: () => false, tunnel: () => false };
+    const lineOn = (f) => {
+        const k = kindOf4(f);
+        if (!k || k === "tunnel") return false;
+        return OVERRIDES[f.id] ?? ON4[k](f);
+    };
+    /** An area's kind in the fourth pass, or null when it's off the map. */
+    function areaOf4(f) {
+        if (f.kind === "building") return "building";
+        if (f.kind === "green") return f.sub === "wood" || f.sub === "scrub" ? "wood" : f.leisure === "track" ? "sport" : "grass";
+        if (f.kind === "ground" && f.sub === "sport" && (f.leisure === "stadium" || f.leisure === "track")) return "sport";
         return null;
     }
 
@@ -375,39 +441,69 @@
             f.shadow = n > 0 && nb / n >= 0.6;
         }
         // What's left, in connected pieces: ways that share a point are one piece.
-        // Bike paths stay unless they're a micro bit (below); footpaths and trails
-        // also go when they follow a street or a bike path, or leave the campus.
-        let left = paths.filter((f) => (f.hw === "cycleway" ? !f.loop : !f.along && !f.outside && !f.loop && !f.shadow));
-        const parent = new Map(left.map((f) => [f, f]));
-        const find = (f) => {
-            while (parent.get(f) !== f) f = parent.get(f);
-            return f;
-        };
-        const at = new Map();
-        for (const f of left)
-            for (const q of f.rings[0]) {
-                const k = `${q[0]},${q[1]}`;
-                if (at.has(k)) {
-                    const a = find(f);
-                    const b = find(at.get(k));
-                    if (a !== b) parent.set(a, b);
-                } else at.set(k, f);
+        // A piece under 60 m, or fitting in a 40 m box (a knot), goes; then dead
+        // ends under 20 m (a path to a door).
+        const survivors = (cands) => {
+            const parent = new Map(cands.map((f) => [f, f]));
+            const find = (f) => {
+                while (parent.get(f) !== f) f = parent.get(f);
+                return f;
+            };
+            const at = new Map();
+            for (const f of cands)
+                for (const q of f.rings[0]) {
+                    const k = `${q[0]},${q[1]}`;
+                    if (at.has(k)) {
+                        const a = find(f);
+                        const b = find(at.get(k));
+                        if (a !== b) parent.set(a, b);
+                    } else at.set(k, f);
+                }
+            const total = new Map();
+            const box = new Map();
+            for (const f of cands) {
+                const r = find(f);
+                total.set(r, (total.get(r) ?? 0) + f.len);
+                const b = box.get(r) ?? [Infinity, Infinity, -Infinity, -Infinity];
+                for (const q of f.rings[0].map(M)) box.set(r, (b[0] = Math.min(b[0], q[0]), b[1] = Math.min(b[1], q[1]), b[2] = Math.max(b[2], q[0]), b[3] = Math.max(b[3], q[1]), b));
             }
-        const total = new Map();
-        const box = new Map();
-        for (const f of left) {
-            const r = find(f);
-            total.set(r, (total.get(r) ?? 0) + f.len);
-            const b = box.get(r) ?? [Infinity, Infinity, -Infinity, -Infinity];
-            for (const q of f.rings[0].map(M)) box.set(r, (b[0] = Math.min(b[0], q[0]), b[1] = Math.min(b[1], q[1]), b[2] = Math.max(b[2], q[0]), b[3] = Math.max(b[3], q[1]), b));
-        }
-        const knot = (r) => {
-            const b = box.get(r);
-            return Math.max(b[2] - b[0], b[3] - b[1]) < 40;
+            const knot = (r) => {
+                const b = box.get(r);
+                return Math.max(b[2] - b[0], b[3] - b[1]) < 40;
+            };
+            return new Set(prune(cands.filter((f) => total.get(find(f)) >= 60 && !knot(find(f))), 20));
         };
-        left = prune(left.filter((f) => total.get(find(f)) >= 60 && !knot(find(f))), 20);
-        const keep = new Set(left);
-        for (const f of paths) f.keep = PATH_KEEP.has(f.id) || (keep.has(f) && !PATH_DROP.has(f.id));
+        // Third pass (keep3): bike paths stay unless they're a micro bit;
+        // footpaths and trails also went when they followed a street or a bike
+        // path, or left the campus.
+        const k3 = survivors(paths.filter((f) => (f.hw === "cycleway" ? !f.loop : !f.along && !f.outside && !f.loop && !f.shadow)));
+        // Fourth pass (keep), from your note: only the small and messy goes
+        // (small loops, short loose pieces, knots, stubs). What follows a street
+        // or a bike path, or leaves the campus, stays; the key editor turns any
+        // of it off by hand, one way or a whole group at a time.
+        const k4 = survivors(paths.filter((f) => !f.loop));
+        for (const f of paths) {
+            f.keep3 = PATH_KEEP.has(f.id) || (k3.has(f) && !PATH_DROP.has(f.id));
+            f.keep = PATH_KEEP.has(f.id) || (k4.has(f) && !PATH_DROP.has(f.id));
+            f.small = !f.loop && !k4.has(f);
+        }
+        // Off campus, for every road (the editor's groups): most of it outside the border.
+        if (border)
+            for (const f of all) {
+                if ((f.kind !== "road" && f.kind !== "tunnel") || f.outside !== undefined) continue;
+                const g = f.rings[0];
+                let n = 0;
+                let inCampus = 0;
+                for (let i = 1; i < g.length; i++) {
+                    const steps = Math.max(1, Math.round(Math.hypot((g[i][0] - g[i - 1][0]) * 76230, (g[i][1] - g[i - 1][1]) * 111200) / 10));
+                    for (let s = 0; s < steps; s++) {
+                        const t = (s + 0.5) / steps;
+                        n++;
+                        if (inside([g[i - 1][0] + (g[i][0] - g[i - 1][0]) * t, g[i - 1][1] + (g[i][1] - g[i - 1][1]) * t])) inCampus++;
+                    }
+                }
+                f.outside = n > 0 && inCampus / n < 0.5;
+            }
     }
 
     const grey = (l) => {
@@ -492,9 +588,12 @@
     /**
      * The map as one SVG element, for the view `map` shows now.
      * spec: a look ("outline" | "solid" | "grain" | "dots" | "key" | "blackroads"
-     * | "blackdots" | "figure"), or { look, drop, prune }: drop "detail"
+     * | "blackdots" | "figure"), or { look, drop, prune, key }: drop "detail"
      * (pavements, crossings, parking aisles, driveways) or "paths" (every
-     * path), prune dead ends.
+     * path), prune dead ends, or key: 3 (or 4) to show only what the key keeps
+     * (with key: 4, roads: "all" draws every road and path whatever the key says)
+     * (pedestrian streets as streets; woods, grass and car parks in black and
+     * white, the same in every look).
      */
     function render(map, spec, w, h) {
         const o = typeof spec === "string" ? { look: spec } : spec;
@@ -516,15 +615,23 @@
             const b = map.latLngToContainerPoint([f.bbox[3], f.bbox[2]]);
             return Math.abs(a.x - b.x) * Math.abs(a.y - b.y);
         };
-        let list = DATA.filter(inView).filter((f) => !(far && f.kind === "road" && f.detail)).filter((f) => !(far && f.kind === "building" && pxArea(f) < 3));
+        // In the fourth pass the key decides what's on the map at every zoom.
+        const keyed4 = style === "key4" || o.key === 4;
+        let list = DATA.filter(inView).filter((f) => keyed4 || !(far && f.kind === "road" && f.detail)).filter((f) => !(far && f.kind === "building" && pxArea(f) < 3));
         if (o.drop === "detail" || o.drop === "paths") list = list.filter((f) => !(f.kind === "road" && f.detail));
         if (o.drop === "paths") list = list.filter((f) => !(f.kind === "road" && f.rank === "path"));
         if (o.prune) {
             const roads = prune(list.filter((f) => f.kind === "road"), o.prune);
             list = list.filter((f) => f.kind !== "road").concat(roads);
         }
+        if (o.key === 3) list = list.filter((f) => KEY3_ON.has(keyOf3(f)));
+        // roads: "all" keeps every road and path OpenStreetMap has (tunnels are
+        // never drawn); otherwise only what the key and the editor turned on.
+        if (o.key === 4) list = list.filter((f) => (f.kind === "road" ? o.roads === "all" || lineOn(f) : !!areaOf4(f)));
         const of = (kind, fn = () => true) => list.filter((f) => f.kind === kind && fn(f));
-        const width = (f) => Math.max(RANK[f.rank].min, RANK[f.rank].m / mpp);
+        // By the key, a pedestrian street is a street: a side street's width.
+        const rankOf = (f) => (o.key && f.hw === "pedestrian" ? "minor" : f.rank);
+        const width = (f) => Math.max(RANK[rankOf(f)].min, RANK[rankOf(f)].m / mpp);
         // Roads grouped by width, so each group is one path element.
         const byWidth = (roads, wOf) => {
             const groups = new Map();
@@ -563,8 +670,25 @@
         const rail = stroke(join(of("rail")), "#000", 1);
         let body = "";
         let defs = "";
+        // The key's areas in black and white, the same in every look: woods in
+        // close dots, grass (parks and fields too) in sparse ones, car parks a
+        // thin dashed edge. Woods go over grass: a wood inside a park shows.
+        const keyAreas = () => {
+            const dot = (x, y) => `<rect x="${x}" y="${y}" width="0.8" height="0.8" fill="#000"/>`;
+            defs += `<pattern id="osmwood" width="3" height="3" patternUnits="userSpaceOnUse"><rect width="3" height="3" fill="#fff"/>${dot(1.1, 1.1)}</pattern>`;
+            defs += `<pattern id="osmgrass" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#fff"/>${dot(1.1, 1.1)}${dot(4.1, 4.1)}</pattern>`;
+            if (o.key === 4) {
+                // Fourth pass: no car parks; the stadium and the running track in
+                // a fine diagonal hatch, under the fields so the pitch shows.
+                defs += `<pattern id="osmsport" width="3.2" height="3.2" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3.2" height="3.2" fill="#fff"/><rect width="0.9" height="3.2" fill="#000"/></pattern>`;
+                const a4 = (key) => list.filter((f) => areaOf4(f) === key);
+                return fillEach(a4("sport"), "url(#osmsport)") + fillEach(a4("grass"), "url(#osmgrass)") + fillEach(a4("wood"), "url(#osmwood)");
+            }
+            const k = (kind, key) => of(kind, (f) => keyOf3(f) === key);
+            return fillEach(k("green", "grass"), "url(#osmgrass)") + fillEach(k("green", "wood"), "url(#osmwood)") + stroke(join(k("ground", "parking")), "#000", far ? 0.6 : 0.8, ' stroke-dasharray="2 2"');
+        };
         if (style === "outline") {
-            body = cased(roads) + outlined(of("building")) + cased(bridges) + rail;
+            body = (o.key ? keyAreas() : "") + cased(roads) + outlined(of("building")) + cased(bridges) + rail;
         } else if (style === "solid") {
             const solidW = (f) => (f.rank === "path" ? (far ? 0.6 : 1) : Math.max(RANK[f.rank].min * 0.7, (RANK[f.rank].m / mpp) * 0.55));
             const solidRoads = (rs) => byWidth(rs, solidW).map(([k, d]) => stroke(d, "#000", k)).join("");
@@ -572,22 +696,34 @@
         } else if (style === "dots") {
             const s = 3;
             defs = `<pattern id="osmdots" width="${s}" height="${s}" patternUnits="userSpaceOnUse"><rect width="${s}" height="${s}" fill="#fff"/><rect x="${s / 2 - 0.4}" y="${s / 2 - 0.4}" width="0.8" height="0.8" fill="#000"/></pattern>`;
-            const lineW = (f) => (f.rank === "path" || f.rank === "aisle" ? (far ? 0.5 : 0.9) : f.rank === "major" || f.rank === "medium" ? (far ? 1.2 : 2) : far ? 0.9 : 1.5);
+            const lineW = (f) => (rankOf(f) === "path" || rankOf(f) === "aisle" ? (far ? 0.5 : 0.9) : rankOf(f) === "major" || rankOf(f) === "medium" ? (far ? 1.2 : 2) : far ? 0.9 : 1.5);
             const centre = (rs) => byWidth(rs, lineW).map(([k, d]) => stroke(d, "#000", k)).join("");
-            body = fillEach([...of("green"), ...of("water")], "url(#osmdots)") + centre(roads) + outlined(of("building")) + centre(bridges) + rail;
+            body = (o.key ? keyAreas() : fillEach([...of("green"), ...of("water")], "url(#osmdots)")) + centre(roads) + outlined(of("building")) + centre(bridges) + rail;
         } else if (style === "blackroads" || style === "blackdots" || style === "figure") {
             // Revived from the tile days: black buildings, with black roads and
             // outlined greens, black roads and dotted greens, or outlined roads.
-            const solidW = (f) => (f.rank === "path" ? (far ? 0.6 : 1) : Math.max(RANK[f.rank].min * 0.7, (RANK[f.rank].m / mpp) * 0.55));
+            const solidW = (f) => (rankOf(f) === "path" ? (far ? 0.6 : 1) : Math.max(RANK[rankOf(f)].min * 0.7, (RANK[rankOf(f)].m / mpp) * 0.55));
             const solidRoads = (rs) => byWidth(rs, solidW).map(([k, d]) => stroke(d, "#000", k)).join("");
             const black = fillEach(of("building"), "#000");
             if (style === "blackroads") body = outlined([...of("green"), ...of("water")]) + solidRoads(roads) + black + solidRoads(bridges) + rail;
             if (style === "blackdots") {
                 const sp = 3;
                 defs = `<pattern id="osmdots" width="${sp}" height="${sp}" patternUnits="userSpaceOnUse"><rect width="${sp}" height="${sp}" fill="#fff"/><rect x="${sp / 2 - 0.4}" y="${sp / 2 - 0.4}" width="0.8" height="0.8" fill="#000"/></pattern>`;
-                body = fillEach([...of("green"), ...of("water")], "url(#osmdots)") + solidRoads(roads) + black + solidRoads(bridges) + rail;
+                body = (o.key ? keyAreas() : fillEach([...of("green"), ...of("water")], "url(#osmdots)")) + solidRoads(roads) + black + solidRoads(bridges) + rail;
             }
             if (style === "figure") body = cased(roads) + black + cased(bridges) + rail;
+        } else if (style === "key4") {
+            // Areas (the stadium and track under the fields), buildings, then the
+            // lines: what's left behind (light) first, then what's on.
+            const a4 = (key) => list.filter((f) => areaOf4(f) === key);
+            body = a4("sport").map((f) => fill(dOf(f), KEY4_OF.sport[1])).join("") + a4("grass").map((f) => fill(dOf(f), KEY4_OF.grass[1])).join("") + a4("wood").map((f) => fill(dOf(f), KEY4_OF.wood[1])).join("");
+            body += a4("building").map((f) => fill(dOf(f), KEY4_OF.building[1], ' stroke="#616161" stroke-width="0.6"')).join("");
+            const lines = of("road");
+            for (const k of ["foot", "bike", "aisle"]) body += stroke(join(lines.filter((f) => kindOf4(f) === k && !lineOn(f))), KEY4_OF[k][6], far ? 1 : 1.6);
+            for (const k of ["tracks", "sidewalk", "service", "aisle", "street", "foot", "bike"]) {
+                const [, color, , , , sw] = KEY4_OF[k];
+                body += stroke(join(lines.filter((f) => kindOf4(f) === k && lineOn(f))), color, far ? sw * 0.6 : sw);
+            }
         } else if (style === "key3") {
             const k3 = (f) => keyOf3(f);
             body = of("ground").filter((f) => k3(f) === "parking").map((f) => fill(dOf(f), KEY3_OF.parking[1], ' stroke="#78909c" stroke-width="0.6"')).join("");
@@ -637,5 +773,26 @@
         return svg;
     }
 
-    window.OSMDraw = { ready, render, legend, count: () => DATA?.length ?? 0, paths: () => DATA.filter((f) => f.keep !== undefined) };
+    /**
+     * What the key editor draws (tools/export-key-editor.mjs): every road and
+     * path with its kind, whether the rules turn it on, the groups it belongs
+     * to (for switching many at once) and its shape as drawn; the areas and
+     * the campus border around them.
+     */
+    function editorData() {
+        const r6 = (q) => [Math.round(q[0] * 1e6) / 1e6, Math.round(q[1] * 1e6) / 1e6];
+        const r5 = (q) => [Math.round(q[0] * 1e5) / 1e5, Math.round(q[1] * 1e5) / 1e5];
+        const lines = [];
+        for (const f of DATA) {
+            const k = kindOf4(f);
+            if (!k || k === "tunnel") continue;
+            const g = [["outside", f.outside], ["along", f.along], ["shadow", f.shadow], ["small", f.small], ["loop", f.loop], ["hand", PATH_DROP.has(f.id)]].filter(([, on]) => on).map(([n]) => n);
+            lines.push({ id: f.id, k, on: Boolean(ON4[k](f)), len: Math.round(f.len), name: f.name ?? null, g, d: (f.draw ?? f.rings).map((r) => r.map(r6)) });
+        }
+        const areas = DATA.filter((f) => areaOf4(f)).map((f) => ({ a: areaOf4(f), d: f.rings.map((r) => r.map(r5)) }));
+        const border = (window.HNSLocations?.layers ?? []).find((l) => l.kind === "polygon")?.ring ?? null;
+        return { kinds: KEY4.map(([k, color, name, what, how, , off]) => ({ k, color, name, what, how, off: off ?? null })), lines, areas, border };
+    }
+
+    window.OSMDraw = { ready, render, legend, editorData, count: () => DATA?.length ?? 0, paths: () => DATA.filter((f) => f.keep !== undefined) };
 })();

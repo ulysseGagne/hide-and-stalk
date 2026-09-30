@@ -15,61 +15,102 @@ from 0 (30%) to 1 (70%): pass `score`, or let `Ink.score(size, importance)`
 work it out (`key` < `info` < `aside` < `vibe`; bigger text leans wilder).
 `write()` and `note()` use it whenever no explicit `mess` is given.
 
-Gallery (all images, with Keep + notes): https://claude.ai/artifact/6LoZgEJAQMzaR6Z6AintGP
-(the up-to-date one, version 14, Sept 30). The earlier one,
-https://claude.ai/artifact/LdRszjr2qKJ9ckB1ZLNKgJ, belongs to the other Claude
-login; each login can only publish to its own.
+Gallery (all images, with Keep + notes): https://claude.ai/artifact/He5TXmq1iCTb7XiyVuGYRk
+(the up-to-date one, version 13, Sept 30, on the ugagne08 login, shared with
+anyone who has the link). This session's work was merged into main by PR #3. Color Map
+Editor: https://claude.ai/artifact/Y6kmr77pJjn1JwPpUyfp9n (same login). Older
+galleries: https://claude.ai/artifact/6LoZgEJAQMzaR6Z6AintGP (version 14, the
+other login) and https://claude.ai/artifact/LdRszjr2qKJ9ckB1ZLNKgJ (this
+login's first, shared by link, left as it was). Each login can only publish to
+its own; notes left on the other login's gallery can't be read from this one.
 
-## Where things stand (handoff, Sept 30)
+## Where things stand (handoff, Sept 30, end of the second session)
 
 The page `gallery.html` in this folder is the source of the gallery above.
 Whichever login picks this up: read the up-to-date gallery with the Artifact
-tool (`read`, and `path` to pull its images, since `shots/` is gitignored), or
+tool (`read`, and `paths` to pull its images, since `shots/` is gitignored), or
 re-render every image with the commands below, then publish `gallery.html`
-with its `shots/` to that login's own artifact.
+with its `shots/` to that login's own artifact. The user reviews live:
+republish after every change they might want to see.
 
-- **Decided:** logo L16.6b, handwriting H06, board B29, ransom notes C19,
-  notification arrow R10.3 (NEW bolder and clear of the arrow, red badge).
-- **Home screen:** W53, mostly done. File Nº 005 titled HIDER LOCATION with
-  only "Are you north or south of me?" and NORTH by hand; the bench Polaroid
-  captioned with coordinates in red (`lab/home3.js`, `fileNS`, `photo`).
-- **App (E):** done for now; the header's STALK is L16.6b's (`Logo.stalk()`).
-- **Map, the big open item.** The map is now drawn from OpenStreetMap's data
-  (`lab/osmdraw.js`, data in `lab/data/osm-campus.json`), not from tiles. The
-  user is settling *what's on it* with the colour-coded key (third pass,
-  `key3`, legend K03, render S30.02a); the skins follow once that's done.
-  Current key rules:
-  - Streets one category (pedestrian streets included); footpaths and trails
-    one category; all paths drawn smoothed (`smoothLine`).
-  - Paths sorted by `sortPaths()`: bike paths all kept except tiny bits;
-    footpaths and trails left behind when they follow a street or a bike
-    path, are off campus, are loose bits under 60 m, stubs under 20 m, or
-    knots; hand corrections in `PATH_DROP` / `PATH_KEEP` (OSM way ids). The
-    user's last note: only drop small messy segments.
-  - Woods include scrub; grass includes parks and every sports field and
-    court; the running track is plain ground; car parks are back.
-  - Left off (listed on the legend): service roads, aisles, driveways,
-    sidewalks, crosswalks, stairs on their own, tracks, platforms, tunnels,
-    railway, water, squares, and all land-use colours.
-- **Skins left:** S11 (outlines; its detail will follow the key), S20
-  (streets and buildings black, greens dotted), S14 (single lines, dotted
-  greens). Not yet re-rendered with the key's rules or the smoothing. Claude's
-  view: S20 looks strongest alone but must be tested under the overlays
-  (hints layer, a question, tags and the black YOU mark) before choosing.
-- **Players:** others get a tag (Ta, Tc, Tf, Tg, Tk, Tk.1, Tl), YOU a heading
-  mark (Yg, Yh, Yj, Ym, Yn); only your own heading is known to the app.
-- **Question screens (N08–N15):** exact pins and circles, pushpin variants,
-  N11 with round dash ends; still on the old tile print until a skin is picked.
-- The user reviews live: republish after each finished change.
+- **Decided** (the gallery's top row): logo L16.6b, handwriting H06, board
+  B29, ransom notes C19, notification arrow R10.3, the map S20 (a, b, c), the
+  players Tp (everyone else is B29's pushpin with no name; tapped, the name
+  shows above it) and YOU Yp.6.5 (Yn's arrow in the pin's look, a white blade
+  of shine from near the tip widening toward the back; `youMark(..., "p.6.5")`,
+  on every map). The hints layer is N3a (N2a dropped).
+- **Open:** the home screen (W54.1 and its variations a-e and b1-b3, W55),
+  and the café map pin in the pins' look: `Ink.glossPin`, six ways (G1-G6,
+  `GPINS` in `lab/maps2.js`), a little less clean since the user's last note
+  (facets, a little give); N08b has G1 on the map. The maps keep N08a's pins
+  until one is picked. The map is
+  S20, decided: every road and path OpenStreetMap has (tunnels never), the
+  key's areas, streets and buildings solid black, woods in close dots, grass
+  in sparse ones, the stadium and track hatched; S20a, S20b, S20c are the
+  whole campus, a few blocks, a few buildings (skin 31.23 a, b, c). Map
+  styling is done.
+- **B29 is the source of truth** for the board and its pieces: File Nº 005
+  is always HIDER LOCATION (two lines: within 500 m, closest café; where
+  exactly is gone), the hider's profile, W53's Polaroid with the coordinates,
+  the north-or-south card with NORTH big (`nsCard`). `b29()` places the
+  pieces and strings anywhere.
+- **Home screen:** the user picked W54.1 (the title over all of B29). This
+  pass, one 30 px margin everywhere: W54.1a (black lines centred on SEEK's
+  axis, the red keeps its place; past scale 0.88 STALK nears the edge),
+  W54.1b (lockup centred), W54.1c (cards overlapping, pinned, no strings),
+  W54.1d (top cards tucked under the title), W54.1e (with LET ME IN); W55.1
+  and W55.2, the home screen in two steps (title alone, then the board under
+  the app's header with LET ME IN). The string checker treats the title and
+  the button as obstacles (`s.avoid`); `s.loose` allows overlapping pieces.
+- **App (E):** this pass: E01's arrow above NEW, stamps bolder (E12, E13),
+  E14's MORE arrow like E19's, E18 asks for the nearest place to sit (card
+  `photo_seat`, the bench from `app/bench.svg`), E19/E20 ticks on their
+  circles, E21's tick sharp (`Ink.sharpCheck`). NOAH_B is NOAH everywhere.
+- **Map.** S20 won over S21 (31.22, only what the key and the editor keep),
+  so the map screens are drawn on S20 (`MAP_SKIN` in `lab/maps2.js`). The
+  colour-coded key and the Color Map Editor are off the gallery; they stay
+  here, and S21 still renders, if the map's contents come up again. The key,
+  fourth pass:
+  - `KEY4`, `kindOf4`, `lineOn`, `areaOf4` in `lab/osmdraw.js`: streets on;
+    footpaths and bike paths on unless small and messy (`sortPaths`: small
+    loops, loose pieces under 60 m, knots in a 40 m box, stubs under 20 m);
+    parking aisles and driveways on; service roads, sidewalks, tracks off;
+    car parks, tunnels, railway, water, squares, land use off; the Rouge et
+    Or stadium (`leisure=stadium`) and the running track (`leisure=track`)
+    as their own area. Legend K04, key map S30.03a (skin code 30.03).
+  - Hand edits: the user switches ways on or off in the Color Map Editor
+    (`key-editor/`, data from `tools/export-key-editor.mjs`). Its database
+    holds collection `overrides`, one document per kind (`{ ways: { osmId:
+    true|false } }`). To bake them: ArtifactData `list` of `overrides` with
+    `out_dir`, then `node tools/bake-key-overrides.mjs <that dir>/overrides`,
+    which writes `lab/data/key-overrides.json`; re-render the key map, S20
+    and the N screens, and republish. Baked: the user's final choices (1,626
+    ways; every street, 558 of 723 footpaths, 140 of 149 bike paths, 400 of
+    415 aisles and driveways, all 8 tracks, no service roads, no sidewalks).
+  - Next, asked but not started: smoothing over every path and road (roads
+    only a little; footpaths and bike paths are the worst). Paths are already
+    simplified and corner-cut (`smoothLine`).
+- **Map screens:** section 2 (N2a, N3a) and 3 (N08, N08a with filled pins,
+  N08.2a the café tapped, N10.1 with a white GREENHOUSES tag, N11 with WEST
+  and EAST bolder, N13, N15 without its subtitle) all on S20. White tags are
+  one outlined shape, pointer included; players are pushpins (`o.tapped`
+  shows one name); YOU is Yp, facing the hider (or, for the hider, the
+  closest stalker).
+- **Rendering on Linux:** `tools/lib.mjs` turns off LCD text (grey edges, as
+  on the Mac), and `tools/shoot-app.mjs` gives pages the iPhone's compass
+  permission hook so the compass notice shows, as it always did on the Mac.
 
 | Path | What |
 | --- | --- |
 | `lab/ink.js` | The red layer: single-stroke capitals jittered per letter and drawn with perfect-freehand (Apple Pencil look), strike-outs, circles, arrows, coloured-in fills, wobbly lines, pins, string |
 | `lab/logo.js` | Set L: the HIDE AND ~~SEEK~~ STALK lockups |
 | `lab/campus.js` | The real campus plan from `src/locations.js`, and truthful eliminations folded with turf like `src/hints.js` |
-| `lab/osmdraw.js` | The map drawn from OpenStreetMap's data (skins S11, S14, S20 and the colour-coded key): every road, path, building and green as a real shape, in our own style |
+| `lab/osmdraw.js` | The map drawn from OpenStreetMap's data (S20 and the colour-coded key, fourth pass): every road, path, building and green as a real shape, in our own style |
+| `lab/data/key-overrides.json` | The Color Map Editor's choices, baked in (`tools/bake-key-overrides.mjs`): OSM way id -> on |
+| `key-editor/` | The Color Map Editor artifact (`index.html`, and `ways.json` from `tools/export-key-editor.mjs`) |
 | `lab/data/osm-campus.json` | That data for the campus, as GeoJSON (`tools/fetch-osm.mjs`; © OpenStreetMap contributors, ODbL) |
 | `lab/board.js` | Set B: the conspiracy boards |
+| `lab/home3.js` | B25-B29, the home screens W31-W55 and the ransom notes; B29's pieces (`file29`, `profile`, `photo`, `nsCard`, `b29()`) |
 | `lab/welcome.js` | Set W (welcome screens) and set H (handwriting comparison) |
 | `app/style-*.css`, `app/decorate.js` | Directions A-D: restyles of the real app, plus the drawn marks on top |
 | `app/fake-api.mjs` | Scripted game states for team 3 (real deck, truthful answers) |
@@ -101,6 +142,20 @@ node tools/shoot-lab.mjs tags a,c,f,g,k,l 0 240 175 T  # other players' tags
 node tools/shoot-lab.mjs tags Yg,Yh,Yj,Ym,Yn 0 240 175 ""  # YOU's heading marks
 node tools/shoot-lab.mjs arrow 10.3 0 375 420 R  # R10.3, the notification arrow (decided)
 node tools/shoot-lab.mjs welcome 53 53 375 812 # W53, the home screen: the file and the Polaroid (lab/home3.js)
+node tools/shoot-lab.mjs board 29 29 375 480 B  # B29, the board (the source of truth)
+node tools/shoot-lab.mjs welcome 54.1,54.1a,54.1b,54.1c,54.1d,54.1e,55.1,55.2 0 375 812 W  # W54.1 and its variations, W55 in two steps
+node tools/shoot-lab.mjs osmkey 4 4 375 640 K  # K04, the key's legend, fourth pass
+node tools/shoot-lab.mjs skin 31.23a,31.23b,31.23c 0 375 812 S  # S20, the map: whole campus, a few blocks, a few buildings
+node tools/shoot-lab.mjs skin 30.03a,31.22a,31.22b 0 375 812 S  # retired: the key map, and S21 (only the editor's roads)
+node tools/shoot-lab.mjs hint 3a 0 375 812 N  # the hints layer, on S20
+node tools/shoot-lab.mjs map2 3a.1,08,08a,08b,08.2a,10.1,11,13,15 0 375 812 N  # a player tapped, and the question screens, on S20
+node tools/shoot-lab.mjs you p.6.5 0 240 175 Y  # YOU, Yp.6.5, at 3x (p to p.8 were the other shines)
+node tools/shoot-lab.mjs tags p 0 240 175 T  # Tp: everyone else, the pushpin with no name and tapped
+node tools/shoot-lab.mjs gpin 1,2,3,4,5,6 0 240 175 G  # G1-G6: the café map pin in the pins' look, 3x
+node tools/shoot-lab.mjs welcome 54.1b1,54.1b2,54.1b3 0 375 812 W  # W54.1b with the whole board shrunk: 85%, 75%, 65%
+node tools/shoot-app.mjs e                     # E-01 ... E-24b (needs app/bench.svg: node tools/export-bench.mjs)
+node tools/export-key-editor.mjs               # key-editor/ways.json, for the Color Map Editor
+node tools/bake-key-overrides.mjs <dir>        # the editor's choices -> lab/data/key-overrides.json
 ```
 
 The app's libraries are served from `node_modules` (same packages as the

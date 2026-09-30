@@ -52,12 +52,14 @@
         host.insertAdjacentHTML("afterbegin", K().filters);
         const items = [];
         const strings = [];
+        const avoid = []; // what's not a piece but must stay clear: the title
         const reds = []; // red marks inside items: [x, y, r]
         const s = {
             b,
             W,
             H,
             items,
+            avoid,
             add(html, { x, y, w, h, rot = 0 }) {
                 const it = b.item(html, { x, y, w, h, rot });
                 const poly = [it.at(0, 0), it.at(1, 0), it.at(1, 1), it.at(0, 1)];
@@ -78,8 +80,9 @@
             red(x, y, r) {
                 reds.push([x, y, r]);
             },
+            loose: false, // pieces may overlap (W54.1c)
             done() {
-                check(items, strings, W, H);
+                check(items, strings, W, H, avoid, s.loose);
                 b.done();
             },
         };
@@ -108,10 +111,11 @@
         }
         return true;
     };
-    function check(items, strings, W, H) {
+    function check(items, strings, W, H, avoid = [], loose = false) {
         const near = (a, b, d) => Math.hypot(a[0] - b[0], a[1] - b[1]) < d;
         for (const [i, st] of strings.entries()) {
             for (const pt of st.pts) {
+                if (avoid.some((q) => inside(q, pt, 2))) return warn(`string ${i} crosses the title`);
                 if (near(pt, st.p, 24) || near(pt, st.q, 24)) continue;
                 for (const [j, it] of items.entries()) if (inside(it.poly, pt, 2)) return warn(`string ${i} crosses item ${j}`);
             }
@@ -121,7 +125,8 @@
             }
         }
         for (const [i, a] of items.entries()) {
-            for (const [j, c] of items.entries()) if (j > i && (a.poly.some((p) => inside(c.poly, p, 4)) || c.poly.some((p) => inside(a.poly, p, 4)))) warn(`items ${i} and ${j} overlap`);
+            if (!loose) for (const [j, c] of items.entries()) if (j > i && (a.poly.some((p) => inside(c.poly, p, 4)) || c.poly.some((p) => inside(a.poly, p, 4)))) warn(`items ${i} and ${j} overlap`);
+            if (avoid.some((q) => a.poly.some((p) => inside(q, p, 4)) || q.some((p) => inside(a.poly, p, 4)))) warn(`item ${i} overlaps the title`);
             if (a.poly.some(([x, y]) => x < 20 || y < 6 || x > W - 20 || y > H - 6)) warn(`item ${i} is off the edge`);
         }
     }
@@ -217,20 +222,23 @@
         return it;
     }
 
-    /** The file: typeset like a printout, what's not known yet blacked out. */
+    /** The file: typeset like a printout, what's not known yet blacked out. File Nº 005 is always HIDER LOCATION. */
     function file(s, { x, y, w = 170, rot = 0, rows }) {
         const bar = (n) => `<span style="display:inline-block;width:${n}px;height:11px;background:#000;vertical-align:-1px"></span>`;
         const body = rows.map(([k, v]) => `<div style="display:flex;justify-content:space-between;gap:8px;white-space:nowrap"><span>${k}</span><b>${typeof v === "number" ? bar(v) : v}</b></div>`).join("");
         const html = `<div style="${BOX};width:${w}px;padding:12px 13px 13px;font:12px/1.75 ${FONT}">
             <div style="font-size:10px;font-weight:700;letter-spacing:.14em">FILE Nº 005</div>
-            <div class="subj" style="display:inline-block;font-size:${fitSize(["SUBJECT: HIDER"], w - 32, 22)}px;font-weight:700;letter-spacing:-.01em;line-height:1.2;margin-top:4px">SUBJECT: HIDER</div>
+            <div class="subj" style="display:inline-block;font-size:${fitSize(["HIDER LOCATION"], w - 32, 22)}px;font-weight:700;letter-spacing:-.01em;line-height:1.2;margin-top:4px">HIDER LOCATION</div>
             <div style="height:${LW}px;background:#000;margin:8px 0 6px"></div>${body}</div>`;
         return s.add(html, { x, y, w, rot });
     }
 
-    /** B29's file: what's known so far, and its one red mark, 500 m underlined by hand. */
+    /**
+     * B29's file: what's known so far, and its one red mark, 500 m underlined
+     * by hand. Two lines: within 500 m and the closest café (where exactly is gone).
+     */
     function file29(s, o) {
-        const rows = [["Within <span class=\"u\">500 m</span>?", "NO"], ...ROWS.slice(2)];
+        const rows = [["Within <span class=\"u\">500 m</span>?", "NO"], ...ROWS.slice(2, 3)];
         const f = file(s, { ...o, rows });
         const u = f.el.querySelector(".u");
         let ox = 0;
@@ -276,6 +284,22 @@
         const [hx, hy] = f.at((ox + (stacked ? 2 : 4)) / f.w, (oy + hand.offsetHeight - (stacked ? 3 : 2)) / f.h);
         s.b.draw(Ink.write("NORTH", { x: hx, y: hy, size, seed: "NORTH", tilt: rot - 2, importance: "key" }).svg);
         return f;
+    }
+
+    /**
+     * B29's north-or-south card, answered the way W53's file answers it: the
+     * question in bold, NORTH big (W53's size, same seed) across the card.
+     */
+    function nsCard(s, { x, y, w = 178, rot = 0 }) {
+        const pad = 13;
+        const inner = w - pad * 2 - LW * 2;
+        const size = fitWrite("NORTH", inner, 34, { seed: "NORTH", importance: "key" });
+        const h = Math.round(LW * 2 + pad + 2 * 15 * 1.3 + 12 + size * 1.05 + pad);
+        const html = `<div style="${BOX};width:${w}px;height:${h}px;padding:${pad}px;font:700 15px/1.3 ${FONT};white-space:nowrap">Are you north or<br>south of me?</div>`;
+        const it = s.add(html, { x, y, w, h, rot });
+        const [ax, ay] = it.at((LW + pad) / w, (h - pad - 5) / h);
+        s.b.draw(Ink.write("NORTH", { x: ax, y: ay, size, seed: "NORTH", tilt: rot - 2, importance: "key" }).svg);
+        return it;
     }
 
     // Cut-out letters, laid out in lines that stay inside the note.
@@ -646,16 +670,230 @@
     // B26, final: the bench instead of the door, the north/south card instead
     // of CLOSER CLOSER CLOSER, and that answer taken off the file (it's on the
     // card now). One red mark on the file: 500 m underlined.
-    BOARDS[29] = board((s) => {
-        const f = file29(s, { x: 30, y: 30, w: 184, rot: -2.5 });
-        const pr = profile(s, { x: 246, y: 44, w: 96, rot: 5 });
-        const ph = photo(s, { x: 40, y: 262, w: 140, rot: 4, scene: "sit", caption: "PLACE TO SIT" });
-        const c = card(s, { x: 222, y: 290, w: 124, rot: -5, q: Q.ns, answer: "NORTH", square: true });
-        s.link(s.pin(f, 0.93, 0.07), s.pin(pr, 0.12, 0.05), { sag: 3 });
-        s.link(s.pin(f, 0.34, 0.96), s.pin(ph, 0.42, 0.04), { sag: 1 });
-        s.link(s.pin(pr, 0.5, 0.97), s.pin(c, 0.55, 0.06), { sag: 2 });
-    });
+    // Since W53, B29 is the source of truth, and it takes W53's pieces: the
+    // Polaroid with the coordinates, and NORTH big on the card. The file keeps
+    // two lines (within 500 m, the closest café).
+    const coords = (s, o) => photo(s, { ...o, scene: "sit", caption: "46.7797 N\n71.2756 W", bold: 1.6 });
+    /**
+     * B29's four pieces and three strings. at: where each piece goes, if not
+     * where B29 has it ({ f, pr, ph, c }: { x, y }), dy: everything moved
+     * down, pins: other pin spots.
+     */
+    function b29(s, { at = {}, dy = 0, pins = {} } = {}) {
+        const put = (o, k) => ({ ...o, ...at[k], y: (at[k]?.y ?? o.y) + dy });
+        const f = file29(s, put({ x: 30, y: 30, w: 184, rot: -2.5 }, "f"));
+        const pr = profile(s, put({ x: 246, y: 44, w: 96, rot: 5 }, "pr"));
+        const ph = coords(s, put({ x: 40, y: 262, w: 122, rot: 4 }, "ph"));
+        const c = nsCard(s, put({ x: 180, y: 312, w: 168, rot: -4 }, "c"));
+        const p = { f1: [0.93, 0.07], pr1: [0.12, 0.05], f2: [0.34, 0.96], ph: [0.42, 0.04], pr2: [0.5, 0.97], c: [0.66, 0.07], ...pins };
+        s.link(s.pin(f, ...p.f1), s.pin(pr, ...p.pr1), { sag: 3 });
+        s.link(s.pin(f, ...p.f2), s.pin(ph, ...p.ph), { sag: 1 });
+        s.link(s.pin(pr, ...p.pr2), s.pin(c, ...p.c), { sag: 2 });
+    }
+    BOARDS[29] = board((s) => b29(s));
     for (const [n, f] of Object.entries(BOARDS)) Board.extra[n] = f;
+
+    // -----------------------------------------------------------------
+    // Home screens, sixth pass (W54.1-W54.6): L16.6b and all of B29 on one
+    // screen. B29's pieces and strings as they are; the title moves around,
+    // with and without LET ME IN. The title and the button are obstacles:
+    // no piece or string may cross them (checked like the rest).
+    // -----------------------------------------------------------------
+    /** L16.6b at scale k, its box's top-left at (x, y) (x "center": centred on the screen). Returns the box. */
+    function titleBox(root, k, x, y) {
+        const NS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(NS, "svg");
+        svg.setAttribute("width", W);
+        svg.setAttribute("height", 520);
+        svg.style.cssText = "position:absolute;left:0;top:0;overflow:visible;z-index:30;transform-origin:0 0";
+        root.appendChild(svg);
+        Logo.draw(svg, FINAL, W, 520);
+        const b = svg.getBBox();
+        const left = x === "center" ? (W - b.width * k) / 2 : x;
+        svg.style.transform = `translate(${left - b.x * k}px,${y - b.y * k}px) scale(${k})`;
+        return [[left, y], [left + b.width * k, y], [left + b.width * k, y + b.height * k], [left, y + b.height * k]];
+    }
+    const box = (x, y, w, h) => [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
+    function homeBoard({ k, x = 17, y, btn = false, place }) {
+        return async (root) => {
+            root.style.background = "#fff";
+            const t = titleBox(root, k, x, y);
+            if (btn) button(root);
+            const host = document.createElement("div");
+            host.style.cssText = `position:absolute;left:0;top:0;width:${W}px;height:${H}px;z-index:20`;
+            root.appendChild(host);
+            const s = surface(host, W, H);
+            s.avoid.push(t);
+            if (btn) s.avoid.push(box(BTN.x, BTN.y, BTN.w, BTN.h));
+            b29(s, place);
+            s.done();
+            host.style.background = "transparent";
+            await K().settle(root);
+        };
+    }
+    // The middle: the file and the profile above the title, the Polaroid and
+    // the card below it, the two long strings pinned at the outer corners so
+    // they run down the sides, clear of the title.
+    const sides = { f2: [0.08, 0.96], ph: [0.14, 0.04], pr2: [0.78, 0.97], c: [0.84, 0.07] };
+    Object.assign(Welcome.extra, {
+        // The title on top, W53's way (left, a bit smaller); B29 under it, whole.
+        54.1: homeBoard({ k: 0.76, y: 52, place: { dy: 339 } }),
+        // The same with LET ME IN: the title smaller, B29's two rows closer.
+        54.2: homeBoard({ k: 0.66, y: 50, btn: true, place: { dy: 298, at: { ph: { y: 212 }, c: { y: 258 } } } }),
+        // B29 first, the title under it, as big as in W53, centred.
+        54.3: homeBoard({ k: 0.84, x: "center", y: 462 }),
+        // The same with LET ME IN: the title smaller.
+        54.4: homeBoard({ k: 0.61, x: "center", y: 452, btn: true }),
+        // The title in the middle of the board.
+        54.5: homeBoard({ k: 0.68, x: "center", y: 261, place: { at: { ph: { y: 612 }, c: { y: 650 } }, pins: sides } }),
+        // The same with LET ME IN: the bottom row higher, the title smaller.
+        54.6: homeBoard({ k: 0.62, x: "center", y: 227, btn: true, place: { at: { ph: { y: 520 }, c: { y: 562 } }, pins: sides } }),
+    });
+
+    // -----------------------------------------------------------------
+    // Home screens, seventh pass (W54.1a-W54.1e, W55.1-W55.2), from W54.1.
+    // One margin, 30 px, everywhere: under the title, round and between the
+    // cards, at the bottom. B29's rows closer (the strings between them are
+    // that margin long), the bottom row off the bottom. The title's black
+    // lines centred; the red keeps its place against SEEK.
+    // -----------------------------------------------------------------
+    const M = 30;
+    const TOP = 44; // HIDE's top, under the phone's status bar
+    /** L16.6b with HIDE, AND and SEEK each centred on one axis (SEEK's); the scribble and STALK stay with SEEK. Returns the title's box. */
+    function titleLines(root, k, y, { block = false } = {}) {
+        const NS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(NS, "svg");
+        svg.setAttribute("width", W);
+        svg.setAttribute("height", 520);
+        svg.style.cssText = "position:absolute;left:0;top:0;overflow:visible;z-index:30;transform-origin:0 0";
+        root.appendChild(svg);
+        Logo.draw(svg, FINAL, W, 520);
+        const texts = [...svg.querySelectorAll(":scope > text")];
+        const seek = texts.find((t) => t.textContent.includes("SEEK"));
+        const sb = seek.getBBox();
+        const axis = sb.x + sb.width / 2;
+        if (!block) for (const t of texts) {
+            const tb = t.getBBox();
+            t.setAttribute("transform", `translate(${(axis - (tb.x + tb.width / 2)).toFixed(2)} 0)`);
+        }
+        const b = svg.getBBox();
+        // Lines: SEEK's middle on the screen's; block: the whole lockup's box centred.
+        const tx = block ? (W - b.width * k) / 2 - b.x * k : W / 2 - axis * k;
+        svg.style.transform = `translate(${tx}px,${y - b.y * k}px) scale(${k})`;
+        return box(tx + b.x * k, y, b.width * k, b.height * k);
+    }
+    // B29 with its rows 30 px apart: the Polaroid under the file, the card under the profile.
+    const tight = { at: { ph: { x: 28, y: 205 }, c: { x: 178, y: 218 } } };
+    /** B29 as a pinned stack: each piece overlaps the next by a few px of blank paper, a pin through both; no strings. */
+    function b29stack(s, dy) {
+        const f = file29(s, { x: 24, y: dy, w: 184, rot: -3 });
+        const pr = profile(s, { x: 234, y: dy + 12, w: 96, rot: 5 });
+        const ph = coords(s, { x: 30, y: dy + 128, w: 122, rot: 4 });
+        const c = nsCard(s, { x: 146, y: dy + 142, w: 168, rot: -4 });
+        s.pin(f, 0.07, 0.07);
+        s.pin(pr, 0.52, 0.05);
+        s.pin(ph, 0.5, 0.035);
+        s.pin(c, 0.76, 0.05);
+        s.pin(c, 0.035, 0.3);
+    }
+    function home7({ k, y = TOP, block = false, btn = false, place, stack, tuck = false }) {
+        return async (root) => {
+            root.style.background = "#fff";
+            const t = titleLines(root, k, y, { block });
+            if (btn) button(root);
+            const host = document.createElement("div");
+            host.style.cssText = `position:absolute;left:0;top:0;width:${W}px;height:${H}px;z-index:20`;
+            root.appendChild(host);
+            const s = surface(host, W, H);
+            // Tucked: the top cards slide under the title's bottom edge, so only strings must keep clear of it.
+            if (!tuck) s.avoid.push(t);
+            if (btn) s.avoid.push(box(BTN.x, BTN.y, BTN.w, BTN.h));
+            if (stack !== undefined) {
+                s.loose = true;
+                b29stack(s, stack);
+            } else b29(s, place);
+            s.done();
+            host.style.background = "transparent";
+            await K().settle(root);
+        };
+    }
+    /** W54.1b's title (the lockup centred), and B29 (rows 30 px apart) drawn at full size, then scaled down whole. */
+    function homeShrunk({ k, y = 44, shrink }) {
+        return async (root) => {
+            root.style.background = "#fff";
+            const t = titleLines(root, k, y, { block: true });
+            const host = document.createElement("div");
+            host.style.cssText = `position:absolute;left:0;top:0;width:${W}px;height:480px;z-index:20;transform-origin:0 0`;
+            root.appendChild(host);
+            const s = surface(host, W, 480);
+            b29(s, tight);
+            s.done();
+            host.style.background = "transparent";
+            // The pieces' own box, then centred across and in the room under the title.
+            const xs = s.items.flatMap((it) => it.poly.map((q) => q[0]));
+            const ys = s.items.flatMap((it) => it.poly.map((q) => q[1]));
+            const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+            const below = t[2][1];
+            const gap = (H - below - (y1 - y0) * shrink) / 2;
+            host.style.transform = `translate(${W / 2 - ((x0 + x1) / 2) * shrink}px,${below + gap - y0 * shrink}px) scale(${shrink})`;
+            await K().settle(root);
+        };
+    }
+    // The home screen in two steps. First the title alone, as the app opens;
+    // then the board, under the app's own header, and LET ME IN.
+    function step2() {
+        return async (root) => {
+            root.style.background = "#fff";
+            const hdr = document.createElement("div");
+            hdr.style.cssText = `position:absolute;left:0;top:0;width:${W}px;height:64px;box-sizing:border-box;border-bottom:${LW}px solid #000;z-index:30`;
+            root.appendChild(hdr);
+            const cx = document.createElement("canvas").getContext("2d");
+            cx.font = `700 17px ${FONT}`;
+            const sx = 16 + cx.measureText("HIDE &").width + 7;
+            // The header's STALK in black: the board below has the screen's red.
+            const st = Logo.stalk({ color: "#000" });
+            const sk = 25 / st.box.h;
+            hdr.innerHTML = `<div style="position:absolute;left:16px;top:25px;font:700 17px ${FONT}">HIDE &amp;</div><svg width="${W}" height="64" style="position:absolute;left:0;top:0;overflow:visible"><g transform="translate(${sx - st.box.x * sk} ${46 - (st.box.y + st.box.h) * sk}) scale(${sk})">${st.svg}</g></svg>`;
+            button(root);
+            const host = document.createElement("div");
+            host.style.cssText = `position:absolute;left:0;top:${Math.round(64 + (BTN.y - 64 - 450) / 2) - 26}px;width:${W}px;height:480px;z-index:20`;
+            root.appendChild(host);
+            const s = surface(host, W, 480);
+            b29(s);
+            s.done();
+            host.style.background = "transparent";
+            await K().settle(root);
+        };
+    }
+    // With the black lines centred on the screen, STALK sits right of the
+    // middle: past 0.88 of its size it comes closer than 30 px to the edge.
+    // The title box's top is y; B29's top row starts 26 px below its dy.
+    const under = (k, y, gap = M) => y + 388 * k + gap - 26;
+    Object.assign(Welcome.extra, {
+        // a: the black lines centred; B29's rows 30 px apart; 30 px round everything.
+        "54.1a": home7({ k: 0.88, y: 58, place: { ...tight, dy: under(0.88, 58) } }),
+        // b: the same, the whole lockup centred as it is (so it can be a little bigger).
+        "54.1b": home7({ k: 0.93, block: true, place: { ...tight, dy: under(0.93, 44) } }),
+        // c: the cards overlapping a little, pinned together: more room round them.
+        "54.1c": home7({ k: 0.88, y: 70, stack: under(0.88, 70, 40) + 26 }),
+        // d: the top cards tucked 20 px under the title's bottom edge.
+        "54.1d": home7({ k: 0.88, y: 76, place: { ...tight, dy: under(0.88, 76, -20) }, tuck: true }),
+        // e: a with LET ME IN; the title smaller.
+        "54.1e": home7({ k: 0.63, y: 50, btn: true, place: { ...tight, dy: under(0.63, 50) } }),
+        // b1-b3: W54.1b with the whole board shrunk, as it is (pieces, strings,
+        // pins and line weights together), centred under the title with equal
+        // room above and below it: 85%, 75%, 65%.
+        "54.1b1": homeShrunk({ k: 0.93, shrink: 0.85 }),
+        "54.1b2": homeShrunk({ k: 0.93, shrink: 0.75 }),
+        "54.1b3": homeShrunk({ k: 0.93, shrink: 0.65 }),
+        // W55: two steps. 1: the title alone, as the app opens.
+        55.1: async (root) => {
+            root.style.background = "#fff";
+            titleLines(root, 0.88, Math.round((H - 388 * 0.88) / 2));
+        },
+        // 2: B29 whole under the app's header, LET ME IN.
+        55.2: step2(),
+    });
 
     // -----------------------------------------------------------------
     // What the ransom note says (C01-C12): just the note

@@ -876,6 +876,104 @@
     }
 
     /** A check mark done fast and big: a hooked start, a heavy bottom, a long leg flung past the top. */
+    /**
+     * The map pin in B29's pushpin look: the pin's red, a thin black edge a
+     * touch uneven, a white shine. The point sits exactly on the spot.
+     *   dot:   "cut" a hole the map shows through (ringed by the edge),
+     *          "white" a white dot, "none"
+     *   shine: "oval" (the pushpin's), "arc" round the head, "blade" down the
+     *          left side, "line" along it, "none"
+     */
+    function glossPin(x, y, o = {}) {
+        const s = o.size ?? 16;
+        const r = rng(o.seed ?? `gp${Math.round(x)},${Math.round(y)}`);
+        const n = noise1(r);
+        const R = s * 0.6;
+        const cy = y - s * 1.4;
+        const alpha = Math.acos(R / (s * 1.4));
+        // A little less clean, like the round pin: the head in 16 facets, each a
+        // little in or out; the straight sides with a little give; the point
+        // exactly on the spot.
+        const head = [];
+        for (let i = 0; i <= 16; i++) {
+            const f = Math.PI / 2 + alpha + (i / 16) * (2 * Math.PI - 2 * alpha);
+            const k = R * (1 + n(i * 0.7) * 0.06);
+            head.push([x + Math.cos(f) * k, cy + Math.sin(f) * k]);
+        }
+        const side = (a, b, at) => {
+            const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+            return [1, 2, 3].map((k) => {
+                const off = n(at + k * 0.9) * s * 0.03;
+                return [a[0] + ((b[0] - a[0]) * k) / 4 - ((b[1] - a[1]) / len) * off, a[1] + ((b[1] - a[1]) * k) / 4 + ((b[0] - a[0]) / len) * off];
+            });
+        };
+        const loop = [[x, y], ...side([x, y], head[0], 40), ...head, ...side(head[head.length - 1], [x, y], 80)];
+        const d = (pts) => `M${pts.map((p) => `${p[0].toFixed(2)} ${p[1].toFixed(2)}`).join("L")}Z`;
+        const circ = (cx0, cy0, rr, m = 14) => Array.from({ length: m }, (_, i) => [cx0 + Math.cos((-i / m) * Math.PI * 2) * rr * (1 + n(60 + i * 0.8) * 0.07), cy0 + Math.sin((-i / m) * Math.PI * 2) * rr * (1 + n(60 + i * 0.8) * 0.07)]);
+        const dot = o.dot ?? "cut";
+        const hole = dot === "cut" ? d(circ(x, cy, s * 0.22)) : "";
+        const id = `gp${Math.round(x * 10)}x${Math.round(y * 10)}`;
+        const white = "#fff";
+        const W = Math.max(1.2, s * 0.1);
+        // Shine in the head's upper left, or down the left side toward the point.
+        const left = [x + Math.cos(Math.PI / 2 + alpha) * R, cy + Math.sin(Math.PI / 2 + alpha) * R];
+        const along = (t, k) => [left[0] + (x - left[0]) * t + k * 0.94, left[1] + (y - left[1]) * t - k * 0.34];
+        const arc = (a0, a1, rr) => {
+            const p0 = [x + Math.cos(a0) * rr, cy + Math.sin(a0) * rr];
+            const p1 = [x + Math.cos(a1) * rr, cy + Math.sin(a1) * rr];
+            return `<path d="M${p0[0].toFixed(2)} ${p0[1].toFixed(2)}A${rr} ${rr} 0 0 1 ${p1[0].toFixed(2)} ${p1[1].toFixed(2)}" stroke="${white}" stroke-width="${W.toFixed(2)}" stroke-linecap="round" fill="none"/>`;
+        };
+        const shine = {
+            oval: `<ellipse cx="${(x - R * 0.36).toFixed(2)}" cy="${(cy - R * 0.4).toFixed(2)}" rx="${(R * 0.34).toFixed(2)}" ry="${(R * 0.2).toFixed(2)}" fill="${white}" transform="rotate(-35 ${(x - R * 0.36).toFixed(2)} ${(cy - R * 0.4).toFixed(2)})"/>`,
+            arc: arc((200 * Math.PI) / 180, (262 * Math.PI) / 180, R * 0.7),
+            blade: `<path d="${d([along(0.06, 1.4), along(0.7, 1.2), along(0.16, 3.6)])}" fill="${white}"/>`,
+            line: `<path d="M${along(0.08, 2).map((v) => v.toFixed(2)).join(" ")}L${along(0.58, 1.6).map((v) => v.toFixed(2)).join(" ")}" stroke="${white}" stroke-width="${(W * 0.9).toFixed(2)}" stroke-linecap="round" fill="none"/>`,
+            none: "",
+        }[o.shine ?? "oval"];
+        const whiteDot = dot === "white" ? `<circle cx="${x}" cy="${cy.toFixed(2)}" r="${(s * 0.22).toFixed(2)}" fill="${white}" stroke="#000" stroke-width="${Math.max(1, s * 0.09).toFixed(2)}"/>` : "";
+        return `<g><defs><clipPath id="${id}"><path d="${d(loop)}"/></clipPath></defs><path d="${d(loop)}${hole}" fill="${o.color ?? RED}" fill-rule="evenodd" stroke="#000" stroke-width="${Math.max(1, s * 0.1).toFixed(2)}" stroke-linejoin="round"/>${whiteDot}<g clip-path="url(#${id})">${shine}</g></g>`;
+    }
+
+    /**
+     * A tick with a sharp corner, one filled shape: a short arm that thickens
+     * down into a mitred point, and a long arm that leaves it at full width
+     * and narrows to a point. Each side wobbles a little by hand; the corner
+     * and the tip stay exactly where they are.
+     */
+    function sharpCheck(x, y, s, o = {}) {
+        const r = rng(o.seed ?? "sharpCheck");
+        const w = o.weight ?? s * 0.26;
+        const a = [x, y + s * r.range(0.42, 0.5)];
+        const v = [x + s * r.range(0.32, 0.37), y + s * r.range(0.96, 1.02)];
+        const b = [x + s * r.range(1.1, 1.2), y - s * r.range(0.3, 0.4)];
+        const unit = (p, q) => {
+            const l = Math.hypot(q[0] - p[0], q[1] - p[1]);
+            return [(q[0] - p[0]) / l, (q[1] - p[1]) / l];
+        };
+        const d1 = unit(a, v);
+        const d2 = unit(v, b);
+        const n1 = [-d1[1], d1[0]];
+        const n2 = [-d2[1], d2[0]];
+        const off = (p, n, k) => [p[0] + n[0] * k, p[1] + n[1] * k];
+        // Where one side of each arm meets the other's at the corner (a mitre), kept near it.
+        const meet = (k) => {
+            const p1 = off(v, n1, k);
+            const p2 = off(v, n2, k);
+            const den = d1[0] * d2[1] - d1[1] * d2[0];
+            const t = ((p2[0] - p1[0]) * d2[1] - (p2[1] - p1[1]) * d2[0]) / den;
+            const m = [p1[0] + d1[0] * t, p1[1] + d1[1] * t];
+            const far = Math.hypot(m[0] - v[0], m[1] - v[1]);
+            return far > w * 1.6 ? off(v, [(m[0] - v[0]) / far, (m[1] - v[1]) / far], w * 1.6) : m;
+        };
+        const ta = w * 0.32;
+        const mid = (k) => off([v[0] + (b[0] - v[0]) * 0.45, v[1] + (b[1] - v[1]) * 0.45], n2, k);
+        const wob = (pts) => humanize(densify(pts, 4), { wobbleAmp: o.wobbleAmp ?? 0.6 });
+        const plus = wob([off(a, n1, ta / 2), meet(w / 2), mid(w * 0.36), b]);
+        const minus = wob([b, mid(-w * 0.36), meet(-w / 2), off(a, n1, -ta / 2)]);
+        const d = `M${plus.concat(minus.slice(1)).map((p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join("L")}Z`;
+        return `<path d="${d}" fill="${o.color ?? RED}"/>`;
+    }
+
     function bigCheck(x, y, s, o = {}) {
         const r = rng(o.seed ?? "bigCheck");
         const pts = [
@@ -1200,8 +1298,23 @@
             const a = (i / 14) * Math.PI * 2;
             hole.push([x + Math.cos(a) * s * 0.2, cy + Math.sin(a) * s * 0.2]);
         }
+        const edge = pressed(loop, (u) => 0.5 + 0.5 * Math.sin(Math.PI * u), { size: Math.max(2.2, s * 0.13), color: o.color, thinning: 0.5, taperStart: 2, taperEnd: 4, wobbleAmp: 0.6 });
+        if (o.fill) {
+            // Filled in: the pin solid, its dot a hole cut through it (the map
+            // shows in it), a touch wider and not quite round; the hand-drawn
+            // edge on top.
+            const hr = r.range(0.25, 0.27);
+            const cut = [];
+            for (let i = 0; i < 16; i++) {
+                const a = -(i / 16) * Math.PI * 2;
+                const k = s * hr * (1 + r.range(-0.06, 0.06));
+                cut.push([x + Math.cos(a) * k, cy + Math.sin(a) * k]);
+            }
+            const d = (pts) => `M${pts.map((p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join("L")}Z`;
+            return `<path d="${d(loop)}${d(cut)}" fill="${o.color ?? RED}" fill-rule="evenodd"/>` + edge;
+        }
         // Outline, then a small coloured-in dot where the hole would be.
-        return pressed(loop, (u) => 0.5 + 0.5 * Math.sin(Math.PI * u), { size: Math.max(2.2, s * 0.13), color: o.color, thinning: 0.5, taperStart: 2, taperEnd: 4, wobbleAmp: 0.6 }) + colorIn([hole], { seed: `${o.seed}f`, weight: Math.max(2, s * 0.12), overshoot: 1 , color: o.color });
+        return edge + colorIn([hole], { seed: `${o.seed}f`, weight: Math.max(2, s * 0.12), overshoot: 1 , color: o.color });
     }
 
     /** An imperfect box: four strokes, corners overshooting or not meeting. */
@@ -1306,6 +1419,8 @@
         bigArrow,
         stubArrow,
         bigCheck,
+        sharpCheck,
+        glossPin,
         mapPin,
         tuck,
         blackout,

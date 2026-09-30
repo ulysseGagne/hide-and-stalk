@@ -15,7 +15,7 @@ const MIN = 60_000;
 export const HIDER = { lat: 46.7806, lng: -71.2789 }; // by the greenhouses
 const POS = {
     jules: { lat: 46.779163, lng: -71.2692303 }, // Pollack
-    noah_b: { lat: 46.7803276, lng: -71.2768114 }, // Vachon
+    noah: { lat: 46.7803276, lng: -71.2768114 }, // Vachon
     camille: { lat: 46.7814, lng: -71.2748 },
     theo: { lat: 46.7797, lng: -71.2731 },
 };
@@ -53,7 +53,7 @@ function truth(cardId, asker) {
 const USERS = [
     { id: 11, username: "maelle", role: "hider" },
     { id: 12, username: "jules", role: "stalker" },
-    { id: 13, username: "noah_b", role: "stalker" },
+    { id: 13, username: "noah", role: "stalker" },
     { id: 14, username: "camille", role: "stalker" },
     { id: 15, username: "theo", role: "stalker" },
 ];
@@ -63,8 +63,8 @@ const HUNT_START = NOW - 17 * MIN - 20_000; // 13:09:40 -> Q4 is live
 const ROUND = [
     { q: 1, cardIds: ["ns", "closer_church", "radius_500"], picked: "ns", by: "jules" },
     { q: 2, cardIds: ["radius_500", "walk_minutes", "nearest_velo"], picked: "radius_500", by: "jules" },
-    { q: 3, cardIds: ["nearest_cafe", "photo_window", "closer_outer_ring"], picked: "nearest_cafe", by: "noah_b" },
-    { q: 4, cardIds: ["closer_greenhouses", "nearest_building", "photo_below"], picked: "closer_greenhouses", by: "noah_b" },
+    { q: 3, cardIds: ["nearest_cafe", "photo_window", "closer_outer_ring"], picked: "nearest_cafe", by: "noah" },
+    { q: 4, cardIds: ["closer_greenhouses", "nearest_building", "photo_below"], picked: "closer_greenhouses", by: "noah" },
 ];
 
 function plays(upTo, { answerLast = true, extra = [] } = {}) {
@@ -196,30 +196,30 @@ export const SCREENS = {
     },
     // Sent, the hider hasn't answered yet: SENT · LOCKED IN.
     waiting: {
-        position: POS.noah_b,
+        position: POS.noah,
         state: (() => {
             const p = plays(3, { answerLast: false });
             return {
                 serverNow: NOW,
                 settings,
-                me: me("noah_b"),
+                me: me("noah"),
                 team: team("hunting", { question: 3, nextQuestionInMs: 3 * MIN + 31_000, huntMs: 11 * MIN + 29_000 }),
-                users: users("noah_b"),
+                users: users("noah"),
                 cards: { role: "stalker", batch: { id: 203, question: 3, cardIds: ROUND[2].cardIds, dealtAt: NOW - 90_000, playedCardId: "nearest_cafe", playedBy: 13, playedAt: NOW - 29_000 }, currentPlay: p[2], pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
             };
         })(),
     },
     // The answer is on screen, so it's read: no bell to point at.
     sent: {
-        position: POS.noah_b,
+        position: POS.noah,
         state: (() => {
             const p = plays(3);
             return {
                 serverNow: NOW,
                 settings,
-                me: me("noah_b"),
+                me: me("noah"),
                 team: team("hunting", { question: 3, nextQuestionInMs: 2 * MIN + 3_000, huntMs: 12 * MIN + 57_000 }),
-                users: users("noah_b"),
+                users: users("noah"),
                 cards: { role: "stalker", batch: { id: 203, question: 3, cardIds: ROUND[2].cardIds, dealtAt: NOW - 3 * MIN, playedCardId: "nearest_cafe", playedBy: 13, playedAt: NOW - 2 * MIN }, currentPlay: p[2], pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
             };
         })(),
@@ -228,7 +228,7 @@ export const SCREENS = {
         position: POS.camille,
         photo: true,
         state: (() => {
-            const extra = [{ q: 5, cardIds: ["photo_door", "radius_100", "floor"], picked: "photo_door", by: "camille", answer: "photo", photo: true }];
+            const extra = [{ q: 5, cardIds: ["photo_seat", "radius_100", "floor"], picked: "photo_seat", by: "camille", answer: "photo", photo: true }];
             const p = plays(5, { extra });
             return {
                 serverNow: NOW,
@@ -236,7 +236,7 @@ export const SCREENS = {
                 me: me("camille"),
                 team: team("hunting", { question: 5, nextQuestionInMs: 1 * MIN + 36_000, huntMs: 23 * MIN + 24_000 }),
                 users: users("camille"),
-                cards: { role: "stalker", batch: { id: 205, question: 5, cardIds: extra[0].cardIds, dealtAt: NOW - 3 * MIN, playedCardId: "photo_door", playedBy: 14, playedAt: NOW - 150_000 }, currentPlay: p[4], pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
+                cards: { role: "stalker", batch: { id: 205, question: 5, cardIds: extra[0].cardIds, dealtAt: NOW - 3 * MIN, playedCardId: "photo_seat", playedBy: 14, playedAt: NOW - 150_000 }, currentPlay: p[4], pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
             };
         })(),
     },
