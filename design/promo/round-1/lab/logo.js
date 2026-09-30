@@ -596,6 +596,10 @@
         "16.6b"(svg) {
             lockup(svg, P76light, S144({ size: 64, glyphs: { K: K_LONG } }), { at: 0.34, gap: 2 });
         },
+        // L16.6b with the scribble a touch lighter, closer to STALK's own stroke.
+        "16.6b1"(svg) {
+            lockup(svg, (s, k) => scribble(s, k, { seed: "p71", even: true, weight: k.h * 0.135 }), S144({ size: 64, glyphs: { K: K_LONG } }), { at: 0.34, gap: 2 });
+        },
         // L16.6b, adjusted: a heavier T; S, T and A each nudged right so nothing
         // touches; the K raised and pulled left to sit inside the L's foot; no
         // pointed stroke ends.
