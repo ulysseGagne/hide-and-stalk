@@ -16,14 +16,15 @@ work it out (`key` < `info` < `aside` < `vibe`; bigger text leans wilder).
 `write()` and `note()` use it whenever no explicit `mess` is given.
 
 Gallery (all images, with Keep + notes): https://claude.ai/artifact/He5TXmq1iCTb7XiyVuGYRk
-(the up-to-date one, version 12, Sept 30, on the ugagne08 login). Color Map
+(the up-to-date one, version 13, Sept 30, on the ugagne08 login, shared with
+anyone who has the link). This session's work was merged into main by PR #3. Color Map
 Editor: https://claude.ai/artifact/Y6kmr77pJjn1JwPpUyfp9n (same login). Older
 galleries: https://claude.ai/artifact/6LoZgEJAQMzaR6Z6AintGP (version 14, the
 other login) and https://claude.ai/artifact/LdRszjr2qKJ9ckB1ZLNKgJ (this
 login's first, shared by link, left as it was). Each login can only publish to
 its own; notes left on the other login's gallery can't be read from this one.
 
-## Where things stand (handoff, Sept 30, second session)
+## Where things stand (handoff, Sept 30, end of the second session)
 
 The page `gallery.html` in this folder is the source of the gallery above.
 Whichever login picks this up: read the up-to-date gallery with the Artifact
@@ -32,15 +33,17 @@ re-render every image with the commands below, then publish `gallery.html`
 with its `shots/` to that login's own artifact. The user reviews live:
 republish after every change they might want to see.
 
-- **Decided:** logo L16.6b, handwriting H06, board B29, ransom notes C19,
-  notification arrow R10.3; on every map, everyone else is one of B29's
-  pushpins with no name (a tap shows it above the pin: Tp, Tp.1, N3a.1) and
-  YOU is Yp, Yn's arrow in the pin's look (`youMark(..., "p")`); its shine is
-  down to a blade, a point near the tip and wide toward the back: p.6, p.7
-  (further down, short of the back edge) or p.8 (into it). The maps still show
-  the oval (p) until the user picks. The café pin in the same look is open
-  too: `Ink.glossPin`, six ways (G1-G6, `GPINS` in `lab/maps2.js`; N08b has
-  G1 on the map). The hints layer is N3a (N2a dropped). The map is
+- **Decided** (the gallery's top row): logo L16.6b, handwriting H06, board
+  B29, ransom notes C19, notification arrow R10.3, the map S20 (a, b, c), the
+  players Tp (everyone else is B29's pushpin with no name; tapped, the name
+  shows above it) and YOU Yp.6.5 (Yn's arrow in the pin's look, a white blade
+  of shine from near the tip widening toward the back; `youMark(..., "p.6.5")`,
+  on every map). The hints layer is N3a (N2a dropped).
+- **Open:** the home screen (W54.1 and its variations a-e and b1-b3, W55),
+  and the café map pin in the pins' look: `Ink.glossPin`, six ways (G1-G6,
+  `GPINS` in `lab/maps2.js`), a little less clean since the user's last note
+  (facets, a little give); N08b has G1 on the map. The maps keep N08a's pins
+  until one is picked. The map is
   S20, decided: every road and path OpenStreetMap has (tunnels never), the
   key's areas, streets and buildings solid black, woods in close dots, grass
   in sparse ones, the stadium and track hatched; S20a, S20b, S20c are the
@@ -144,10 +147,10 @@ node tools/shoot-lab.mjs welcome 54.1,54.1a,54.1b,54.1c,54.1d,54.1e,55.1,55.2 0 
 node tools/shoot-lab.mjs osmkey 4 4 375 640 K  # K04, the key's legend, fourth pass
 node tools/shoot-lab.mjs skin 31.23a,31.23b,31.23c 0 375 812 S  # S20, the map: whole campus, a few blocks, a few buildings
 node tools/shoot-lab.mjs skin 30.03a,31.22a,31.22b 0 375 812 S  # retired: the key map, and S21 (only the editor's roads)
-node tools/shoot-lab.mjs hint 2a,3a 0 375 812 N  # the hints layer, on S20
+node tools/shoot-lab.mjs hint 3a 0 375 812 N  # the hints layer, on S20
 node tools/shoot-lab.mjs map2 3a.1,08,08a,08b,08.2a,10.1,11,13,15 0 375 812 N  # a player tapped, and the question screens, on S20
-node tools/shoot-lab.mjs tags p,p.1 0 240 175 T  # Tp, Tp.1: everyone else as B29's pushpin, and tapped
-node tools/shoot-lab.mjs you p.6,p.7,p.8 0 240 175 Y  # YOU's shine, 3x: the blade, further down, into the back edge (p to p.5 retired)
+node tools/shoot-lab.mjs you p.6.5 0 240 175 Y  # YOU, Yp.6.5, at 3x (p to p.8 were the other shines)
+node tools/shoot-lab.mjs tags p 0 240 175 T  # Tp: everyone else, the pushpin with no name and tapped
 node tools/shoot-lab.mjs gpin 1,2,3,4,5,6 0 240 175 G  # G1-G6: the café map pin in the pins' look, 3x
 node tools/shoot-lab.mjs welcome 54.1b1,54.1b2,54.1b3 0 375 812 W  # W54.1b with the whole board shrunk: 85%, 75%, 65%
 node tools/shoot-app.mjs e                     # E-01 ... E-24b (needs app/bench.svg: node tools/export-bench.mjs)
