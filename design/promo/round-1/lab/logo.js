@@ -587,7 +587,7 @@
             const g = S142({ size: 70 })(svg);
             // Same width and the same vertical middle as the reference.
             const at = place(g, { top, x: r.x, width: r.w });
-            g.setAttribute("transform", g.getAttribute("transform").replace(/translate\(([-\d.]+) ([-\d.]+)\)/, (_, x, y) => `translate(${x} ${Number(y) + (r.h - at.h) / 2})`));
+            g.setAttribute("transform", g.getAttribute("transform").replace(/translate\(([-\d.]+) ([-\d.]+)\)/, (_, x, y) => `translate(${x} ${Number(y) + (r.h - at.h) / 2 + 4})`));
         },
         "16.6b"(svg) {
             lockup(svg, P76light, S144({ size: 64 }), { at: 0.34, gap: 2 });
