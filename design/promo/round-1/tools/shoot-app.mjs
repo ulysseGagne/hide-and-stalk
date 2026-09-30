@@ -13,13 +13,15 @@ import { SCREENS, NOW, catalog } from "../app/fake-api.mjs";
 
 const styles = (process.argv[2] ?? "a,b,c,d").split(",");
 const only = process.argv[3] && process.argv[3] !== "all" ? process.argv[3].split(",") : Object.keys(SCREENS);
-const ORDER = ["login", "loginfilled", "lobby", "ready", "hiding", "cards", "selected", "waiting", "sent", "photo", "question", "choice", "tagcode", "history", "found", "win"];
+const ORDER = ["login", "loginfilled", "permask", "permasking", "permhalf", "permdone", "permblocked", "lobby", "ready", "hiding", "cards", "selected", "waiting", "sent", "photo", "question", "choice", "tagcode", "history", "found", "win"];
 
 // A stand-in for the hider's photo of "the nearest door" (real photos later).
 const DOOR = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 60 80"><rect width="60" height="80" fill="#000"/><rect x="14" y="12" width="32" height="66" fill="none" stroke="#fff" stroke-width="2"/><rect x="19" y="18" width="22" height="22" fill="none" stroke="#fff" stroke-width="1"/><circle cx="40" cy="48" r="1.8" fill="#fff"/><rect x="21" y="5" width="18" height="5" fill="#fff"/><text x="30" y="9.2" font-family="Arial" font-weight="700" font-size="3.6" text-anchor="middle">SORTIE</text><path d="M0 78 L14 77 M46 77 L60 78" stroke="#fff" stroke-width="1"/></svg>`;
 const DOOR_URL = `data:image/svg+xml;base64,${Buffer.from(DOOR).toString("base64")}`;
 
 function css(style) {
+    // E stands alone; B-D are layered over A.
+    if (style === "e") return fs.readFileSync(path.join(ROUND, "app/style-e.css"), "utf8");
     const base = fs.readFileSync(path.join(ROUND, "app/style-a.css"), "utf8");
     const extra = style === "a" ? "" : fs.readFileSync(path.join(ROUND, `app/style-${style}.css`), "utf8");
     return base + "\n" + extra;
@@ -78,7 +80,7 @@ for (const style of styles) {
                 menu.scrollTop = el.getBoundingClientRect().top - menu.getBoundingClientRect().top + menu.scrollTop - 120;
             }, screen.scrollTo);
         }
-        await page.evaluate(([s, n]) => window.InkApp.decorate(s, n), [style, name]);
+        await page.evaluate(([s, n, perm]) => window.InkApp.decorate(s, n, perm), [style, name, screen.perm ?? null]);
         await page.waitForTimeout(150);
         const out = path.join(ROUND, "shots", `${style.toUpperCase()}-${String(ORDER.indexOf(name) + 1).padStart(2, "0")}-${name}.png`);
         await page.screenshot({ path: out });

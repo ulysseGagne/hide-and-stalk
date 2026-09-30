@@ -141,6 +141,13 @@ export const SCREENS = {
     login: { token: false, position: POS.jules },
     // Both fields typed in: the Log in button gets its mark.
     loginfilled: { token: false, position: POS.jules, fill: { "#auth-form input[name=username]": "jules", "#auth-form input[name=password]": "hunter22" } },
+    // First launch (after logging in): the two permissions, one button each
+    // (the pattern from marathon-quebec-2026/pacer). Drawn by decorate.js.
+    permask: { position: POS.jules, perm: { loc: "off", compass: "off" }, state: { serverNow: NOW, settings, me: { ...me("jules"), groupId: null, role: null }, team: null, users: [], cards: null } },
+    permasking: { position: POS.jules, perm: { loc: "asking", compass: "off" }, state: { serverNow: NOW, settings, me: { ...me("jules"), groupId: null, role: null }, team: null, users: [], cards: null } },
+    permhalf: { position: POS.jules, perm: { loc: "on", compass: "off" }, state: { serverNow: NOW, settings, me: { ...me("jules"), groupId: null, role: null }, team: null, users: [], cards: null } },
+    permdone: { position: POS.jules, perm: { loc: "on", compass: "on" }, state: { serverNow: NOW, settings, me: { ...me("jules"), groupId: null, role: null }, team: null, users: [], cards: null } },
+    permblocked: { position: POS.jules, perm: { loc: "blocked", compass: "off" }, state: { serverNow: NOW, settings, me: { ...me("jules"), groupId: null, role: null }, team: null, users: [], cards: null } },
     lobby: {
         position: POS.jules,
         state: { serverNow: NOW, settings, me: { ...me("jules"), groupId: null, role: null }, team: null, users: [], cards: null },

@@ -31,6 +31,7 @@
             add(markup) {
                 m += markup;
             },
+            has: () => m.length > 0,
             done() {
                 svg.innerHTML = m;
             },
@@ -47,7 +48,7 @@
     }
 
     /** The in-app header: the lockup, small. */
-    function headerLogo(dark) {
+    function headerLogo(dark, red = Ink.RED) {
         const t = $("#site-title");
         if (!t) return;
         const ink = dark ? "#fff" : "#000";
@@ -64,8 +65,8 @@
         probe.innerHTML += `<text x="${sx}" y="26" font-family="${FONT}" font-weight="700" font-size="19" letter-spacing="-0.3" fill="${ink}">SEEK</text>`;
         probe.querySelector("#p1").setAttribute("fill", ink);
         const sw = 52;
-        probe.innerHTML += Ink.scribbleOut(sx + 1, 12, sw - 2, 15, { seed: "hdr", passes: 3, weight: 3.4 });
-        probe.innerHTML += Ink.write("STALK", { x: sx + sw + 6, y: 33, size: 21, weight: 4.2, seed: "hdrs", tilt: -7, spacing: 0.1, mess: 0.45 }).svg;
+        probe.innerHTML += Ink.scribbleOut(sx + 1, 12, sw - 2, 15, { seed: "hdr", passes: 3, weight: 3.4, color: red });
+        probe.innerHTML += Ink.write("STALK", { x: sx + sw + 6, y: 33, size: 21, weight: 4.2, seed: "hdrs", tilt: -7, spacing: 0.1, mess: 0.45, color: red }).svg;
     }
 
     const noteAt = (L, text, x, y, o = {}) => L.add(Ink.note(text, { x, y, size: o.size ?? 17, maxWidth: o.maxWidth ?? 160, seed: o.seed ?? text, tilt: o.tilt ?? -4, mess: o.mess, importance: o.importance ?? "aside", color: o.color, weight: o.weight }).svg);
@@ -86,6 +87,7 @@
             add(markup) {
                 m += markup;
             },
+            has: () => m.length > 0,
             done() {
                 svg.innerHTML = m;
             },
@@ -111,12 +113,72 @@
         b: { dark: false, stampRole: true },
         c: { timer: "underline", dark: false },
         d: { dark: true, stampRole: "reveal" },
+        // The merge: only what's useful stays, and the header's red goes
+        // black whenever something else on screen is red.
+        e: { dark: false, stampRole: "reveal", prune: true, quietHeader: true },
     };
 
-    function decorate(styleKey, screen) {
+    /**
+     * Direction E: cut what isn't useful at this moment. Round 1 hides it
+     * here; round 2 removes it from src/.
+     */
+    function prune(screen) {
+        const hide = (sel) => $$(sel).forEach((el) => (el.style.display = "none"));
+        // Never useful: who you are logged in as, the team roll call, GPS chatter, the hint count.
+        hide(".whoami, #status-team, #location-status, #hint-status");
+        // Before the game only: the Discord call and the rules.
+        if (!["lobby", "ready"].includes(screen)) hide("#discord-btn, #rules-card");
+        // During the hunt the screen says it already (timer label, the cards, the bell).
+        if (["cards", "selected", "waiting", "sent", "photo", "question", "choice", "tagcode"].includes(screen)) hide("#status-text");
+        hide("#hider-questions > .muted");
+        // The tag code: the hand-written line says what to do with it.
+        const qrP = $("#hider-qr > p.muted:not(.hider-qr-text)");
+        if (qrP) qrP.style.display = "none";
+        // Who sent it is on the card; "tap to send" is no longer true.
+        if (["cards", "selected", "waiting", "photo"].includes(screen)) hide("#card-note");
+        // The scanner lives here now, not in the header.
+        const found = $("#found-btn");
+        if (found) found.textContent = "Found them? Scan their code";
+        // Cards are numbered, so you can tell there are three.
+        const cards = $$("#card-row .card");
+        cards.forEach((c, i) => {
+            const cat = $(".card-category", c);
+            if (cat && !$(".card-count", cat)) cat.insertAdjacentHTML("beforeend", `<span class="card-count">${i + 1} OF ${cards.length}</span>`);
+        });
+    }
+
+    // ---------------------------------------------------------------------
+    // First launch: the two permissions (after marathon-quebec-2026/pacer's
+    // "Before you start" card). Round 2 builds this into src/.
+    // ---------------------------------------------------------------------
+    const PIN_ICON = `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-7.6 7-13a7 7 0 0 0-14 0c0 5.4 7 13 7 13Z"/><circle cx="12" cy="9" r="2.6"/></svg>`;
+    const COMPASS_ICON = `<svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19"/><path d="M12 5.5 15 12h-6Z" fill="currentColor"/><path d="M12 18.5 9 12h6Z"/></svg>`;
+    function permSheet(perm) {
+        const row = (n, key, icon, name, state, notes) => {
+            const btn =
+                state === "on" ? `<span class="perm-on">On</span>`
+                : state === "asking" ? `<button type="button" class="perm-btn" disabled>Asking…</button>`
+                : state === "blocked" ? `<button type="button" class="perm-btn">How to fix</button>`
+                : `<button type="button" class="perm-btn${notes.next ? " next" : ""}">Turn on</button>`;
+            return `<div class="perm-row" data-perm="${key}"><div class="perm-icon">${icon}</div><div class="perm-text"><b>${n}. ${name}</b><span>${notes[state] ?? notes.off}</span></div>${btn}</div>`;
+        };
+        const all = perm.loc === "on" && perm.compass === "on";
+        const html = `<div id="perm-sheet" class="modal"><div class="modal-card">
+            <div class="modal-head"><h2>Before you start</h2></div>
+            <div class="perm-body">
+                <p class="muted perm-intro">Two things to turn on. Tap a button, then choose <b>Allow</b> when the iPhone asks.</p>
+                ${row(1, "loc", PIN_ICON, "Location", perm.loc, { off: "Needed. Puts you on the map, for your team and the game.", asking: "Choose Allow in the iPhone’s popup (“While Using the App”).", on: "On: GPS ±6 m.", blocked: "Blocked. How to fix shows how to allow it again on this phone.", next: perm.loc === "off" })}
+                ${row(2, "compass", COMPASS_ICON, "Compass", perm.compass, { off: "Optional. Shows which way you’re facing on the map. The iPhone calls it “motion and orientation”.", on: "On.", next: perm.loc === "on" && perm.compass === "off" })}
+                <button type="button" id="perm-done" class="big-btn${all ? " cta" : ""}">${all ? "Done" : "Later"}</button>
+                <p class="muted perm-foot">Later on: the notices at the top of the screen.</p>
+            </div></div></div>`;
+        document.body.insertAdjacentHTML("beforeend", html);
+    }
+
+    function decorate(styleKey, screen, perm = null) {
         const S = STYLES[styleKey];
         document.body.dataset.style = styleKey;
-        headerLogo(S.dark);
+        if (S.prune) prune(screen);
         const ink = S.dark ? "#fff" : "#000";
 
         // Rules in order of importance (round 2 moves this into src/index.html).
@@ -144,15 +206,34 @@
         const L = layer(menu);
         const P = screenLayer();
 
+        if (perm) {
+            permSheet(perm);
+            for (const on of $$("#perm-sheet .perm-on")) {
+                const b = P.box(on);
+                P.add(Ink.check(b.x + b.w + 4, b.y - 6, 26, { seed: `pc${b.y}`, weight: 5 }));
+            }
+            const fix = $("#perm-sheet .perm-row[data-perm=loc] .perm-btn");
+            if (perm.loc === "blocked" && fix) {
+                const b = P.box(fix);
+                P.add(Ink.circle(b.x + b.w / 2, b.y + b.h / 2, b.w / 2 + 12, b.h / 2 + 12, { seed: "fix", weight: 4.5 }));
+            }
+        }
+
         // A notification is the most important thing on the screen: a big arrow at the bell.
         const count = $("#bell-count");
         if (visible(count)) {
             const bb = P.box($("#bell"));
             const cx = bb.x + bb.w / 2;
             const cy = bb.y + bb.h / 2;
-            P.add(Ink.circle(cx, cy, bb.w / 2 + 8, bb.h / 2 + 7, { seed: "bell", weight: 4.5 }));
-            P.add(Ink.handArrow(cx - 150, cy + 96, cx - 16, cy + 18, { seed: `bella${screen}`, weight: 7, head: 26, bend: -0.2 }));
-            P.add(Ink.write("NEW", { x: cx - 236, y: cy + 112, size: 30, seed: `belln${screen}`, tilt: -8, importance: "key" }).svg);
+            if (S.prune) {
+                // Never a circle as well: one long arrow from low on the screen.
+                P.add(Ink.bigArrow(64, innerHeight * 0.5, cx - 12, bb.y + bb.h + 8, { seed: `bella${screen}`, weight: 7, bend: -0.22 }));
+                P.add(Ink.write("NEW", { x: 30, y: innerHeight * 0.5 + 46, size: 32, seed: `belln${screen}`, tilt: -8, importance: "key" }).svg);
+            } else {
+                P.add(Ink.circle(cx, cy, bb.w / 2 + 8, bb.h / 2 + 7, { seed: "bell", weight: 4.5 }));
+                P.add(Ink.handArrow(cx - 150, cy + 96, cx - 16, cy + 18, { seed: `bella${screen}`, weight: 7, head: 26, bend: -0.18 }));
+                P.add(Ink.write("NEW", { x: cx - 236, y: cy + 112, size: 30, seed: `belln${screen}`, tilt: -8, importance: "key" }).svg);
+            }
         }
 
         // Role badge -> stamp (style B).
@@ -200,13 +281,15 @@
                     L.add(Ink.write(String(i + 1), { x: b.x + b.w - 40, y: b.y + 46, size: 34, seed: `n${i}`, weight: 7 }).svg);
                 });
             } else if (styleKey !== "b") {
-                noteAt(L, "PICK JUST ONE.", first.x + first.w - 190, first.y + 30, { maxWidth: 200, size: 22, tilt: -5, importance: "key" });
+                if (S.prune && screen !== "selected") noteAt(L, "PICK JUST ONE.", first.x + first.w - 206, first.y + 4, { maxWidth: 220, size: 22, tilt: -4, importance: "key" });
+                else if (!S.prune) noteAt(L, "PICK JUST ONE.", first.x + first.w - 190, first.y + 30, { maxWidth: 200, size: 22, tilt: -5, importance: "key" });
             }
             if (screen === "selected") {
                 const c = L.box(cards[1]);
                 L.add(Ink.box(c.x - 4, c.y - 4, c.w + 8, c.h + 8, { seed: "pick", weight: 5.5, jitter: 4 }));
                 const send = L.box($(".send-btn"));
-                noteAt(L, "NOT SENT YET", send.x + send.w - 176, send.y + send.h + 34, { size: 19, maxWidth: 180, tilt: -4, importance: "info" });
+                if (S.prune) noteAt(L, "NOT SENT YET", send.x + send.w - 250, send.y + send.h + 44, { size: 34, maxWidth: 270, tilt: -5, importance: "key", weight: 6.5 });
+                else noteAt(L, "NOT SENT YET", send.x + send.w - 176, send.y + send.h + 34, { size: 19, maxWidth: 180, tilt: -4, importance: "info" });
             } else {
                 // More cards below the fold.
                 const last = cards[cards.length - 1].getBoundingClientRect();
@@ -254,7 +337,11 @@
         const qr = $("#hider-qr-figure");
         if (visible(qr) && screen === "tagcode") {
             const q = L.box(qr);
-            noteAt(L, "SHOW THIS TO THE STALKER", q.x + 4, q.y + q.h + 70, { size: 21, maxWidth: 320, tilt: -3, importance: "key" });
+            if (S.prune) {
+                // Beside the heading, the top of it just over the code's frame.
+                const hd = L.box($("#hider-qr .cards-title"));
+                noteAt(L, "SHOW THIS TO THE STALKER", hd.x + 136, hd.y + 6, { size: 20, maxWidth: 200, tilt: -4, importance: "key" });
+            } else noteAt(L, "SHOW THIS TO THE STALKER", q.x + 4, q.y + q.h + 70, { size: 21, maxWidth: 320, tilt: -3, importance: "key" });
         }
 
         // Per-screen notes.
@@ -287,11 +374,20 @@
             noteAt(L, "WALK. DON'T RUN.", tb.x + 150, tb.y + 4, { size: 24, maxWidth: 190, tilt: -5, importance: "key" });
         }
         if ((screen === "found" || screen === "win") && tb) {
-            if (screen === "found") noteAt(L, "GOTCHA.", tb.x + 150, tb.y + 26, { size: 52, tilt: -9, maxWidth: 260, importance: "vibe" });
+            if (S.prune) {
+                // Above the title, just catching its top edge.
+                if (screen === "found") noteAt(L, "GOTCHA.", innerWidth - 268, tb.y + 10, { size: 46, tilt: -7, maxWidth: 260, importance: "vibe" });
+                else noteAt(L, "HOW ABOUT THAT.", innerWidth - 300, tb.y + 8, { size: 26, tilt: -6, maxWidth: 300, importance: "vibe" });
+            } else if (screen === "found") noteAt(L, "GOTCHA.", tb.x + 150, tb.y + 26, { size: 52, tilt: -9, maxWidth: 260, importance: "vibe" });
             else noteAt(L, "HOW ABOUT THAT.", tb.x + 90, tb.y + 22, { size: 34, tilt: -8, maxWidth: 280, importance: "vibe" });
         }
         L.done();
         P.done();
+        // The header's red is the brand; once anything else on the screen is
+        // red, it steps back to black so the red means "look here".
+        const quiet = S.quietHeader && (L.has() || P.has() || screen === "history");
+        headerLogo(S.dark, quiet ? ink : Ink.RED);
+        if (S.prune) $("#site-title svg").style.cssText = "transform:scale(0.88);transform-origin:0 0";
 
         // History modal: answers written in.
         const hist = $("#history-list");

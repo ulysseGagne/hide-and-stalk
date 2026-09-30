@@ -890,6 +890,73 @@
         );
     }
 
+    /**
+     * The attention arrow: a long pressured shaft, and a head in one flick
+     * that thins at the turn, so the point is sharp; the head is big (about
+     * a quarter of the shaft) and its sides never match.
+     * o.head: "flick" | "filled" | "open"; o.shaft: "single" | "double" | "dashed"; o.loop: start with a curl.
+     */
+    function bigArrow(x1, y1, x2, y2, o = {}) {
+        const r = rng(o.seed ?? "bigArrow");
+        const len = Math.hypot(x2 - x1, y2 - y1);
+        const bend = o.bend ?? r.range(-0.2, 0.2);
+        const mx = (x1 + x2) / 2 - (y2 - y1) * bend;
+        const my = (y1 + y2) / 2 + (x2 - x1) * bend;
+        const w = o.weight ?? 7;
+        const pts = [];
+        if (o.loop) {
+            // A curl at the tail, the pen winding up before it goes.
+            for (let i = 0; i <= 26; i++) {
+                const a = Math.PI * 0.5 + (i / 26) * Math.PI * 2.1;
+                pts.push([x1 + Math.cos(a) * 26, y1 + Math.sin(a) * 22 - 22]);
+            }
+        }
+        for (let i = 0; i <= 30; i++) {
+            const t = i / 30;
+            pts.push([(1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * mx + t * t * x2, (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * my + t * t * y2]);
+        }
+        let shaft = "";
+        const fat = (u) => 0.35 + 0.6 * Math.sin(Math.PI * Math.min(1, 0.1 + u * 1.05));
+        if (o.shaft === "double") {
+            const off = w * 0.9;
+            const side = (k) => pts.map((p, i) => {
+                const q = pts[Math.min(pts.length - 1, i + 1)];
+                const p0 = pts[Math.max(0, i - 1)];
+                const nx = -(q[1] - p0[1]);
+                const ny = q[0] - p0[0];
+                const l = Math.hypot(nx, ny) || 1;
+                return [p[0] + (nx / l) * off * k, p[1] + (ny / l) * off * k];
+            });
+            shaft = pressed(side(1), fat, { size: w, color: o.color, thinning: 0.5, taperStart: 6, taperEnd: 3 }) + pressed(side(-1), fat, { size: w, color: o.color, thinning: 0.5, taperStart: 6, taperEnd: 3 });
+        } else if (o.shaft === "dashed") {
+            const n = pts.length;
+            for (let i = 0; i < n - 3; i += 5) shaft += pressed(pts.slice(i, i + 4), () => 0.8, { size: w, color: o.color, thinning: 0.3, taperStart: 2, taperEnd: 2 });
+        } else {
+            shaft = pressed(pts, fat, { size: w * 1.5, color: o.color, thinning: 0.55, taperStart: 10, taperEnd: 2, wobbleAmp: o.wobbleAmp ?? 2 });
+        }
+        const ang = Math.atan2(y2 - my, x2 - mx);
+        const head = o.head === undefined || typeof o.head === "string" ? Math.max(20, Math.min(46, len * (o.headRatio ?? 0.13))) : o.head;
+        const spread = o.spread ?? 0.52;
+        const wing = (sgn, k) => {
+            const a = ang + Math.PI + sgn * spread * r.range(0.85, 1.15);
+            return [x2 + Math.cos(a) * head * k, y2 + Math.sin(a) * head * k];
+        };
+        const A = wing(1, r.range(0.85, 1.1));
+        const B = wing(-1, r.range(0.7, 1.2));
+        const tip = [x2 + Math.cos(ang) * 3, y2 + Math.sin(ang) * 3];
+        let headSvg;
+        if (o.head === "filled") {
+            headSvg = colorIn([[A, tip, B, [x2 - Math.cos(ang) * head * 0.55, y2 - Math.sin(ang) * head * 0.55]]], { seed: `${o.seed}h`, weight: Math.max(4, w * 0.9), overshoot: 2, color: o.color });
+        } else if (o.head === "open") {
+            headSvg = pressed(densify([A, tip], 6), (u) => 0.5 + 0.5 * u, { size: w * 1.3, color: o.color, thinning: 0.5, taperStart: 6, taperEnd: 1 }) + pressed(densify([B, tip], 6), (u) => 0.5 + 0.5 * u, { size: w * 1.3, color: o.color, thinning: 0.5, taperStart: 6, taperEnd: 1 });
+        } else {
+            // One flick: out to one side, sharp turn at the point, back out; thinnest at the point.
+            const flick = [A, [(A[0] + tip[0]) / 2, (A[1] + tip[1]) / 2], tip, [(B[0] + tip[0]) / 2, (B[1] + tip[1]) / 2], B];
+            headSvg = pressed(densify(flick, 6), (u) => 0.25 + 0.75 * Math.abs(u - 0.5) * 2, { size: w * 1.5, color: o.color, thinning: 0.6, taperStart: 4, taperEnd: 6, wobbleAmp: 0.5 });
+        }
+        return shaft + headSvg;
+    }
+
     /** A map pin (the teardrop), drawn: a pressured outline and a coloured-in head. */
     function mapPin(x, y, o = {}) {
         const s = o.size ?? 16;
@@ -1013,6 +1080,7 @@
         pressed,
         colorIn,
         handArrow,
+        bigArrow,
         mapPin,
         tuck,
         blackout,

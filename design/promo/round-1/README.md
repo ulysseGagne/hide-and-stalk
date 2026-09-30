@@ -38,7 +38,8 @@ node tools/shoot-lab.mjs welcome 13 24 375 812 # W13-W24, second pass (lab/welco
 node tools/shoot-lab.mjs logo 1.1,1.2,1.3,1.4,1.5,1.6,2.1,2.2,3.1,3.2,7.1,7.2,7.3,7.4,12.1 0 375 520 L
 node tools/shoot-lab.mjs hand 4 5 375 700 H   # H04-H05, the handwriting band
 node tools/shoot-lab.mjs hand 1 3 375 560 H   # H01-H03
-node tools/shoot-app.mjs a,b,c,d              # A/01 ... D/13
+node tools/shoot-app.mjs e                     # E-01 ... E-21, the app (direction E; A-D retired)
+node tools/shoot-lab.mjs arrow 1 8 375 420 R  # R01-R08, notification arrow options
 node tools/shoot-lab.mjs wild 1 83 375 812 X  # X01-X83, the wild concepts (lab/wild.js, lab/wild2.js)
 node tools/shoot-lab.mjs map 1 26 375 812 M   # M01-M26, maps on real OSM tiles (lab/maps.js)
 ```
@@ -69,3 +70,16 @@ House rules from the feedback, for every screen:
 - At most two red highlights on a screen.
 - No new text for flavour; new wording only replaces existing text.
 - One typeface in the app (the case-file mono is out).
+
+Direction E (`app/style-e.css`, `prune()` in `app/decorate.js`) is the one
+to build. Round 2 also needs:
+
+- First launch: a "Before you start" sheet for the two permissions, location
+  (needed) and compass (optional, iPhone "motion and orientation"), one
+  button each: Turn on → Asking… → On (ticked) / How to fix; Later → Done.
+  Same flow as marathon-quebec-2026/pacer (`#sheet-welcome`, renderWelcome in
+  pacer/js/app.js), replacing the two notices at first launch.
+- The camera (scan) button leaves the header; the scanner opens from the
+  in-page "Found them? Scan their code" button.
+- Everything prune() hides gets removed from src/ for that phase.
+- The header's red goes black while anything else on screen is red.
