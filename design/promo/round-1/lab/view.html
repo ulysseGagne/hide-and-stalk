@@ -21,6 +21,7 @@
     <script src="wild.js"></script>
     <script src="wild2.js"></script>
     <script src="maps.js"></script>
+    <script src="maps2.js"></script>
     <script src="arrows.js"></script>
     <script>
         (async () => {
@@ -51,6 +52,8 @@
                 Wild.draw(root, v);
             } else if (set === "arrow") {
                 Arrows.draw(root, v);
+            } else if (set === "map2") {
+                await Maps2.draw(root, v);
             } else if (set === "map") {
                 await Maps.draw(root, v);
             } else if (set === "hand") {

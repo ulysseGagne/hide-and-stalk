@@ -41,7 +41,8 @@ node tools/shoot-lab.mjs hand 1 3 375 560 H   # H01-H03
 node tools/shoot-app.mjs e                     # E-01 ... E-21, the app (direction E; A-D retired)
 node tools/shoot-lab.mjs arrow 1 8 375 420 R  # R01-R08, notification arrow options
 node tools/shoot-lab.mjs wild 1 83 375 812 X  # X01-X83, the wild concepts (lab/wild.js, lab/wild2.js)
-node tools/shoot-lab.mjs map 1 26 375 812 M   # M01-M26, maps on real OSM tiles (lab/maps.js)
+node tools/shoot-lab.mjs map 1 26 375 812 M   # M01-M26, first map pass (retired)
+node tools/shoot-lab.mjs map2 1 16 375 812 N  # N01-N16, the map screen redone (lab/maps2.js)
 ```
 
 The app's libraries are served from `node_modules` (same packages as the
@@ -87,3 +88,9 @@ to build. Round 2 also needs:
   initials drawn on its line; Done after the last (X45).
 - End screens: the round as a receipt (questions, answers, hide and hunt
   time, found by / where redacted, campus left as a hand-coloured bar).
+
+The map (lab/maps2.js): everything needed is computer-drawn (tiles in 1-bit
+black and white, hints layer, name tags, the question in a box at the top).
+One red thing at a time: the hints layer while nothing is waiting, else only
+the waiting question's drawing. No auto-zoom. At most one string (hider to
+closest stalker).

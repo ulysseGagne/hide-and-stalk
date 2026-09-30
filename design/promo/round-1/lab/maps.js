@@ -463,5 +463,7 @@
             return LIST.map((o, i) => ({ n: i + 1, ...o }));
         },
         draw,
+        GAMES,
+        off,
     };
 })();
