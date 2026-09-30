@@ -404,7 +404,10 @@
                     const [x, y] = rot(p, tilt);
                     return [(o.x ?? 0) + x, (o.y ?? 0) + y];
                 });
-                paths.push(pathEl(placed, { size: weight * (0.9 + r() * 0.22), color, thinning: 0.18 + 0.12 * mess, taperEnd: r() * 4 }));
+                const sw = weight * (0.9 + r() * 0.22);
+                const te = r() * 4;
+                // o.blunt: stroke ends stay round instead of tapering to a point.
+                paths.push(pathEl(placed, { size: sw, color, thinning: o.blunt ? 0.06 : 0.18 + 0.12 * mess, taperEnd: o.blunt ? 0 : te }));
             }
             const tail = rot([b.x + it.w * sx, b.y], tilt);
             end = [(o.x ?? 0) + tail[0], (o.y ?? 0) + tail[1]];
@@ -800,6 +803,31 @@
         return pathEl(pts.map((p) => rot(p, tilt, [cx, cy])), { size: o.weight ?? 5, color: o.color ?? RED, thinning: 0.3, taperEnd: 12, taperStart: 3 });
     }
 
+    /**
+     * A circle that marks a real distance, drawn by hand: centred exactly, its
+     * line never more than about 2 px off the true radius, but done in one
+     * go, the pressure changing on the way round and the pen running a
+     * little past where it started.
+     */
+    function ring(cx, cy, rad, o = {}) {
+        const r = rng(o.seed ?? "ring");
+        const n = noise1(r);
+        const start = r.range(-Math.PI, Math.PI);
+        const sweep = Math.PI * 2 * r.range(1.07, 1.12);
+        const dev = Math.min(2, rad * 0.02);
+        const steps = Math.max(90, Math.round(rad * 1.2));
+        const pts = [];
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const a = start + t * sweep;
+            // A slow wander; the last stretch, past the start, drifts just outside it.
+            const k = rad + n(t * 5) * dev + Math.max(0, (t - 0.9) / 0.1) * dev * 0.8;
+            pts.push([cx + Math.cos(a) * k, cy + Math.sin(a) * k]);
+        }
+        const press = (u) => (0.55 + 0.45 * Math.sin(Math.PI * Math.min(1, u * 1.1))) * (0.85 + 0.15 * n(u * 9 + 3));
+        return pressed(pts, press, { size: o.weight ?? 4.5, color: o.color ?? RED, thinning: 0.5, taperStart: 8, taperEnd: 16, wobble: false });
+    }
+
     function underline(x, y, w, o = {}) {
         const r = rng(o.seed ?? "underline");
         const out = [];
@@ -1155,14 +1183,18 @@
         const cy = y - d;
         // Tangent points sit at pi/2 +- alpha from the centre (screen coords, y down).
         const alpha = Math.acos(R / d);
-        const loop = [[x + r.range(-0.5, 0.5), y]];
+        // The point sits exactly on the spot: no jitter there.
+        r.range(-0.5, 0.5);
+        const loop = [[x, y]];
         const steps = 30;
         for (let i = 0; i <= steps; i++) {
             const f = Math.PI / 2 + alpha + (i / steps) * (2 * Math.PI - 2 * alpha);
             const k = R * (1 + r.range(-0.04, 0.04));
             loop.push([x + Math.cos(f) * k, cy + Math.sin(f) * k]);
         }
-        loop.push([x + r.range(-1, 1), y + r.range(0, 1.5)]);
+        r.range(-1, 1);
+        r.range(0, 1.5);
+        loop.push([x, y]);
         const hole = [];
         for (let i = 0; i < 14; i++) {
             const a = (i / 14) * Math.PI * 2;
@@ -1253,6 +1285,7 @@
 
     window.Ink = {
         RED,
+        ring,
         rng,
         noise1,
         spline,

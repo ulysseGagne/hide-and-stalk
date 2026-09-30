@@ -8,7 +8,8 @@ const b = await browser();
 const ctx = await context(b, { viewport: { width: +w, height: +h } });
 const page = await ctx.newPage();
 page.on("pageerror", (e) => console.error("pageerror:", e.message));
-const vs = from.includes(",") || from.includes(".") ? from.split(",") : Array.from({ length: +to - +from + 1 }, (_, i) => +from + i);
+// A list ("a,c,f"), a code with a dot ("16.6b") or any single non-number code ("Yg") is taken as is; two numbers are a range.
+const vs = from.includes(",") || from.includes(".") || Number.isNaN(+from) ? from.split(",").filter(Boolean) : Array.from({ length: +to - +from + 1 }, (_, i) => +from + i);
 for (const v of vs) {
     await page.goto(`${base}/design/promo/round-1/lab/view.html?set=${set}&v=${v}&w=${w}&h=${h}`);
     await page.waitForSelector("body[data-ready='1']", { timeout: 60000 });

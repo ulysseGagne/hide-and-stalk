@@ -1,4 +1,4 @@
-/* global Ink */
+/* global Ink, Logo */
 
 // Set R: arrow options for the one thing that must never be missed, a new
 // notification. Each is drawn on the same header (the app's, in direction E),
@@ -12,19 +12,19 @@
     const bx = BELL.x + BELL.w / 2;
     const by = BELL.y + BELL.h + 6;
 
-    // The header's STALK (the logo's), black: the arrow is the red on this screen.
+    // The header's STALK (the logo's, L16.6b), black: the arrow is the red on this screen.
     function stalk() {
-        const st = Ink.tuck("STALK", { size: 74, seed: "w13", mess: 1.15, tilt: -4, sizes: [1.06, 0.94, 1.02, 0.95, 1.0], rises: [0.02, -0.02, 0.03, 0, 0.02], spin: 5, overshoot: 0.05, color: "#000" });
+        const st = Logo.stalk({ color: "#000" });
         const k = 27 / st.box.h;
         return `<svg width="120" height="44" style="position:absolute;left:0;top:0;overflow:visible"><g transform="translate(${83 - st.box.x * k} ${43 - (st.box.y + st.box.h) * k}) scale(${k})">${st.svg}</g></svg>`;
     }
 
-    function header() {
+    function header(badge = "#000") {
         return `<div style="position:absolute;left:0;top:0;width:${W}px;height:104px;border-bottom:3px solid #000;box-sizing:border-box;background:#fff">
             <div style="position:absolute;left:12px;top:16px;font:700 19px ${FONT}">HIDE &amp;</div>${stalk()}
             <div style="position:absolute;left:${BELL.x}px;top:${BELL.y}px;width:40px;height:40px;box-sizing:border-box;border:3px solid #000;display:flex;align-items:center;justify-content:center">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#000" stroke-width="2.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-                <div style="position:absolute;top:-8px;right:-8px;width:18px;height:18px;background:#000;color:#fff;font:700 11px/18px ${FONT};text-align:center">1</div></div>
+                <div style="position:absolute;top:-8px;right:-8px;width:18px;height:18px;background:${badge};color:#fff;font:700 11px/18px ${FONT};text-align:center">1</div></div>
             <div style="position:absolute;right:12px;top:12px;height:40px;box-sizing:border-box;border:3px solid #000;padding:0 12px;font:700 15px/34px ${FONT}">Log out</div>
             <div style="position:absolute;left:12px;bottom:-3px;display:flex;gap:6px;align-items:flex-end">
                 <div style="width:124px;height:46px;box-sizing:border-box;border:3px solid #000;border-bottom:none;background:#fff;font:700 17px/43px ${FONT};letter-spacing:.12em;text-align:center">MENU</div>
@@ -70,6 +70,13 @@
         // R11 and R12, the whole arrow a bit to the left and higher.
         "11.1": () => Ink.stubArrow(...shift(from(-80, 92), -10, -8), ...shift(tip, -10, -8), { seed: "s2", weight: 13, spread: 0.78 }) + Ink.write("NEW", { x: tip[0] + 4, y: tip[1] + 76, size: 44, weight: 9, seed: "new11.1", tilt: -8, importance: "key" }).svg,
         "12.1": () => Ink.stubArrow(...shift(from(-62, 78), -10, -8), ...shift(tip, -10, -8), { seed: "s3", weight: 17 }) + Ink.write("NEW", { x: tip[0] + 4, y: tip[1] + 68, size: 44, weight: 9, seed: "new12.1", tilt: -8, importance: "key" }).svg,
+        // R10 kept: NEW further from the arrow and clear of the header's line, no pointed stroke ends.
+        "10.1": () => Ink.stubArrow(...from(-6, 112), ...tip, { seed: "s1", weight: 14 }) + Ink.write("NEW", { x: tip[0] + 27, y: tip[1] + 110, size: 44, weight: 9, seed: "new10", tilt: -8, importance: "key", blunt: true }).svg,
+        // R10.1 with NEW back from the screen's edge; the arrow's tail moves left and it
+        // leans to the bell, so a gap stays between it and NEW all the way along.
+        "10.2": () => Ink.stubArrow(...from(-58, 104), ...tip, { seed: "s1", weight: 14 }) + Ink.write("NEW", { x: tip[0] + 6, y: tip[1] + 120, size: 44, weight: 9, seed: "new10", tilt: -8, importance: "key", blunt: true }).svg,
+        // R10.2 with NEW a bit bolder, lower and further left.
+        "10.3": () => Ink.stubArrow(...from(-58, 104), ...tip, { seed: "s1", weight: 14 }) + Ink.write("NEW", { x: tip[0] - 1, y: tip[1] + 128, size: 44, weight: 11, seed: "new10", tilt: -8, importance: "key", blunt: true }).svg,
     };
 
     window.Arrows = {
@@ -77,7 +84,8 @@
         draw(root, v) {
             root.style.cssText += `;width:${W}px;height:${H}px;background:#fff`;
             if (EXTRA[v]) {
-                root.innerHTML = header() + `<svg width="${W}" height="${H}" style="position:absolute;left:0;top:0;overflow:visible;z-index:5">${EXTRA[v]()}</svg>`;
+                // From R10.2 on, the badge on the bell is red.
+                root.innerHTML = header(Number(v) >= 10.2 ? Ink.RED : "#000") + `<svg width="${W}" height="${H}" style="position:absolute;left:0;top:0;overflow:visible;z-index:5">${EXTRA[v]()}</svg>`;
                 return;
             }
             const [, fn, beside] = V[v - 1];

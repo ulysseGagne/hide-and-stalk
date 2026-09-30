@@ -6,7 +6,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
-import { chromium } from "/opt/node22/lib/node_modules/playwright/index.mjs";
+// Playwright: the cloud machine's global install; on a Mac, `npm i --no-save
+// playwright-core` here, and it drives the installed Google Chrome.
+const { chromium } = await import("/opt/node22/lib/node_modules/playwright/index.mjs").catch(() => import("playwright-core"));
+const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 export const ROUND = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const REPO = path.resolve(ROUND, "../../..");
@@ -35,7 +38,7 @@ const UNPKG = {
 };
 
 export async function browser() {
-    const b = await chromium.launch();
+    const b = await chromium.launch(fs.existsSync(CHROME) ? { executablePath: CHROME } : {});
     return b;
 }
 

@@ -403,7 +403,8 @@
 
     /** STALK at the top of the handwriting band: even gaps, a loose hand. */
     const WILD = { sizes: [1.06, 0.94, 1.02, 0.95, 1.0], rises: [0.02, -0.02, 0.03, 0, 0.02] };
-    const wild = (svg, o = {}) => tucked(svg, { seed: "w1", size: 74, mess: 1.15, tilt: -4, ...WILD, spin: 5, overshoot: 0.05, ...o });
+    const wildOpts = (o = {}) => ({ seed: "w1", size: 74, mess: 1.15, tilt: -4, ...WILD, spin: 5, overshoot: 0.05, ...o });
+    const wild = (svg, o = {}) => tucked(svg, wildOpts(o));
 
     /** A plain stack whose SEEK is scribbled by `mark`, STALK below. */
     function lockup(svg, mark, st, o = {}) {
@@ -549,7 +550,10 @@
     const K_LONG = [0.62, [[[0, -0.14], [0, 1.12]], [[0.6, 0], [0.03, 0.56], [0.64, 1]]]];
     const L_SHARP = [0.46, [[[0, 0], [0, 0.93], [0.01, 1], [0.07, 1.01], [0.42, 1]]]];
     const S142 = (o = {}) => (s) => loose(s, { seed: "L3s", size: 84, tilt: -8, mess: 1.1, spacing: 0.05, ...o });
-    const S144 = (o = {}) => (s) => wild(s, { seed: "w144", sizes: [1.06, 0.94, 1.02, 0.96, 0.9], rises: [0.14, -0.02, 0.03, 0, 0.16], gap: 0, pulls: [0, 0, 0, 0, 0.05], ...o });
+    const S144o = (o = {}) => ({ seed: "w144", sizes: [1.06, 0.94, 1.02, 0.96, 0.9], rises: [0.14, -0.02, 0.03, 0, 0.16], gap: 0, pulls: [0, 0, 0, 0, 0.05], ...o });
+    const S144 = (o = {}) => (s) => wild(s, S144o(o));
+    // The chosen logo's STALK (L16.6b), also drawn on its own in the app's header.
+    const FINAL_STALK = wildOpts(S144o({ size: 64, glyphs: { K: K_LONG } }));
     Object.assign(LOCKUPS, {
         "16.1"(svg) {
             lockup(svg, P76, S142(), { at: 0.08, gap: 8 });
@@ -594,7 +598,7 @@
             g.setAttribute("transform", g.getAttribute("transform").replace(/translate\(([-\d.]+) ([-\d.]+)\)/, (_, x, y) => `translate(${x} ${Number(y) + (r.h - at.h) / 2 + 4})`));
         },
         "16.6b"(svg) {
-            lockup(svg, P76light, S144({ size: 64, glyphs: { K: K_LONG } }), { at: 0.34, gap: 2 });
+            lockup(svg, P76light, (s) => tucked(s, FINAL_STALK), { at: 0.34, gap: 2 });
         },
         // L16.6b with the scribble a touch lighter, closer to STALK's own stroke.
         "16.6b1"(svg) {
@@ -610,6 +614,8 @@
 
     window.Logo = {
         count: Object.keys(LOCKUPS).length,
+        /** L16.6b's STALK alone, as Ink.tuck draws it ({ svg, box }): the app's header. */
+        stalk: (o = {}) => Ink.tuck("STALK", { ...FINAL_STALK, ...o }),
         draw(svg, v, W, H, o = {}) {
             canvasW = W;
             TYPE = o.dark ? "#fff" : "#000";
