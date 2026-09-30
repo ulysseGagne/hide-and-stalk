@@ -1,7 +1,8 @@
 /* global Ink, Logo, Board, WildKit, turf */
 
 // Home screens and boards, third pass (W31-W41, B25-B28, C01-C12), from the
-// notes on B13-B24 and W25-W30:
+// notes on B13-B24 and W25-W30 (and the fourth home pass, W42-W47, at the end
+// of the home screens):
 //
 //  - the board is one composition made of the pieces that worked: question
 //    cards, Polaroids, white post-its, the hider's profile, the file (file
@@ -147,18 +148,28 @@
         return it;
     }
 
-    /** A Polaroid: the photo (drawn by hand, white on black), the caption by hand. */
-    function photo(s, { x, y, w = 140, rot = 0, scene = "sit", caption }) {
+    /**
+     * A Polaroid: the photo (drawn by hand, white on black), the caption by hand.
+     * ink: the caption's colour (red by default); a caption with "\n" is two lines.
+     */
+    function photo(s, { x, y, w = 140, rot = 0, scene = "sit", caption, ink, bold = 1 }) {
         const m = 9;
         const ph = w - m * 2 - LW * 2;
-        const capH = caption ? 40 : 22;
+        const lines = caption ? caption.split("\n") : [];
+        const capH = lines.length > 1 ? 50 : caption ? 40 : 22;
         const h = LW * 2 + m + ph + capH;
         const html = `<div style="${BOX};width:${w}px;height:${h}px;padding:${m}px ${m}px 0"><svg width="${ph}" height="${ph}" viewBox="0 0 100 100" style="display:block;background:#000">${K().photo(scene, "#fff")}</svg></div>`;
         const it = s.add(html, { x, y, w, h, rot });
-        if (caption) {
+        if (lines.length === 1) {
             const size = fitWrite(caption, ph * 0.94, 17, { seed: caption, importance: "aside" });
             const [cx, cy] = it.at((LW + m + 2) / w, (h - 12) / h);
-            s.b.draw(Ink.write(caption, { x: cx, y: cy, size, seed: caption, tilt: rot - 1.5, importance: "aside" }).svg);
+            s.b.draw(Ink.write(caption, { x: cx, y: cy, size, seed: caption, tilt: rot - 1.5, importance: "aside", color: ink }).svg);
+        } else if (lines.length) {
+            const size = Math.min(...lines.map((l) => fitWrite(l, ph * 0.94, 15, { seed: l, importance: "aside" })));
+            lines.forEach((l, i) => {
+                const [cx, cy] = it.at((LW + m + 2) / w, (h - 30 + i * (size + 5)) / h);
+                s.b.draw(Ink.write(l, { x: cx, y: cy, size, seed: l, tilt: rot - 1.5, importance: "aside", color: ink, weight: size * 0.16 * bold }).svg);
+            });
         }
         return it;
     }
@@ -192,7 +203,7 @@
     }
 
     /** The hider's profile, as the app would print it: silhouette, name, team. */
-    function profile(s, { x, y, w = 132, rot = 0 }) {
+    function profile(s, { x, y, w = 132, rot = 0, seed = `pf${x}` }) {
         const m = 10;
         const pw = w - m * 2 - LW * 2;
         const h = LW * 2 + m + pw * 1.06 + 44;
@@ -202,7 +213,7 @@
             <div style="font-size:11px;font-weight:700;letter-spacing:.12em">TEAM 3</div></div>`;
         const it = s.add(html, { x, y, w, h, rot });
         const [fx, fy] = it.at(0.5, (LW + m + pw * 0.34) / h);
-        s.b.draw(Ink.roundScribble(fx - pw * 0.24, fy - pw * 0.16, pw * 0.48, pw * 0.3, { seed: `pf${x}`, passes: 3, weight: pw * 0.06 }));
+        s.b.draw(Ink.roundScribble(fx - pw * 0.24, fy - pw * 0.16, pw * 0.48, pw * 0.3, { seed, passes: 3, weight: pw * 0.06 }));
         return it;
     }
 
@@ -215,6 +226,56 @@
             <div class="subj" style="display:inline-block;font-size:${fitSize(["SUBJECT: HIDER"], w - 32, 22)}px;font-weight:700;letter-spacing:-.01em;line-height:1.2;margin-top:4px">SUBJECT: HIDER</div>
             <div style="height:${LW}px;background:#000;margin:8px 0 6px"></div>${body}</div>`;
         return s.add(html, { x, y, w, rot });
+    }
+
+    /** B29's file: what's known so far, and its one red mark, 500 m underlined by hand. */
+    function file29(s, o) {
+        const rows = [["Within <span class=\"u\">500 m</span>?", "NO"], ...ROWS.slice(2)];
+        const f = file(s, { ...o, rows });
+        const u = f.el.querySelector(".u");
+        let ox = 0;
+        let oy = 0;
+        for (let e = u; e && e !== f.el; e = e.offsetParent) {
+            ox += e.offsetLeft;
+            oy += e.offsetTop;
+        }
+        const [ux, uy] = f.at(ox / f.w, (oy + u.offsetHeight + 1) / f.h);
+        const [vx] = f.at((ox + u.offsetWidth) / f.w, (oy + u.offsetHeight + 1) / f.h);
+        s.b.draw(Ink.underline(ux - 3, uy, vx - ux + 6, { seed: "b29u", weight: 3.4 }));
+        return f;
+    }
+
+    /**
+     * The file, fifth pass: HIDER LOCATION. North or south answered by hand in
+     * red, the way B29's card answers it (same hand); where exactly still
+     * blacked out. stacked: the whole question on its own line, NORTH big
+     * under it; otherwise "North or south?" with NORTH beside it.
+     */
+    function fileNS(s, { x, y, w = 184, rot = 0, stacked = true, only = false }) {
+        const bar = (n) => `<span style="display:inline-block;width:${n}px;height:11px;background:#000;vertical-align:-1px"></span>`;
+        // only: the one question, bigger and bold, NORTH bigger; where exactly is gone.
+        const ns = only
+            ? `<div style="font-size:15px;font-weight:700;line-height:1.3;margin-top:2px">Are you north or<br>south of me?</div><div class="hand" style="height:48px"></div>`
+            : stacked
+            ? `<div style="line-height:1.35;margin-top:2px">Are you north or<br>south of me?</div><div class="hand" style="height:44px"></div>`
+            : `<div style="display:flex;justify-content:space-between;gap:8px;white-space:nowrap"><span>North or south?</span><span class="hand" style="display:inline-block;width:78px;height:21px"></span></div>`;
+        const html = `<div style="${BOX};width:${w}px;padding:12px 13px 13px;font:12px/1.75 ${FONT}">
+            <div style="font-size:10px;font-weight:700;letter-spacing:.14em">FILE Nº 005</div>
+            <div style="display:inline-block;font-size:${fitSize(["HIDER LOCATION"], w - 32, 22)}px;font-weight:700;letter-spacing:-.01em;line-height:1.2;margin-top:4px">HIDER LOCATION</div>
+            <div style="height:${LW}px;background:#000;margin:8px 0 6px"></div>${ns}
+            ${only ? "" : `<div style="display:flex;justify-content:space-between;gap:8px;white-space:nowrap"><span>Where exactly?</span><b>${bar(56)}</b></div>`}</div>`;
+        const f = s.add(html, { x, y, w, rot });
+        const hand = f.el.querySelector(".hand");
+        let ox = 0;
+        let oy = 0;
+        for (let e = hand; e && e !== f.el; e = e.offsetParent) {
+            ox += e.offsetLeft;
+            oy += e.offsetTop;
+        }
+        const size = only ? 34 : stacked ? 30 : 19;
+        const [hx, hy] = f.at((ox + (stacked ? 2 : 4)) / f.w, (oy + hand.offsetHeight - (stacked ? 3 : 2)) / f.h);
+        s.b.draw(Ink.write("NORTH", { x: hx, y: hy, size, seed: "NORTH", tilt: rot - 2, importance: "key" }).svg);
+        return f;
     }
 
     // Cut-out letters, laid out in lines that stay inside the note.
@@ -308,14 +369,14 @@
     const LOGO = "13.1";
 
     // With a scene, the title is the same lockup, uniformly smaller.
-    function title(root, k = 1) {
+    function title(root, k = 1, logo = LOGO) {
         const NS = "http://www.w3.org/2000/svg";
         const svg = document.createElementNS(NS, "svg");
         svg.setAttribute("width", W);
         svg.setAttribute("height", 520);
         svg.style.cssText = `position:absolute;left:0;top:40px;overflow:visible;z-index:30;transform:scale(${k});transform-origin:26px 0`;
         root.appendChild(svg);
-        Logo.draw(svg, LOGO, W, 520);
+        Logo.draw(svg, logo, W, 520);
         const b = svg.getBBox();
         return 40 + (b.y + b.height) * k;
     }
@@ -328,10 +389,10 @@
     }
 
     /** The title, a two-item scene halfway between STALK and the button, the button. */
-    function home(sceneFn, sceneH) {
+    function home(sceneFn, sceneH, logo = LOGO) {
         return async (root) => {
             root.style.background = "#fff";
-            const bottom = title(root, 0.84);
+            const bottom = title(root, 0.84, logo);
             button(root);
             const top = Math.round(bottom + (BTN.y - bottom - sceneH) / 2);
             const host = document.createElement("div");
@@ -444,6 +505,79 @@
         };
     }
     Object.assign(HOMES, { 39: arrowed("left"), 40: arrowed("above"), 41: arrowed("right") });
+
+    // Fourth pass (W42-W47): the title is L16.6b, and the two pinned things are
+    // two of B29's four pieces, every pair once. Each piece is B29's own (same
+    // words, same seeds), only sized for the screen.
+    const FINAL = "16.6b";
+    const hider = (s, o) => profile(s, { ...o, seed: "pf246" });
+    const bench = (s, o) => photo(s, { ...o, scene: "sit", caption: "PLACE TO SIT" });
+    const northCard = (s, o) => card(s, { ...o, q: Q.ns, answer: "NORTH", square: true });
+    Object.assign(HOMES, {
+        // The file and the profile (B29's top row).
+        42: home((s) => {
+            const a = file29(s, { x: 26, y: 20, w: 184, rot: -3 });
+            const b = hider(s, { x: 230, y: 14, w: 116, rot: 5 });
+            pair(s, a, b, { ax: 0.9, ay: 0.05, bx: 0.14 });
+        }, 190, FINAL),
+        // The file and the photo.
+        43: home((s) => {
+            const a = file29(s, { x: 26, y: 22, w: 182, rot: -3 });
+            const b = bench(s, { x: 226, y: 13, w: 122, rot: 5 });
+            pair(s, a, b, { ax: 0.9, ay: 0.05, bx: 0.14 });
+        }, 190, FINAL),
+        // The file and the north-or-south card.
+        44: home((s) => {
+            const a = file29(s, { x: 26, y: 14, w: 180, rot: -3 });
+            const b = northCard(s, { x: 220, y: 24, w: 128, rot: 5 });
+            pair(s, a, b, { ax: 0.9, ay: 0.05, bx: 0.14 });
+        }, 190, FINAL),
+        // The profile and the photo.
+        45: home((s) => {
+            const a = hider(s, { x: 40, y: 12, w: 128, rot: -4 });
+            const b = bench(s, { x: 202, y: 13, w: 138, rot: 5 });
+            pair(s, a, b, { ax: 0.86, ay: 0.05, bx: 0.14 });
+        }, 200, FINAL),
+        // The profile and the card.
+        46: home((s) => {
+            const a = hider(s, { x: 40, y: 12, w: 128, rot: -4 });
+            const b = northCard(s, { x: 200, y: 26, w: 140, rot: 5 });
+            pair(s, a, b, { ax: 0.86, ay: 0.05, bx: 0.12 });
+        }, 200, FINAL),
+        // The photo and the card (B29's bottom row).
+        47: home((s) => {
+            const a = bench(s, { x: 30, y: 12, w: 140, rot: -4 });
+            const b = northCard(s, { x: 198, y: 24, w: 144, rot: 5 });
+            pair(s, a, b, { ax: 0.88, ay: 0.05, bx: 0.12 });
+        }, 200, FINAL),
+    });
+
+    // Fifth pass (W48-W52), from W43: the profile is gone (its red fought the
+    // title) and the Polaroid stays small. The file is HIDER LOCATION: north or
+    // south answered by hand in red, where exactly still blacked out. The
+    // bench photo stays; only its caption changes, written in black, so the
+    // title and NORTH are the only red words.
+    const benchAt = (caption) => (s, o) => photo(s, { ...o, scene: "sit", caption, ink: "#000" });
+    const w43 = (caption, stacked = true) =>
+        home((s) => {
+            const a = fileNS(s, { x: 26, y: 14, w: 184, rot: -3, stacked });
+            const b = benchAt(caption)(s, { x: 226, y: 12, w: 122, rot: 5 });
+            pair(s, a, b, { ax: 0.9, ay: 0.05, bx: 0.14 });
+        }, stacked ? 236 : 200, FINAL);
+    Object.assign(HOMES, {
+        48: w43("JUST SEEN HERE"),
+        49: w43("LAST SEEN HERE"),
+        50: w43("13:27"),
+        51: w43("46.7797 N\n71.2756 W"),
+        52: w43("46.7797 N\n71.2756 W", false),
+        // W51, finished: only the one question, bigger and bold; NORTH bigger;
+        // the Polaroid's coordinates in red, their strokes heavier.
+        53: home((s) => {
+            const a = fileNS(s, { x: 26, y: 14, w: 184, rot: -3, only: true });
+            const b = photo(s, { x: 226, y: 12, w: 122, rot: 5, scene: "sit", caption: "46.7797 N\n71.2756 W", bold: 1.6 });
+            pair(s, a, b, { ax: 0.9, ay: 0.05, bx: 0.14 });
+        }, 236, FINAL),
+    });
     for (const [n, f] of Object.entries(HOMES)) Welcome.extra[n] = f;
 
     // -----------------------------------------------------------------
@@ -511,21 +645,9 @@
     };
     // B26, final: the bench instead of the door, the north/south card instead
     // of CLOSER CLOSER CLOSER, and that answer taken off the file (it's on the
-    // card now). One red mark on the file: SUBJECT underlined.
+    // card now). One red mark on the file: 500 m underlined.
     BOARDS[29] = board((s) => {
-        const rows = [["Within <span class=\"u\">500 m</span>?", "NO"], ...ROWS.slice(2)];
-        const f = file(s, { x: 30, y: 30, w: 184, rot: -2.5, rows });
-        // The one red mark on the file: 500 m underlined by hand.
-        const u = f.el.querySelector(".u");
-        let ox = 0;
-        let oy = 0;
-        for (let e = u; e && e !== f.el; e = e.offsetParent) {
-            ox += e.offsetLeft;
-            oy += e.offsetTop;
-        }
-        const [ux, uy] = f.at(ox / f.w, (oy + u.offsetHeight + 1) / f.h);
-        const [vx] = f.at((ox + u.offsetWidth) / f.w, (oy + u.offsetHeight + 1) / f.h);
-        s.b.draw(Ink.underline(ux - 3, uy, vx - ux + 6, { seed: "b29u", weight: 3.4 }));
+        const f = file29(s, { x: 30, y: 30, w: 184, rot: -2.5 });
         const pr = profile(s, { x: 246, y: 44, w: 96, rot: 5 });
         const ph = photo(s, { x: 40, y: 262, w: 140, rot: 4, scene: "sit", caption: "PLACE TO SIT" });
         const c = card(s, { x: 222, y: 290, w: 124, rot: -5, q: Q.ns, answer: "NORTH", square: true });

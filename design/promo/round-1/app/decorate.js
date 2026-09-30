@@ -1,4 +1,4 @@
-/* global Ink */
+/* global Ink, Logo */
 
 // Draws the red layer on top of the real app, once it has rendered.
 //
@@ -50,7 +50,7 @@
     /**
      * The in-app header: HIDE & in type, then the logo's STALK right after
      * it. No SEEK and no scribble: at this size a scribble over black type
-     * is just a smudge. STALK is the one from the chosen lockup (L13.1's).
+     * is just a smudge. STALK is the chosen logo's (L16.6b's, lab/logo.js).
      */
     function headerLogo(dark, red = Ink.RED) {
         const t = $("#site-title");
@@ -66,7 +66,7 @@
         t.textContent = "";
         t.appendChild(svg);
         const a = svg.querySelector("#p1").getBBox();
-        const st = Ink.tuck("STALK", { size: 74, seed: "w13", mess: 1.15, tilt: -4, sizes: [1.06, 0.94, 1.02, 0.95, 1.0], rises: [0.02, -0.02, 0.03, 0, 0.02], spin: 5, overshoot: 0.05, color: red });
+        const st = Logo.stalk({ color: red });
         const k = 27 / st.box.h;
         const x = a.x + a.width + 7;
         svg.innerHTML += `<g transform="translate(${x - st.box.x * k} ${31 - (st.box.y + st.box.h) * k}) scale(${k})">${st.svg}</g>`;

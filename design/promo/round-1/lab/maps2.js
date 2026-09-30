@@ -1,4 +1,4 @@
-/* global L, turf, Ink, Campus, Maps */
+/* global L, turf, Ink, Campus, Maps, Logo, OSMDraw */
 
 // Set M, second pass: the map screen rethought from the notes on M1-M26.
 //
@@ -107,6 +107,18 @@
         blackbuildings: { thin: true, outlines: [], solid: ["building"], dots: ["green"] },
     };
 
+    // Drawn from OpenStreetMap's data instead of its tiles (osmdraw.js): S2, S3, S9 and S5 redone.
+    const DATA_SKINS = {
+        dataoutline: "outline", datasolid: "solid", datagrain: "grain", datadots: "dots", datakey: "key", datakey2: "key2", datakey3: "key3",
+        // Decluttered: S11 without paths, S11 without dead ends, S14 without what doubles the streets or hangs loose.
+        dataoutlinenopaths: { look: "outline", drop: "paths" },
+        dataoutlinepruned: { look: "outline", prune: 60 },
+        dataoutlineclean: { look: "outline", drop: "detail", prune: 60 },
+        datadotsclean: { look: "dots", drop: "detail", prune: 60 },
+        // Revived from the tile days, redrawn from the data.
+        datablackroads: "blackroads", datablackdots: "blackdots", datafigure: "figure",
+    };
+
     // The app around the map (direction E): header with MAP open, the question box.
     function chrome(box) {
         const hdr = `<div style="position:absolute;left:0;top:0;width:${W}px;height:${HEAD}px;background:#fff;border-bottom:3px solid #000;box-sizing:border-box;z-index:60">
@@ -119,9 +131,9 @@
         // The header's red steps back to black: the map always has its one red thing.
         const cx = document.createElement("canvas").getContext("2d");
         cx.font = `700 17px ${FONT}`;
-        // HIDE & plus the logo's STALK, as in the app's header.
+        // HIDE & plus the logo's STALK (L16.6b's), as in the app's header.
         const sx = 12 + cx.measureText("HIDE &").width + 7;
-        const st = Ink.tuck("STALK", { size: 74, seed: "w13", mess: 1.15, tilt: -4, sizes: [1.06, 0.94, 1.02, 0.95, 1.0], rises: [0.02, -0.02, 0.03, 0, 0.02], spin: 5, overshoot: 0.05, color: "#000" });
+        const st = Logo.stalk({ color: "#000" });
         const sk = 25 / st.box.h;
         const hdrInk = `<g transform="translate(${sx - st.box.x * sk} ${40 - (st.box.y + st.box.h) * sk}) scale(${sk})">${st.svg}</g>`;
         const q = `<div style="position:absolute;left:12px;top:${HEAD + 12}px;width:${W - 24}px;box-sizing:border-box;background:#fff;border:3px solid #000;padding:12px 14px;z-index:55;font-family:${FONT}">
@@ -144,11 +156,13 @@
     const tagFont = (fs) => `700 ${fs}px/1 ${FONT}`;
     const cv = document.createElement("canvas").getContext("2d");
     /** Size of a tag in the current style. */
+    // In "ink", a stalker's tag is exactly the original YOU tag: same size, no ring.
+    const plain = (t) => TAGS === "base" || (TAGS === "ink" && !t.self);
     function tagBox(t) {
-        const fs = TAGS === "big" ? 15 : TAGS === "base" ? 12 : 13;
+        const fs = TAGS === "big" ? 15 : plain(t) ? 12 : 13;
         cv.font = tagFont(fs);
         const w = cv.measureText(t.label).width + fs * 1.3 + 12;
-        const h = TAGS === "big" ? 30 : TAGS === "base" ? 24 : 26;
+        const h = TAGS === "big" ? 30 : plain(t) ? 24 : 26;
         if (TAGS === "marker") return { fs: 14, w: w + 2, h: 26, x: t.x + 14, y: t.y - 13 };
         return { fs, w, h, x: t.x - w / 2, y: t.y - h - 12 };
     }
@@ -169,7 +183,7 @@
         if (part === "lead") return moved ? `<div style="position:absolute;left:${x - 1.5}px;top:${top + h}px;width:3px;height:${y - top - h}px;background:#000;box-shadow:0 0 0 2px #fff"></div>` : "";
         const dark = TAGS === "ink" ? !self : self;
         // Every style but the original gets a 3px white ring, so it reads on black too.
-        const ring = TAGS === "base" ? "" : ";box-shadow:0 0 0 3px #fff";
+        const ring = plain(t) ? "" : ";box-shadow:0 0 0 3px #fff";
         const border = TAGS === "ink" && self ? "border:3px solid #000;outline:3px solid #fff;box-shadow:0 0 0 6px #000,0 0 0 9px #fff" : `border:3px solid #000${ring}`;
         if (TAGS === "sticker") out += `<div style="position:absolute;left:${left - 7}px;top:${top - 7}px;width:${w + 14}px;height:${h + 14}px;background:#fff"></div>`;
         if (TAGS === "shadow") out += `<div style="position:absolute;left:${left + 5}px;top:${top + 5}px;width:${w}px;height:${h}px;background:#000"></div>`;
@@ -197,9 +211,12 @@
             placed.push({ ...bx, y: bx.y + t.dy });
             boxes.set(t, bx);
         }
-        // Leaders first, so no line crosses over a tag.
-        for (const t of list) html += tagHtml(t, boxes.get(t), "lead");
-        for (const t of list) html += tagHtml(t, boxes.get(t), "body");
+        // Leaders first, so no line crosses over a tag. Then the tags from the
+        // top of the screen down: where two overlap, the lower one is on top.
+        // YOU goes last, over everything, so it is never hidden.
+        const order = [...list].sort((a, b) => a.self - b.self || boxes.get(a).y + a.dy - (boxes.get(b).y + b.dy));
+        for (const t of order) html += tagHtml(t, boxes.get(t), "lead");
+        for (const t of order) html += tagHtml(t, boxes.get(t), "body");
         PENDING = [];
         return html;
     }
@@ -208,7 +225,7 @@
     const ringD = (pts) => pts.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join("") + "Z";
 
     /** The dashed line of an east/west or north/south question, by hand. */
-    function dashed(a, b, seed) {
+    function dashed(a, b, seed, weight = 4.2) {
         const r = Ink.rng(seed);
         const n = Ink.noise1(r);
         const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -221,27 +238,41 @@
         let out = "";
         for (let s = 0; s < len; s += 26) {
             const d = r.range(13, 19);
-            out += Ink.pathEl([pt(s), pt(s + d / 2), pt(s + d)], { size: 4.2, color: R, thinning: 0.3, taperEnd: 3, taperStart: 2 });
+            // Round ends, the same width all along: no droplets.
+            out += Ink.pathEl([pt(s), pt(s + d / 2), pt(s + d)], { size: weight, color: R, thinning: 0.04, taperEnd: 0, taperStart: 0 });
         }
         return out;
     }
 
-    async function draw(root, v) {
-        const o = LIST[v - 1];
+    // Variants of a screen (N08.1 …): the base screen with one thing changed. They
+    // keep the base screen's seeds, so everything else is drawn exactly the same.
+    const VARIANTS = {
+        "8.1": { pins: "push" },
+        "8.2": { pins: "push", popup: true },
+        "10.1": { pins: "push" },
+    };
+
+    async function draw(root, code) {
+        const v = Math.floor(code);
+        const o = { ...LIST[v - 1], ...(VARIANTS[String(code)] ?? {}) };
         TAGS = o.tags ?? "base";
         const g = state(o.game, o.upTo);
         root.style.background = "#fff";
         root.insertAdjacentHTML("beforeend", FILTER);
+        // The colour-coded key map is shown bare: the whole screen is map, no app around it.
+        const bare = ["datakey", "datakey2", "datakey3"].includes(o.skin);
         const mapEl = document.createElement("div");
-        mapEl.style.cssText = `position:absolute;left:0;top:${HEAD}px;width:${W}px;height:${H - HEAD}px;z-index:0;background:#fff`;
+        mapEl.style.cssText = `position:absolute;left:0;top:${bare ? 0 : HEAD}px;width:${W}px;height:${bare ? H : H - HEAD}px;z-index:0;background:#fff`;
         root.appendChild(mapEl);
         const map = L.map(mapEl, { zoomControl: false, attributionControl: true, zoomSnap: 0, fadeAnimation: false, zoomAnimation: false });
         map.attributionControl.setPrefix(false);
         const redraw = RETRACE[o.skin];
+        const data = DATA_SKINS[o.skin];
         // Redrawn tiles are stretched a pixel so no seam shows between them.
         if (redraw) mapEl.insertAdjacentHTML("beforeend", `<style>.leaflet-tile{width:${redraw.sharp ? 129 : 257}px!important;height:${redraw.sharp ? 129 : 257}px!important}</style>`);
-        const tiles = (redraw ? Retrace.layer(redraw) : L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" })).addTo(map);
-        mapEl.querySelector(".leaflet-tile-pane").style.filter = redraw ? redraw.filter ?? "none" : SKINS[o.skin ?? "xerox"];
+        const tiles = data ? null : (redraw ? Retrace.layer(redraw) : L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" })).addTo(map);
+        if (tiles) mapEl.querySelector(".leaflet-tile-pane").style.filter = redraw ? redraw.filter ?? "none" : SKINS[o.skin ?? "xerox"];
+        else map.attributionControl.addAttribution("© OpenStreetMap");
         // The whole campus, below the question box: no auto-zoom.
         const ring = Campus.layers.campus.ring;
         map.fitBounds(L.latLngBounds(ring.map(([lng, lat]) => [lat, lng])), { paddingTopLeft: [10, 118], paddingBottomRight: [10, 16], animate: false });
@@ -250,11 +281,16 @@
             const [lng, lat] = g.pos[g.me];
             map.setView([lat, lng], o.zoom, { animate: false });
         }
-        await new Promise((ok) => {
-            if (!tiles.isLoading()) ok();
-            tiles.once("load", ok);
-            setTimeout(ok, 15000);
-        });
+        if (data) {
+            await OSMDraw.ready;
+            mapEl.appendChild(OSMDraw.render(map, data, W, bare ? H : H - HEAD));
+            if (bare) return;
+        } else
+            await new Promise((ok) => {
+                if (!tiles.isLoading()) ok();
+                tiles.once("load", ok);
+                setTimeout(ok, 15000);
+            });
         const P = ([lng, lat]) => {
             const p = map.latLngToContainerPoint([lat, lng]);
             return [p.x, p.y + HEAD];
@@ -282,29 +318,49 @@
 
         // The question on the table, and only that, in red.
         const q = o.ask;
+        // A pin on an exact spot: the map pin's point, or B29's pushpin centred on it.
+        const pinAt = (x, y, size, seed) => (o.pins === "push" ? Ink.pin(x, y, { size: size * 0.55 }) : Ink.mapPin(x, y, { size, seed, color: R }));
+        let popup = "";
         if (q) {
             const who = g.pos[q.by];
             const c = P(who);
             if (q.ew) {
-                red += dashed([c[0], HEAD + 110], [c[0], H + 10], `m2d${v}`);
-                const y = HEAD + 150;
-                red += Ink.write("WEST", { x: c[0] - 96, y: y + 190, size: 26, seed: `w${v}`, tilt: -3, importance: "key" }).svg + Ink.handArrow(c[0] - 26, y + 204, c[0] - 88, y + 206, { seed: `wa${v}`, weight: 3.6, bend: 0.05, head: 12 });
-                red += Ink.write("EAST", { x: c[0] + 18, y: y + 190, size: 26, seed: `e${v}`, tilt: -3, importance: "key" }).svg + Ink.handArrow(c[0] + 24, y + 204, c[0] + 86, y + 202, { seed: `ea${v}`, weight: 3.6, bend: -0.05, head: 12 });
+                // A bolder line; the words well clear of it, no arrows. WEST goes a
+                // little further out than EAST: its T reads closer to the line.
+                red += dashed([c[0], HEAD + 110], [c[0], H + 10], `m2d${v}`, 6.2);
+                const y = HEAD + 340;
+                const west = { size: 26, seed: `w${v}`, tilt: -3, importance: "key" };
+                red += Ink.write("WEST", { ...west, x: c[0] - 30 - Ink.write("WEST", west).width, y }).svg;
+                red += Ink.write("EAST", { x: c[0] + 28, y, size: 26, seed: `e${v}`, tilt: -3, importance: "key" }).svg;
             } else if (q.radius) {
+                // Circles are exact (centre and radius), only drawn by hand.
                 const rp = q.radius * pxPerM;
-                red += Ink.circle(c[0], c[1], rp, rp, { seed: `m2c${v}`, weight: 4.5, tilt: 0 });
-                red += Ink.write(`${q.radius} M`, { x: c[0] + rp * 0.72 + 4, y: c[1] - rp * 0.72, size: 20, seed: `m2cm${v}`, tilt: -24, importance: "key" }).svg;
+                red += Ink.ring(c[0], c[1], rp, { seed: `m2c${v}`, weight: 4.5 });
+                red += Ink.write(`${q.radius} M`, { x: c[0] + rp * 0.72 + 14, y: c[1] - rp * 0.72 - 8, size: 24, seed: `m2cm${v}`, tilt: -24, importance: "key" }).svg;
             } else if (q.nearest) {
+                const shown = [];
                 for (const p of Campus.layers[q.nearest].places) {
                     const [x, y] = P([p.lng, p.lat]);
                     if (y < HEAD + 110 || y > H) continue;
-                    red += Ink.mapPin(x, y, { size: 13, seed: `m2p${p.id}`, color: R });
+                    red += pinAt(x, y, 13, `m2p${p.id}`);
+                    shown.push({ p, x, y });
+                }
+                // One café tapped: its box, as the app's popup has it (the name, then where).
+                if (o.popup) {
+                    const { p, x, y } = shown.filter((s) => s.y > HEAD + 260).sort((a, b) => a.y - b.y)[0];
+                    const w = 214;
+                    const left = Math.max(12, Math.min(W - 12 - w, x - w / 2));
+                    const bottom = y - (o.pins === "push" ? 16 : 34);
+                    const rows = (p.detail ?? []).filter(([k]) => k === "Pavillon" || k === "Room").map(([k, val]) => `<div><span style="font-weight:700">${k}</span> ${val}</div>`).join("");
+                    popup = `<div style="position:absolute;left:${x - 9}px;top:${bottom - 3}px;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:12px solid #000"></div>
+                        <div style="position:absolute;left:${left}px;top:${bottom}px;transform:translateY(-100%);width:${w}px;box-sizing:border-box;background:#fff;border:3px solid #000;padding:8px 10px;font:400 13px/1.35 ${FONT}">
+                        <div style="font:700 15px/1.2 ${FONT};margin-bottom:3px">${p.label}</div>${rows}</div>`;
                 }
             } else if (q.closer) {
                 const lm = Campus.at("landmarks", q.closer);
                 const [lx, ly] = P(lm);
                 const rp = dist(lm, who) * pxPerM;
-                red += Ink.circle(lx, ly, rp, rp, { seed: `m2k${v}`, weight: 4.5, tilt: 0 }) + Ink.mapPin(lx, ly, { size: 15, seed: "m2lm", color: R });
+                red += Ink.ring(lx, ly, rp, { seed: `m2k${v}`, weight: 4.5 }) + pinAt(lx, ly, 15, "m2lm");
             }
         }
 
@@ -314,7 +370,7 @@
             const [name, p] = Object.entries(g.pos).sort((a, b) => dist(g.hider, a[1]) - dist(g.hider, b[1]))[0];
             const sp = P(p);
             red += Ink.string(hp[0], hp[1], sp[0], sp[1], { width: 3, sag: 10 });
-            red += Ink.write(`${Math.round(dist(g.hider, p))} M`, { x: (hp[0] + sp[0]) / 2 - 20, y: (hp[1] + sp[1]) / 2 + 30, size: 18, seed: `t${v}`, tilt: -6, importance: "key" }).svg;
+            red += Ink.write(`${Math.round(dist(g.hider, p))} M`, { x: (hp[0] + sp[0]) / 2 - 24, y: (hp[1] + sp[1]) / 2 + 34, size: 22, seed: `t${v}`, tilt: -6, importance: "key" }).svg;
             void name;
         }
 
@@ -350,6 +406,7 @@
         layer(6, html.split("<!--tags-->")[0]);
         layer(40, red, true);
         layer(50, tagsHtml);
+        layer(55, popup);
         layer(60, c.html);
         layer(65, c.ink, true);
         const attr = mapEl.querySelector(".leaflet-control-attribution");
@@ -391,7 +448,7 @@
     // Skin samples: every skin at three zoom levels (a: whole campus, b: a few buildings, c: close up).
     const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold", "dotsonly", "tone", "tonelight", "tonegrey", "dotsclean", "streetsclean", "grainclean", "grainnotext", "blackbuildings"];
     // Variants numbered after the skin they come from.
-    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "27.1": "grainsamegreen", "27.2": "grainlightgreen", "1.1": "xeroxnotext", "2.1": "xeroxdarknotext", "11.1": "greynotext", "27.3": "grainreorder", "27.4": "grainshift", "2.2": "xeroxsolid", "16.2": "vector16", "16.3": "vector161", "16.31": "vector161s", "16.32": "vector161ss", "16.4": "vector16g", "24.1": "dotsgreen" };
+    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "27.1": "grainsamegreen", "27.2": "grainlightgreen", "1.1": "xeroxnotext", "2.1": "xeroxdarknotext", "11.1": "greynotext", "27.3": "grainreorder", "27.4": "grainshift", "2.2": "xeroxsolid", "16.2": "vector16", "16.3": "vector161", "16.31": "vector161s", "16.32": "vector161ss", "16.4": "vector16g", "24.1": "dotsgreen", "30.2": "dataoutline", "30.3": "datasolid", "30.9": "datagrain", "30.5": "datadots", "30.0": "datakey", "30.01": "datakey2", "30.02": "datakey3", "30.21": "dataoutlinenopaths", "30.22": "dataoutlinepruned", "30.23": "dataoutlineclean", "30.51": "datadotsclean", "31.1": "datablackroads", "31.2": "datablackdots", "31.3": "datafigure" };
     const ZOOMS = { a: null, b: 16.6, c: 18.2 };
     function drawSkin(root, code) {
         const [, n, z] = /^([\d.]+)([abc])$/.exec(code);
@@ -409,13 +466,76 @@
         return draw(root, LIST.length);
     }
 
-    /** Just the name tags in one style, on white: one stalker and YOU. */
-    function tagsOnly(root, t) {
-        TAGS = TAG_LIST["abcdef".indexOf(t)];
-        root.style.background = "#fff";
+    /**
+     * Name tags, fifth pass: everyone else and YOU are separate choices now.
+     * The app knows only your own heading (the others' positions come without
+     * one), so YOU is a mark that shows which way your phone points, and
+     * everyone else is a tag.
+     *   Others: a (the outline running round the pointer too), c, f, g (a red
+     *   pin), k (a's shape, its edge drawn by hand in red), l (coloured in red).
+     *   YOU: g (beam), h (arrow, bigger), j (outlined beam), m (the arrow's
+     *   edge by hand in red), n (the arrow coloured in red).
+     */
+    const PIN_R = 7.5;
+    const tagW = (label) => {
+        cv.font = tagFont(12);
+        return cv.measureText(label).width + 12 * 1.3 + 12;
+    };
+    const tagText = (cx, cy, label, color = "#000") => `<text x="${cx}" y="${cy + 4.3}" text-anchor="middle" font-family="${FONT}" font-weight="700" font-size="12" letter-spacing="0.72" fill="${color}">${label}</text>`;
+    /** a's tag as one shape, box and pointer, its point on the spot (w: its width, if not the typed name's). */
+    function bubble(x, y, label, w = tagW(label), h = 24) {
+        const left = x - w / 2;
+        const top = y - h - 12;
+        const b = top + h;
+        const pts = [[left, top], [left + w, top], [left + w, b], [x + 7, b], [x, b + 10], [x - 7, b], [left, b]];
+        return { pts, left, cx: x, cy: top + h / 2 };
+    }
+    function otherTag(t, x, y, label) {
+        if (t === "a" || t === "k" || t === "k.1" || t === "l") {
+            // k.1: k with the name written by hand too, in red like its edge; the tag fits the handwriting.
+            const hand = { size: 15, seed: `tk1${label}`, tilt: -2, importance: "info" };
+            const handW = t === "k.1" ? Ink.write(label, hand).width : 0;
+            const bb = handW ? bubble(x, y, label, handW + 26, 30) : bubble(x, y, label);
+            const d = `M${bb.pts.map((p) => p.join(" ")).join("L")}Z`;
+            if (t === "a") return `<path d="${d}" fill="#fff" stroke="#000" stroke-width="3" stroke-linejoin="miter"/>${tagText(bb.cx, bb.cy, label)}`;
+            const name = handW ? Ink.write(label, { ...hand, x: bb.left + 13, y: bb.cy + 7.5 }).svg : tagText(bb.cx, bb.cy, label);
+            if (t === "k" || t === "k.1") return `<path d="${d}" fill="#fff"/>${Ink.wobble([...bb.pts, bb.pts[0], bb.pts[1]].map((p, i, a) => (i === a.length - 1 ? [p[0] - 14, p[1]] : p)), { seed: `tk${label}`, weight: 3.4, amp: 0.9 })}${name}`;
+            // Coloured in: solid red under a hand-drawn red edge (a scribble fill is a blob at this size).
+            return `<path d="${d}" fill="${R}"/>${Ink.wobble([...bb.pts, bb.pts[0], bb.pts[1]].map((p, i, a) => (i === a.length - 1 ? [p[0] - 14, p[1]] : p)), { seed: `tl${label}`, weight: 3.4, amp: 0.9 })}${tagText(bb.cx, bb.cy, label)}`;
+        }
+        if (t === "g") {
+            const w = tagW(label);
+            return `${Ink.pin(x, y, { size: PIN_R })}<rect x="${x - w / 2 + 1.5}" y="${y - PIN_R - 7 - 24 + 1.5}" width="${w - 3}" height="21" fill="#fff" stroke="#000" stroke-width="3"/>${tagText(x, y - PIN_R - 7 - 12, label)}`;
+        }
+        // c and f: the earlier styles, stalker only.
+        TAGS = t === "c" ? "ink" : "marker";
         PENDING = [];
-        for (const [x, y, n, me] of [[60, 80, "CAMILLE", false], [150, 150, "YOU", true]]) tag(x, y, n, me);
-        root.innerHTML = `<div style="position:absolute;inset:0">${flushTags()}</div>`;
+        tag(x, y, label, false);
+        return `<foreignObject x="0" y="0" width="240" height="175"><div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:240px;height:175px">${flushTags()}</div></foreignObject>`;
+    }
+    /** YOU: the spot and the way you're facing (deg clockwise from north). */
+    function youMark(x, y, kind, deg) {
+        const a = ((deg - 90) * Math.PI) / 180;
+        const at = (ang, r) => `${(x + Math.cos(ang) * r).toFixed(1)} ${(y + Math.sin(ang) * r).toFixed(1)}`;
+        const wedge = (r, half) => `M${x} ${y}L${at(a - half, r)}A${r} ${r} 0 0 1 ${at(a + half, r)}Z`;
+        const dot = `<circle cx="${x}" cy="${y}" r="8.5" fill="#fff"/><circle cx="${x}" cy="${y}" r="6.5" fill="#000"/>`;
+        if (kind === "g") return `<path d="${wedge(38, 0.6)}" fill="#000"/>${dot}`;
+        if (kind === "j") return `<path d="${wedge(40, 0.55)}" fill="none" stroke="#000" stroke-width="3" stroke-linejoin="round"/>${dot}`;
+        // The navigation arrow, half as big again as h's first pass: point ahead, notch behind.
+        const r = (deg * Math.PI) / 180;
+        const pts = [[0, -21], [15, 15], [0, 6], [-15, 15]].map(([px, py]) => [x + px * Math.cos(r) - py * Math.sin(r), y + px * Math.sin(r) + py * Math.cos(r)]);
+        const poly = pts.map((p) => p.map((n) => n.toFixed(1)).join(",")).join(" ");
+        const edge = (seed) => Ink.wobble([...pts, pts[0], pts[1]].map((p, i, all) => (i === all.length - 1 ? [(p[0] + all[i - 1][0]) / 2, (p[1] + all[i - 1][1]) / 2] : p)), { seed, weight: 3.4, amp: 0.7 });
+        if (kind === "m") return `<polygon points="${poly}" fill="#fff"/>${edge("youm")}`;
+        if (kind === "n") return `<polygon points="${poly}" fill="${R}"/>${edge("youn")}`;
+        return `<polygon points="${poly}" fill="#000" stroke="#fff" stroke-width="5" stroke-linejoin="round" paint-order="stroke"/>`;
+    }
+
+    /** One mark alone on white: another player's tag (a, c, f, g, k, l) or YOU (Yg, Yh, Yj, Ym, Yn). */
+    function tagsOnly(root, t) {
+        root.style.background = "#fff";
+        const inner = t.startsWith("Y") ? youMark(120, 92, t[1], 35) : otherTag(t, 120, 108, "CAMILLE");
+        root.innerHTML = `<svg width="240" height="175" style="position:absolute;left:0;top:0;overflow:visible">${inner}</svg>`;
     }
 
     window.Maps2 = { tagsOnly, list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, drawHint, SKIN_LIST };

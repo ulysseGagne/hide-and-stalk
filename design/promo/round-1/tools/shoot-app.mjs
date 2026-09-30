@@ -44,7 +44,7 @@ for (const style of styles) {
         await page.route("**/src/index.html", async (r) => {
             let html = fs.readFileSync(path.join(REPO, "src/index.html"), "utf8");
             html = html.replace("</head>", `<link rel="stylesheet" href="/design/promo/round-1/fonts/fonts.css" /></head>`);
-            html = html.replace("</body>", `<script src="/design/promo/round-1/lab/vendor/perfect-freehand.js"></script><script src="/design/promo/round-1/lab/ink.js"></script><script src="/design/promo/round-1/app/decorate.js"></script></body>`);
+            html = html.replace("</body>", `<script src="/design/promo/round-1/lab/vendor/perfect-freehand.js"></script><script src="/design/promo/round-1/lab/ink.js"></script><script src="/design/promo/round-1/lab/logo.js"></script><script src="/design/promo/round-1/app/decorate.js"></script></body>`);
             r.fulfill({ contentType: "text/html", body: html });
         });
         await page.route("**/api/**", (r) => {

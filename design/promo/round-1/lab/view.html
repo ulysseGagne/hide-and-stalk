@@ -22,6 +22,7 @@
     <script src="wild2.js"></script>
     <script src="maps.js"></script>
     <script src="retrace.js"></script>
+    <script src="osmdraw.js"></script>
     <script src="maps2.js"></script>
     <script src="arrows.js"></script>
     <script src="home3.js"></script>
@@ -54,6 +55,10 @@
                 Wild.draw(root, v);
             } else if (set === "arrow") {
                 Arrows.draw(root, v);
+            } else if (set === "osmkey") {
+                await OSMDraw.ready;
+                root.style.background = "#fff";
+                root.innerHTML = OSMDraw.legend(v);
             } else if (set === "tags") {
                 Maps2.tagsOnly(root, String(q.get("v")));
             } else if (set === "hint") {
