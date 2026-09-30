@@ -410,13 +410,13 @@
         const seek = stack(svg);
         const m = mark(svg, seek);
         const b = m.getBBox();
-        place(st(svg), { top: Math.max(b.y + b.height, seek.base) + (o.gap ?? 18), x: seek.x + seek.w * (o.at ?? 0.16) });
+        place(st(svg), { top: Math.max(b.y + b.height, seek.base) + (o.gap ?? 18), x: seek.x + seek.w * (o.at ?? 0.16), width: o.width });
     }
 
     const S13 = { seed: "w13" };
     Object.assign(LOCKUPS, {
         "13.1"(svg) {
-            lockup(svg, (s, k) => round(s, k, { seed: "r131", weight: 0.16 }), (s) => wild(s, S13));
+            lockup(svg, (s, k) => round(s, k, { seed: "r131", weight: 0.16 }), (s) => wild(s, S13), { gap: 2 });
         },
         "13.2"(svg) {
             lockup(svg, (s, k) => round(s, k, { seed: "r132", round: [0.7, 1], weight: 0.16 }), (s) => wild(s, S13));
@@ -537,6 +537,32 @@
             put(h);
             put(amp);
             g.setAttribute("transform", `translate(${cx - gb.x * k} ${base - h.h - gb.y * k}) scale(${k})`);
+        },
+    });
+
+    // Fifth pass: the stack flush left, L7.6's scribble (even), and the STALK
+    // of L14.2 or L14.4 at different sizes and places.
+    const P76 = (s, k) => scribble(s, k, { seed: "p71", even: true });
+    const S142 = (o = {}) => (s) => loose(s, { seed: "L3s", size: 84, tilt: -8, mess: 1.1, spacing: 0.05, ...o });
+    const S144 = (o = {}) => (s) => wild(s, { seed: "w144", sizes: [1.06, 0.94, 1.02, 0.96, 0.9], rises: [0.14, -0.02, 0.03, 0, 0.16], gap: 0, pulls: [0, 0, 0, 0, 0.05], ...o });
+    Object.assign(LOCKUPS, {
+        "16.1"(svg) {
+            lockup(svg, P76, S142(), { at: 0.08, gap: 8 });
+        },
+        "16.2"(svg) {
+            lockup(svg, P76, S142(), { at: 0, gap: 6, width: 300 });
+        },
+        "16.3"(svg) {
+            lockup(svg, P76, S142({ size: 70 }), { at: 0.3, gap: 4 });
+        },
+        "16.4"(svg) {
+            lockup(svg, P76, S144(), { at: 0.1, gap: 8 });
+        },
+        "16.5"(svg) {
+            lockup(svg, P76, S144(), { at: 0, gap: 6, width: 300 });
+        },
+        "16.6"(svg) {
+            lockup(svg, P76, S144({ size: 64 }), { at: 0.34, gap: 2 });
         },
     });
 
