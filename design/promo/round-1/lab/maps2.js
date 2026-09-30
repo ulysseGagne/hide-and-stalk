@@ -82,6 +82,7 @@
         grainclean: { mode: "tone", pixel: true, road: "pixel" },
         // S04 exactly (the same grain filter), on tiles with the text taken out.
         grainnotext: { mode: "clean", filter: "url(#m2n)" },
+        grainsamegreen: { mode: "clean", filter: "url(#m2n)", greenAs: "building" },
         // Sixth round.
         tracedoutline: { thin: true, roads: "outline" },
         centerline: { roads: "center", lineW: 2, dots: ["green"] },
@@ -374,7 +375,7 @@
     // Skin samples: every skin at three zoom levels (a: whole campus, b: a few buildings, c: close up).
     const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold", "dotsonly", "tone", "tonelight", "tonegrey", "dotsclean", "streetsclean", "grainclean", "grainnotext", "blackbuildings"];
     // Variants numbered after the skin they come from.
-    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "24.1": "dotsgreen" };
+    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "27.1": "grainsamegreen", "24.1": "dotsgreen" };
     const ZOOMS = { a: null, b: 16.6, c: 18.2 };
     function drawSkin(root, code) {
         const [, n, z] = /^([\d.]+)([abc])$/.exec(code);

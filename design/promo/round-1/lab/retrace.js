@@ -149,6 +149,8 @@
         const o4 = out.data;
         if (o.mode === "clean") {
             // The tile as it was, minus its text and icons: a filter prints it after.
+            // o.greenAs: every green printed in the buildings' fill colour.
+            if (o.greenAs === "building") for (let i = 0; i < N * N; i++) if (cls[i] === CLASS.green) col[i] = 0xd9d0c9;
             for (let i = 0; i < N * N; i++) {
                 o4[i * 4] = col[i] >>> 16;
                 o4[i * 4 + 1] = (col[i] >>> 8) & 255;
