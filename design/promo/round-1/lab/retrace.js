@@ -156,12 +156,16 @@
                 for (let i = 0; i < N * N; i++) m[i] = cls[i] === k ? 1 : 0;
                 return m;
             };
-            const road = mask(CLASS.road);
+            // From far, roads are only a few pixels wide: remove only the thinnest paths.
+            if (far && o.open) o = { ...o, open: 1 };
+            let road = mask(CLASS.road);
+            // o.open: drop roads thinner than about 2·open pixels (footpaths, parking aisles).
+            if (o.open) road = opening(road, N, o.open);
             return {
                 vector: {
                     roadFill: o.roads === "outline" ? null : contours(road, N, true, o.eps ?? 1.3),
                     roadLine: o.roads === "outline" ? contours(road, N, false, o.eps ?? 1.3, (o.minLen ?? 0) * (far ? 2 : 1)) : null,
-                    shapes: (o.outlines ?? ["building", "green"]).flatMap((k) => contours(mask(CLASS[k]), N, false, k === "green" ? (o.epsGreen ?? o.eps ?? 1.3) : (o.eps ?? 1.3), (o.minLen ?? 0) * (far ? 2 : 1))),
+                    shapes: (o.outlines ?? ["building", "green"]).flatMap((k) => contours(o.minArea ? dropSmall(mask(CLASS[k]), N, o.minArea) : mask(CLASS[k]), N, false, k === "green" ? (o.epsGreen ?? o.eps ?? 1.3) : (o.eps ?? 1.3), (o.minLen ?? 0) * (far ? 2 : 1))),
                 },
             };
         }
@@ -355,6 +359,49 @@
         ctx.lineWidth = o.lineW ?? 1.1;
         if (v.roadLine) ctx.stroke(path(v.roadLine, false));
         ctx.stroke(path(v.shapes, false));
+    }
+
+    /** Erode then dilate (square, radius r): removes anything narrower than 2r+1. */
+    function opening(m, N, r) {
+        const pass = (src, keep) => {
+            const out = new Uint8Array(N * N);
+            for (let y = 0; y < N; y++)
+                for (let x = 0; x < N; x++) {
+                    let all = true;
+                    let any = false;
+                    for (let dy = -r; dy <= r; dy++)
+                        for (let dx = -r; dx <= r; dx++) {
+                            const xx = Math.min(N - 1, Math.max(0, x + dx));
+                            const yy = Math.min(N - 1, Math.max(0, y + dy));
+                            if (src[yy * N + xx]) any = true;
+                            else all = false;
+                        }
+                    out[y * N + x] = keep === "all" ? (all ? 1 : 0) : any ? 1 : 0;
+                }
+            return out;
+        };
+        return pass(pass(m, "all"), "any");
+    }
+    /** Remove patches smaller than minArea pixels (not touching the tile edge). */
+    function dropSmall(m, N, minArea) {
+        const seen = new Uint8Array(N * N);
+        for (let s0 = 0; s0 < N * N; s0++) {
+            if (!m[s0] || seen[s0]) continue;
+            const stack = [s0];
+            const members = [];
+            let edge = false;
+            seen[s0] = 1;
+            while (stack.length) {
+                const i = stack.pop();
+                members.push(i);
+                const x = i % N;
+                const y = (i - x) / N;
+                if (x === 0 || y === 0 || x === N - 1 || y === N - 1) edge = true;
+                for (const j of [x > 0 ? i - 1 : -1, x < N - 1 ? i + 1 : -1, y > 0 ? i - N : -1, y < N - 1 ? i + N : -1]) if (j >= 0 && m[j] && !seen[j]) (seen[j] = 1), stack.push(j);
+            }
+            if (!edge && members.length < minArea) for (const i of members) m[i] = 0;
+        }
+        return m;
     }
 
     /** Zhang-Suen thinning: a binary mask down to 1-pixel lines. */

@@ -94,6 +94,9 @@
         // The hints layer's map (S16), traced into straight lines instead of pixels.
         vector16: { mode: "vector", sharp: true, thin: true, outlines: ["building"], eps: 2, minLen: 14 },
         vector161: { mode: "vector", sharp: true, thin: true, roads: "outline", outlines: ["building"], eps: 2, minLen: 14 },
+        // S2, simpler: no footpaths or parking aisles, no small shapes, straighter lines.
+        vector161s: { mode: "vector", sharp: true, thin: true, roads: "outline", outlines: ["building"], eps: 3, minLen: 30, open: 2, minArea: 150 },
+        vector161ss: { mode: "vector", sharp: true, thin: true, roads: "outline", outlines: ["building"], eps: 4.5, minLen: 50, open: 3, minArea: 400 },
         vector16g: { mode: "vector", sharp: true, thin: true, outlines: ["building", "green"], eps: 2, epsGreen: 3, minLen: 30 },
         // Sixth round.
         tracedoutline: { thin: true, roads: "outline" },
@@ -387,7 +390,7 @@
     // Skin samples: every skin at three zoom levels (a: whole campus, b: a few buildings, c: close up).
     const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold", "dotsonly", "tone", "tonelight", "tonegrey", "dotsclean", "streetsclean", "grainclean", "grainnotext", "blackbuildings"];
     // Variants numbered after the skin they come from.
-    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "27.1": "grainsamegreen", "27.2": "grainlightgreen", "1.1": "xeroxnotext", "2.1": "xeroxdarknotext", "11.1": "greynotext", "27.3": "grainreorder", "2.2": "xeroxsolid", "16.2": "vector16", "16.3": "vector161", "16.4": "vector16g", "24.1": "dotsgreen" };
+    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "27.1": "grainsamegreen", "27.2": "grainlightgreen", "1.1": "xeroxnotext", "2.1": "xeroxdarknotext", "11.1": "greynotext", "27.3": "grainreorder", "2.2": "xeroxsolid", "16.2": "vector16", "16.3": "vector161", "16.31": "vector161s", "16.32": "vector161ss", "16.4": "vector16g", "24.1": "dotsgreen" };
     const ZOOMS = { a: null, b: 16.6, c: 18.2 };
     function drawSkin(root, code) {
         const [, n, z] = /^([\d.]+)([abc])$/.exec(code);
