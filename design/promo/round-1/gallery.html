@@ -88,26 +88,13 @@ body.only-kept .tile:not(.kept) { display: none; }
 
 <script>
 const SETS = [
-    { id: "logo2", title: "Logo", intro: "Your third round of logo notes. L13: a new scribble, rounder, evenly spread, the same weight from start to end, going past SEEK above and below by uneven amounts. L14: STALK at the wild end of the handwriting band, with even gaps. L15: SEEK crossed out instead of scribbled. L7.5–L7.6: the same-width block, smaller and centred. Every STALK in L13 is the same, so only the scribble changes; every scribble in L14 is L13.1's, so only STALK changes.", wide: false, items: [
-        ["L13.1", "Scribble: round turns, four passes"],
-        ["L13.2", "Scribble: rounder turns"],
-        ["L13.3", "Scribble: some turns round, some sharp, more of them reaching far"],
-        ["L13.4", "Scribble: five passes, thinner"],
-        ["L13.5", "Scribble: three passes, thicker, big reaches"],
-        ["L13.6", "Scribble: leaning further right"],
-        ["L14.1", "STALK: L1.3's, wilder, even gaps"],
-        ["L14.2", "STALK: L3.1's, under SEEK instead of over it"],
-        ["L14.3", "STALK: tucked, letters close to one size"],
-        ["L14.4", "STALK: tucked, small K pulled in against the L"],
-        ["L14.5", "STALK: tucked, the wildest the band allows"],
-        ["L14.6", "L2.2 redone: HIDE / & SEEK, big STALK, sizes closer, K tucked in"],
-        ["L15.1", "SEEK crossed out: one line"],
-        ["L15.2", "SEEK crossed out: two lines"],
-        ["L15.3", "SEEK crossed out: across and back, in a hurry"],
-        ["L15.4", "SEEK crossed out: an X"],
-        ["L7.5", "L7.3 centred and smaller, with room around it, new scribble"],
-        ["L7.6", "L7.5 with L7.1's scribble"],
-        ["L12.2", "App icon: S by hand at the H's height, even gaps"],
+    { id: "logo2", title: "Logo", intro: "Whittled down to the ones you kept, with your fixes. The K is now one stem and one continuous stroke for the arm and leg, so there's no gap inside it (this changes every handwritten K, in the app too).", wide: false, items: [
+        ["L13.1", "Scribble a little lighter; K in one stroke"],
+        ["L13.2", "Rounder scribble, a little lighter"],
+        ["L14.1", "L1.3's STALK, wilder"],
+        ["L14.2", "L3.1's STALK, letters pulled closer together"],
+        ["L14.4", "Tucked: S higher, K pulled in against the L"],
+        ["L7.6", "L7.1's scribble, its weight evened out; K bolder"],
     ]},
     { id: "hand", title: "Handwriting", intro: "All app handwriting sits between 30% and 70% of the way from H1 (calm) to H3 (unhinged). Small or important text leans calm; big text, or text that's just for the vibe, leans wild.", wide: true, items: [
         ["H04", "The band: score 0 to 1, with H1 and H3 for reference"],
@@ -132,9 +119,9 @@ const SETS = [
         ["W40", "No scene, arrow from above"],
         ["W41", "No scene, arrow from the right"],
     ]},
-    { id: "notes", title: "Ransom note", intro: "Only the note: twelve things it could say. All from the stalker to the hider.", wide: false, items: [
-        ["C01", "I SEE YOU"], ["C02", "FOUND YOU"], ["C03", "READY OR NOT"], ["C04", "NOT FAR NOW"], ["C05", "GETTING WARMER"], ["C06", "I'M CLOSE"],
-        ["C07", "NOWHERE TO HIDE"], ["C08", "LOOK BEHIND YOU"], ["C09", "COMING FOR YOU"], ["C10", "I KNOW WHERE YOU ARE"], ["C11", "SAY CHEESE"], ["C12", "RUN"],
+    { id: "notes", title: "Ransom note", intro: "The ones you liked, and a second round (C13–C18) where the letters strictly alternate black and white. W32, W37, B25 and B28 now use GETTING CLOSER or COMING FOR YOU.", wide: false, items: [
+        ["C13", "GETTING CLOSER"], ["C14", "GETTING WARMER, alternating"], ["C15", "COMING FOR YOU, alternating"], ["C16", "BEHIND YOU (LOOK BEHIND YOU, shorter)"], ["C17", "NOWHERE TO GO (no HIDE twice on screen)"], ["C18", "WARMER"],
+        ["C05", "GETTING WARMER (first round)"], ["C07", "NOWHERE TO HIDE (first round)"], ["C08", "LOOK BEHIND YOU (first round)"], ["C09", "COMING FOR YOU (first round)"],
     ]},
 ];
 

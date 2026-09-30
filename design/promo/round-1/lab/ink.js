@@ -184,7 +184,8 @@
         H: [0.64, [[[0, 0], [0, 1]], [[0.64, 0], [0.64, 1]], [[0, 0.5], [0.64, 0.49]]]],
         I: [0.12, [[[0.06, 0], [0.06, 1]]]],
         J: [0.52, [[[0.5, 0], [0.5, 0.74], [0.4, 0.96], [0.2, 1], [0.02, 0.84]]]],
-        K: [0.62, [[[0, 0], [0, 1]], [[0.58, 0], [0.02, 0.6]], [[0.2, 0.44], [0.64, 1]]]],
+        // The arm and the leg are one stroke, a "<" that touches the stem.
+        K: [0.62, [[[0, 0], [0, 1]], [[0.6, 0], [0.03, 0.56], [0.64, 1]]]],
         L: [0.52, [[[0, 0], [0, 1], [0.54, 1]]]],
         M: [0.8, [[[0, 1], [0.04, 0], [0.4, 0.66], [0.76, 0], [0.8, 1]]]],
         N: [0.64, [[[0, 1], [0, 0], [0.64, 1], [0.64, 0]]]],
@@ -535,8 +536,10 @@
             const leg = u * (verts.length - 1);
             const f = leg - Math.floor(leg);
             const mid = Math.sin(Math.PI * f) ** 0.8;
-            const fatigue = 1 - 0.3 * u;
-            return (0.28 + 0.72 * mid) * fatigue * (0.8 + 0.25 * n(u * 7 + 3));
+            // o.even: the same weight all along, only easing a little at the turns.
+            const fatigue = o.even ? 1 : 1 - 0.3 * u;
+            const lo = o.even ? 0.62 : 0.28;
+            return (lo + (1 - lo) * mid) * fatigue * (o.even ? 0.92 + 0.1 * n(u * 7 + 3) : 0.8 + 0.25 * n(u * 7 + 3));
         };
         return pressed(path, pressure, { size: o.weight ?? h * 0.2, color: o.color, thinning: o.thinning ?? 0.7, wobbleAmp: o.wobbleAmp ?? 1.6, taperEnd: 24 });
     }
@@ -700,7 +703,7 @@
                 }
                 return densify(pts.length > 2 ? spline(pts, 8) : pts, 3);
             });
-            glyphs.push({ local, w: gw * sx, weight: weight * r.range(0.9, 1.12) });
+            glyphs.push({ local, w: gw * sx, weight: weight * r.range(0.9, 1.12) * (o.weights?.[i] ?? 1), pull: (o.pulls?.[i] ?? 0) * size });
         });
         // Slide each letter left until it would touch something already down.
         const placed = [];
@@ -718,6 +721,7 @@
             let dx = cursor + weight * 2 - minX;
             if (placed.length) while (dx > prevLeft - minX + weight * 0.4 && clear(pts, dx - 1, need)) dx -= 1;
             else dx = -minX;
+            dx -= g.pull;
             prevLeft = minX + dx;
             for (const p of pts) placed.push([p[0] + dx, p[1]]);
             cursor = Math.max(cursor, Math.max(...pts.map((p) => p[0])) + dx);

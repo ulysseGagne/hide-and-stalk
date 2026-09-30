@@ -212,13 +212,13 @@
     };
 
     /** The SEEK scribble, pressure and all. */
-    const scribble = (svg, box, o = {}) => ink(svg, Ink.pencilScribble(box.x + 4, box.y - 2, box.w - 6, box.h + 4, { seed: o.seed ?? "p1", passes: o.passes ?? 3, weight: o.weight ?? box.h * 0.22, overshoot: o.overshoot }));
+    const scribble = (svg, box, o = {}) => ink(svg, Ink.pencilScribble(box.x + 4, box.y - 2, box.w - 6, box.h + 4, { seed: o.seed ?? "p1", passes: o.passes ?? 3, weight: o.weight ?? box.h * 0.22, overshoot: o.overshoot, even: o.even }));
 
     /** STALK as in L1 or L8 (the plain scrawl), drawn at the origin, to be placed. */
     const scrawl = (svg, o = {}) => ink(svg, Ink.write(o.text ?? "STALK", { x: 0, y: 0, size: o.size ?? 84, weight: (o.size ?? 84) * 0.18, seed: o.seed ?? "L1s", mess: o.mess ?? 0.45, tilt: o.tilt ?? -2, spacing: 0.12 }).svg);
 
     /** STALK with its letters tucked together, drawn at the origin, to be placed. */
-    const tucked = (svg, o = {}) => ink(svg, Ink.tuck(o.text ?? "STALK", { size: o.size ?? 84, seed: o.seed ?? "t1", sizeVar: o.sizeVar, riseVar: o.riseVar, sizes: o.sizes, rises: o.rises, tilt: o.tilt ?? -3, mess: o.mess ?? 0.45, gap: o.gap, spin: o.spin, overshoot: o.overshoot }).svg);
+    const tucked = (svg, o = {}) => ink(svg, Ink.tuck(o.text ?? "STALK", { size: o.size ?? 84, seed: o.seed ?? "t1", sizeVar: o.sizeVar, riseVar: o.riseVar, sizes: o.sizes, rises: o.rises, tilt: o.tilt ?? -3, mess: o.mess ?? 0.45, gap: o.gap, spin: o.spin, overshoot: o.overshoot, weights: o.weights, pulls: o.pulls }).svg);
 
     /** One typeset word at whatever size makes it exactly `width` wide. */
     function fitWord(svg, text, x, top, width, o = {}) {
@@ -416,10 +416,10 @@
     const S13 = { seed: "w13" };
     Object.assign(LOCKUPS, {
         "13.1"(svg) {
-            lockup(svg, (s, k) => round(s, k, { seed: "r131" }), (s) => wild(s, S13));
+            lockup(svg, (s, k) => round(s, k, { seed: "r131", weight: 0.16 }), (s) => wild(s, S13));
         },
         "13.2"(svg) {
-            lockup(svg, (s, k) => round(s, k, { seed: "r132", round: [0.7, 1] }), (s) => wild(s, S13));
+            lockup(svg, (s, k) => round(s, k, { seed: "r132", round: [0.7, 1], weight: 0.16 }), (s) => wild(s, S13));
         },
         "13.3"(svg) {
             lockup(svg, (s, k) => round(s, k, { seed: "r133", round: [0.1, 0.9], fly: 0.45 }), (s) => wild(s, S13));
@@ -436,8 +436,8 @@
     });
 
     /** An earlier STALK (plain scrawl), pushed up the band, gaps made even. */
-    const loose = (svg, o) => ink(svg, Ink.write("STALK", { x: 0, y: 0, size: o.size ?? 78, weight: (o.size ?? 78) * 0.18, seed: o.seed, mess: o.mess ?? 1.15, tilt: o.tilt ?? -3, spacing: 0.15, even: true }).svg);
-    const R14 = (s, k) => round(s, k, { seed: "r131" });
+    const loose = (svg, o) => ink(svg, Ink.write("STALK", { x: 0, y: 0, size: o.size ?? 78, weight: (o.size ?? 78) * 0.18, seed: o.seed, mess: o.mess ?? 1.15, tilt: o.tilt ?? -3, spacing: o.spacing ?? 0.15, even: true }).svg);
+    const R14 = (s, k) => round(s, k, { seed: "r131", weight: 0.16 });
     Object.assign(LOCKUPS, {
         // L1.3's STALK, wilder, even gaps.
         "14.1"(svg) {
@@ -445,7 +445,7 @@
         },
         // L3.1's STALK, under SEEK instead of over it.
         "14.2"(svg) {
-            lockup(svg, R14, (s) => loose(s, { seed: "L3s", size: 84, tilt: -8, mess: 1.1 }), { at: 0.06 });
+            lockup(svg, R14, (s) => loose(s, { seed: "L3s", size: 84, tilt: -8, mess: 1.1, spacing: 0.05 }), { at: 0.08 });
         },
         // Tucked, letters close to one size.
         "14.3"(svg) {
@@ -453,7 +453,7 @@
         },
         // Tucked, the K pulled in against the L.
         "14.4"(svg) {
-            lockup(svg, R14, (s) => wild(s, { seed: "w144", sizes: [1.06, 0.94, 1.02, 0.96, 0.9], rises: [0.02, -0.02, 0.03, 0, 0.16], gap: 0 }));
+            lockup(svg, R14, (s) => wild(s, { seed: "w144", sizes: [1.06, 0.94, 1.02, 0.96, 0.9], rises: [0.14, -0.02, 0.03, 0, 0.16], gap: 0, pulls: [0, 0, 0, 0, 0.05] }));
         },
         // Tucked, top of the band: more lean, overshooting strokes.
         "14.5"(svg) {
@@ -507,9 +507,9 @@
             const hide = fitWord(svg, "HIDE", x, 56, TW);
             const and = fitWord(svg, "AND", x, hide.base + 14, TW);
             const seek = fitWord(svg, "SEEK", x, and.base + 14, TW);
-            const m = scribble(svg, seek, { seed: "p71" });
+            const m = scribble(svg, seek, { seed: "p71", even: true });
             const b = m.getBBox();
-            place(wild(svg, { seed: "w143", size: 60 }), { top: b.y + b.height + 16, cx: W / 2 });
+            place(wild(svg, { seed: "w143", size: 60, weights: [1, 1, 1, 1, 1.3] }), { top: b.y + b.height + 16, cx: W / 2 });
         },
         // The app icon: H & in type, S by hand at the H's height, even gaps.
         "12.2"(svg, W) {

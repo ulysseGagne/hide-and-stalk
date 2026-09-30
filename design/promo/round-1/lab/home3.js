@@ -223,22 +223,26 @@
         ["#fff", "#000", FONT, 400],
         ["#000", "#fff", "'Courier New', monospace", 700],
     ];
-    function cutouts(text, { width, size, seed }) {
+    function cutouts(text, { width, size, seed, alt }) {
         // Shrink until the longest word fits on a line of its own.
         for (let k = 0; k < 30; k++) {
-            const c = cutoutsAt(text, { width, size, seed });
+            const c = cutoutsAt(text, { width, size, seed, alt });
             if (c.w <= width + 1) return c;
             size *= 0.94;
         }
-        return cutoutsAt(text, { width, size, seed });
+        return cutoutsAt(text, { width, size, seed, alt });
     }
-    function cutoutsAt(text, { width, size, seed }) {
+    function cutoutsAt(text, { width, size, seed, alt }) {
         const r = Ink.rng(seed ?? text);
+        // alt: black and white letters take turns, never two of a kind side by side.
+        const DARK = CUTS.filter((c) => c[0] === "#000");
+        const LIGHT = CUTS.filter((c) => c[0] === "#fff");
+        let n = r() < 0.5 ? 0 : 1;
         const words = text.split(" ").map((wd) =>
             [...wd].map((ch) => {
-                const [bg, fg, font, wt] = r.pick(CUTS);
+                const [bg, fg, font, wt] = alt ? r.pick(n++ % 2 ? DARK : LIGHT) : r.pick(CUTS);
                 const sz = size * r.range(0.82, 1.16);
-                return { ch, bg, fg, font, wt, sz, w: textW(ch, sz, wt, font) + 10, rot: r.range(-7, 7), dy: r.range(-4, 4) };
+                return { ch, bg, fg, font, wt, sz, w: textW(ch, sz, wt, font) + Math.max(6, sz * 0.34), rot: r.range(-7, 7), dy: r.range(-4, 4) };
             }),
         );
         const lines = [[]];
@@ -273,10 +277,10 @@
     }
 
     /** The ransom note: a card of cut-out letters. */
-    function ransom(s, { x, y, w = 170, rot = 0, text, size = 24, seed }) {
+    function ransom(s, { x, y, w = 170, rot = 0, text, size = 24, seed, alt }) {
         const pad = 16;
         const inner = w - pad * 2 - LW * 2;
-        const c = cutouts(text, { width: inner, size, seed });
+        const c = cutouts(text, { width: inner, size, seed, alt });
         const h = c.h + pad * 2 + LW * 2 + 2;
         const html = `<div style="${BOX};width:${w}px;height:${h}px;position:relative"><div style="position:absolute;left:${pad}px;top:${pad + 2}px;width:${inner}px">${c.html}</div></div>`;
         return s.add(html, { x, y, w, h, rot });
@@ -363,8 +367,8 @@
         }, 210),
         // A card and the ransom note.
         32: home((s) => {
-            const a = card(s, { x: 28, y: 14, w: 162, rot: -4, q: Q.green, answer: "YES" });
-            const b = ransom(s, { x: 206, y: 40, w: 136, rot: 5, text: "I SEE YOU", size: 21, seed: "h32" });
+            const a = card(s, { x: 28, y: 14, w: 146, rot: -4, q: Q.green, answer: "YES" });
+            const b = ransom(s, { x: 188, y: 34, w: 162, rot: 5, text: "GETTING CLOSER", size: 21, seed: "h32", alt: true });
             pair(s, a, b);
         }, 200),
         // The profile and a post-it with a question mark.
@@ -397,8 +401,8 @@
         }, 200),
         // The ransom note and a photo.
         37: home((s) => {
-            const a = ransom(s, { x: 30, y: 34, w: 156, rot: -5, text: "SAY CHEESE", size: 26, seed: "h37" });
-            const b = photo(s, { x: 206, y: 10, w: 132, rot: 5, scene: "sit", caption: "PLACE TO SIT" });
+            const a = ransom(s, { x: 28, y: 30, w: 168, rot: -5, text: "COMING FOR YOU", size: 22, seed: "h37", alt: true });
+            const b = photo(s, { x: 212, y: 10, w: 124, rot: 5, scene: "sit", caption: "PLACE TO SIT" });
             pair(s, a, b);
         }, 200),
         // The file and a post-it.
@@ -457,7 +461,7 @@
             const a = card(s, { x: 28, y: 26, w: 140, rot: -4, q: Q.ns, answer: "NORTH" });
             const b = photo(s, { x: 234, y: 20, w: 110, rot: 5, scene: "sit", caption: "PLACE TO SIT" });
             const p = postit(s, { x: 32, y: 336, w: 100, rot: -5, text: "NOT WITHIN 500 M", size: 17 });
-            const r = ransom(s, { x: 194, y: 346, w: 146, rot: 4, text: "I SEE YOU", size: 20, seed: "b25" });
+            const r = ransom(s, { x: 182, y: 340, w: 162, rot: 4, text: "GETTING CLOSER", size: 19, seed: "b25", alt: true });
             s.link(s.pin(a, 0.92, 0.93), c[0], { sag: 2 });
             s.link(s.pin(b, 0.1, 0.97), c[1], { sag: 2 });
             s.link(s.pin(p, 0.9, 0.08), c[2], { sag: 2 });
@@ -493,7 +497,7 @@
             const a = card(s, { x: 28, y: 22, w: 136, rot: -4, q: Q.ns, answer: "NORTH" });
             const ph = photo(s, { x: 240, y: 20, w: 100, rot: 5, scene: "sit", caption: "PLACE TO SIT" });
             const p = postit(s, { x: 30, y: 196, w: 80, rot: -6, text: "COFFEE?", size: 15 });
-            const r = ransom(s, { x: 30, y: 344, w: 140, rot: -3, text: "I SEE YOU", size: 19, seed: "b28" });
+            const r = ransom(s, { x: 28, y: 336, w: 160, rot: -3, text: "COMING FOR YOU", size: 18, seed: "b28", alt: true });
             const b = card(s, { x: 206, y: 334, w: 136, rot: 4, q: Q.io, answer: "OUTSIDE" });
             s.link(s.pin(a, 0.92, 0.93), c[0], { sag: 2 });
             s.link(s.pin(ph, 0.1, 0.96), c[1], { sag: 2 });
@@ -507,14 +511,16 @@
     // -----------------------------------------------------------------
     // What the ransom note says (C01-C12): just the note
     // -----------------------------------------------------------------
-    const NOTES = ["I SEE YOU", "FOUND YOU", "READY OR NOT", "NOT FAR NOW", "GETTING WARMER", "I'M CLOSE", "NOWHERE TO HIDE", "LOOK BEHIND YOU", "COMING FOR YOU", "I KNOW WHERE YOU ARE", "SAY CHEESE", "RUN"];
+    const NOTES = ["I SEE YOU", "FOUND YOU", "READY OR NOT", "NOT FAR NOW", "GETTING WARMER", "I'M CLOSE", "NOWHERE TO HIDE", "LOOK BEHIND YOU", "COMING FOR YOU", "I KNOW WHERE YOU ARE", "SAY CHEESE", "RUN",
+        // Second round (C13-C18): the letters alternate black and white.
+        "GETTING CLOSER", "GETTING WARMER", "COMING FOR YOU", "BEHIND YOU", "NOWHERE TO GO", "WARMER"];
     window.Home3 = {
         NOTES,
         async note(root, v) {
             root.style.background = "#fff";
             root.style.position = "relative";
             const s = surface(root, 375, 300);
-            const it = ransom(s, { x: 62, y: 50, w: 250, rot: -3, text: NOTES[v - 1], size: 30, seed: `c${v}` });
+            const it = ransom(s, { x: 62, y: 50, w: 250, rot: -3, text: NOTES[v - 1], size: 30, seed: `c${v}`, alt: v > 12 });
             s.pin(it, 0.5, 0.07);
             s.done();
         },
