@@ -16,7 +16,7 @@ work it out (`key` < `info` < `aside` < `vibe`; bigger text leans wilder).
 `write()` and `note()` use it whenever no explicit `mess` is given.
 
 Gallery (all images, with Keep + notes): https://claude.ai/artifact/He5TXmq1iCTb7XiyVuGYRk
-(the up-to-date one, version 10, Sept 30, on the ugagne08 login). Color Map
+(the up-to-date one, version 12, Sept 30, on the ugagne08 login). Color Map
 Editor: https://claude.ai/artifact/Y6kmr77pJjn1JwPpUyfp9n (same login). Older
 galleries: https://claude.ai/artifact/6LoZgEJAQMzaR6Z6AintGP (version 14, the
 other login) and https://claude.ai/artifact/LdRszjr2qKJ9ckB1ZLNKgJ (this
@@ -36,8 +36,11 @@ republish after every change they might want to see.
   notification arrow R10.3; on every map, everyone else is one of B29's
   pushpins with no name (a tap shows it above the pin: Tp, Tp.1, N3a.1) and
   YOU is Yp, Yn's arrow in the pin's look (`youMark(..., "p")`); its shine is
-  open: the oval (p, on the maps) or p.1-p.5 (line, triangle, blade, fold,
-  two strokes). The map is
+  down to a blade, a point near the tip and wide toward the back: p.6, p.7
+  (further down, short of the back edge) or p.8 (into it). The maps still show
+  the oval (p) until the user picks. The café pin in the same look is open
+  too: `Ink.glossPin`, six ways (G1-G6, `GPINS` in `lab/maps2.js`; N08b has
+  G1 on the map). The hints layer is N3a (N2a dropped). The map is
   S20, decided: every road and path OpenStreetMap has (tunnels never), the
   key's areas, streets and buildings solid black, woods in close dots, grass
   in sparse ones, the stadium and track hatched; S20a, S20b, S20c are the
@@ -142,9 +145,11 @@ node tools/shoot-lab.mjs osmkey 4 4 375 640 K  # K04, the key's legend, fourth p
 node tools/shoot-lab.mjs skin 31.23a,31.23b,31.23c 0 375 812 S  # S20, the map: whole campus, a few blocks, a few buildings
 node tools/shoot-lab.mjs skin 30.03a,31.22a,31.22b 0 375 812 S  # retired: the key map, and S21 (only the editor's roads)
 node tools/shoot-lab.mjs hint 2a,3a 0 375 812 N  # the hints layer, on S20
-node tools/shoot-lab.mjs map2 3a.1,08,08a,08.2a,10.1,11,13,15 0 375 812 N  # a player tapped, and the question screens, on S20
+node tools/shoot-lab.mjs map2 3a.1,08,08a,08b,08.2a,10.1,11,13,15 0 375 812 N  # a player tapped, and the question screens, on S20
 node tools/shoot-lab.mjs tags p,p.1 0 240 175 T  # Tp, Tp.1: everyone else as B29's pushpin, and tapped
-node tools/shoot-lab.mjs you p,p.1,p.2,p.3,p.4,p.5 0 240 175 Y  # YOU's shine six ways, 3x: oval (on the maps), line, triangle, blade, fold, two strokes
+node tools/shoot-lab.mjs you p.6,p.7,p.8 0 240 175 Y  # YOU's shine, 3x: the blade, further down, into the back edge (p to p.5 retired)
+node tools/shoot-lab.mjs gpin 1,2,3,4,5,6 0 240 175 G  # G1-G6: the café map pin in the pins' look, 3x
+node tools/shoot-lab.mjs welcome 54.1b1,54.1b2,54.1b3 0 375 812 W  # W54.1b with the whole board shrunk: 85%, 75%, 65%
 node tools/shoot-app.mjs e                     # E-01 ... E-24b (needs app/bench.svg: node tools/export-bench.mjs)
 node tools/export-key-editor.mjs               # key-editor/ways.json, for the Color Map Editor
 node tools/bake-key-overrides.mjs <dir>        # the editor's choices -> lab/data/key-overrides.json

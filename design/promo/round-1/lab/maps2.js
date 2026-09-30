@@ -273,6 +273,8 @@
         "3a.1": { tapped: "camille" },
         // N08 with the map pins filled in, the dot a hole; and a café tapped.
         "8a": { pins: "filled" },
+        // N08 with the glossy map pin (G1: the pins' look, the map through its hole).
+        "8b": { pins: "gloss", gloss: 1 },
         "8.2a": { pins: "filled", popup: true },
     };
 
@@ -345,7 +347,7 @@
         // The question on the table, and only that, in red.
         const q = o.ask;
         // A pin on an exact spot: the map pin's point, or B29's pushpin centred on it.
-        const pinAt = (x, y, size, seed) => (o.pins === "push" ? Ink.pin(x, y, { size: size * 0.55 }) : Ink.mapPin(x, y, { size, seed, color: R, fill: o.pins === "filled" }));
+        const pinAt = (x, y, size, seed) => (o.pins === "push" ? Ink.pin(x, y, { size: size * 0.55 }) : o.pins === "gloss" ? Ink.glossPin(x, y, { size, seed, ...GPINS[o.gloss ?? 1] }) : Ink.mapPin(x, y, { size, seed, color: R, fill: o.pins === "filled" }));
         let popup = "";
         if (q) {
             const who = g.pos[q.by];
@@ -584,7 +586,8 @@
             // uneven, as the pin's is), and its white shine, kept inside the
             // arrow. p: an oval streak along the left side; p.1 a straight
             // line; p.2 a small triangle, a facet at the front; p.3 a blade
-            // along the left edge; p.4 the fold down the middle; p.5 two strokes.
+            // along the left edge; p.4 the fold down the middle; p.5 two strokes;
+            // p.6 the blade turned around; p.7 and p.8 that, further down.
             const n = Ink.noise1(Ink.rng(`yp${Math.round(x)},${Math.round(y)}`));
             const ring = [];
             pts.forEach((q, i) => {
@@ -623,10 +626,31 @@
                 "p.3": tri(inset(0.18, 1.8), inset(0.66, 1.8), inset(0.27, 4.4)),
                 "p.4": line([-0.9, -15.6], lerp(T, N, 0.75).map((v, i) => (i ? v : v - 0.9)), 1.9),
                 "p.5": line(inset(0.24, 2.2), inset(0.5, 2.2), 1.9) + line(inset(0.4, 4.6), inset(0.52, 4.6), 1.9),
+                // p.3 turned around: widest toward the back, a point toward the tip.
+                "p.6": tri(inset(0.14, 1.8), inset(0.66, 1.8), inset(0.56, 4.4)),
+                // p.6 further down: stopping about 2 px short of the back edge (p.7),
+                // or running into it, cut by the edge itself (p.8).
+                "p.7": tri(inset(0.14, 1.8), inset(0.86, 1.8), inset(0.76, 4.6)),
+                "p.8": tri(inset(0.14, 1.8), inset(1.08, 1.8), inset(0.9, 5.6)),
             }[kind];
-            return `<defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="${R}" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/><g clip-path="url(#${id})">${shine}</g>`;
+            return `<defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="${R}"/><g clip-path="url(#${id})">${shine}</g><path d="${d}" fill="none" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/>`;
         }
         return `<polygon points="${poly}" fill="#000" stroke="#fff" stroke-width="5" stroke-linejoin="round" paint-order="stroke"/>`;
+    }
+
+    // The map pin in the pins' look, six ways (Ink.glossPin): G1 ... G6.
+    const GPINS = {
+        1: { dot: "cut", shine: "oval" },
+        2: { dot: "none", shine: "oval" },
+        3: { dot: "white", shine: "oval" },
+        4: { dot: "cut", shine: "arc" },
+        5: { dot: "cut", shine: "blade" },
+        6: { dot: "none", shine: "line" },
+    };
+    /** One glossy map pin alone, enlarged 3x: its point near the bottom. */
+    function pinOnly(root, code) {
+        root.style.background = "#fff";
+        root.innerHTML = `<svg width="240" height="175" style="position:absolute;left:0;top:0;overflow:visible"><g transform="translate(120 140) scale(3)">${Ink.glossPin(0, 0, { size: 13, seed: `g${code}`, ...GPINS[code] })}</g></svg>`;
     }
 
     /** YOU alone, enlarged (3x, same proportions), to compare the shines: p, p.1 ... p.5. */
@@ -642,5 +666,5 @@
         root.innerHTML = `<svg width="240" height="175" style="position:absolute;left:0;top:0;overflow:visible">${inner}</svg>`;
     }
 
-    window.Maps2 = { tagsOnly, youOnly, list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, drawHint, SKIN_LIST };
+    window.Maps2 = { tagsOnly, youOnly, pinOnly, list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, drawHint, SKIN_LIST };
 })();

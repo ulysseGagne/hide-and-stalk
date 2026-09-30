@@ -817,6 +817,28 @@
             await K().settle(root);
         };
     }
+    /** W54.1b's title (the lockup centred), and B29 (rows 30 px apart) drawn at full size, then scaled down whole. */
+    function homeShrunk({ k, y = 44, shrink }) {
+        return async (root) => {
+            root.style.background = "#fff";
+            const t = titleLines(root, k, y, { block: true });
+            const host = document.createElement("div");
+            host.style.cssText = `position:absolute;left:0;top:0;width:${W}px;height:480px;z-index:20;transform-origin:0 0`;
+            root.appendChild(host);
+            const s = surface(host, W, 480);
+            b29(s, tight);
+            s.done();
+            host.style.background = "transparent";
+            // The pieces' own box, then centred across and in the room under the title.
+            const xs = s.items.flatMap((it) => it.poly.map((q) => q[0]));
+            const ys = s.items.flatMap((it) => it.poly.map((q) => q[1]));
+            const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+            const below = t[2][1];
+            const gap = (H - below - (y1 - y0) * shrink) / 2;
+            host.style.transform = `translate(${W / 2 - ((x0 + x1) / 2) * shrink}px,${below + gap - y0 * shrink}px) scale(${shrink})`;
+            await K().settle(root);
+        };
+    }
     // The home screen in two steps. First the title alone, as the app opens;
     // then the board, under the app's own header, and LET ME IN.
     function step2() {
@@ -858,6 +880,12 @@
         "54.1d": home7({ k: 0.88, y: 76, place: { ...tight, dy: under(0.88, 76, -20) }, tuck: true }),
         // e: a with LET ME IN; the title smaller.
         "54.1e": home7({ k: 0.63, y: 50, btn: true, place: { ...tight, dy: under(0.63, 50) } }),
+        // b1-b3: W54.1b with the whole board shrunk, as it is (pieces, strings,
+        // pins and line weights together), centred under the title with equal
+        // room above and below it: 85%, 75%, 65%.
+        "54.1b1": homeShrunk({ k: 0.93, shrink: 0.85 }),
+        "54.1b2": homeShrunk({ k: 0.93, shrink: 0.75 }),
+        "54.1b3": homeShrunk({ k: 0.93, shrink: 0.65 }),
         // W55: two steps. 1: the title alone, as the app opens.
         55.1: async (root) => {
             root.style.background = "#fff";

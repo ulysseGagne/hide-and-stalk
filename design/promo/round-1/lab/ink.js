@@ -877,6 +877,54 @@
 
     /** A check mark done fast and big: a hooked start, a heavy bottom, a long leg flung past the top. */
     /**
+     * The map pin in B29's pushpin look: the pin's red, a thin black edge a
+     * touch uneven, a white shine. The point sits exactly on the spot.
+     *   dot:   "cut" a hole the map shows through (ringed by the edge),
+     *          "white" a white dot, "none"
+     *   shine: "oval" (the pushpin's), "arc" round the head, "blade" down the
+     *          left side, "line" along it, "none"
+     */
+    function glossPin(x, y, o = {}) {
+        const s = o.size ?? 16;
+        const r = rng(o.seed ?? `gp${Math.round(x)},${Math.round(y)}`);
+        const n = noise1(r);
+        const R = s * 0.6;
+        const cy = y - s * 1.4;
+        const alpha = Math.acos(R / (s * 1.4));
+        const loop = [[x, y]];
+        for (let i = 0; i <= 36; i++) {
+            const f = Math.PI / 2 + alpha + (i / 36) * (2 * Math.PI - 2 * alpha);
+            // A touch uneven, slowly: no bumps.
+            const k = R * (1 + n(i * 0.22) * 0.025);
+            loop.push([x + Math.cos(f) * k, cy + Math.sin(f) * k]);
+        }
+        const d = (pts) => `M${pts.map((p) => `${p[0].toFixed(2)} ${p[1].toFixed(2)}`).join("L")}Z`;
+        const circ = (cx0, cy0, rr, m = 18) => Array.from({ length: m }, (_, i) => [cx0 + Math.cos((-i / m) * Math.PI * 2) * rr, cy0 + Math.sin((-i / m) * Math.PI * 2) * rr]);
+        const dot = o.dot ?? "cut";
+        const hole = dot === "cut" ? d(circ(x, cy, s * 0.22)) : "";
+        const id = `gp${Math.round(x * 10)}x${Math.round(y * 10)}`;
+        const white = "#fff";
+        const W = Math.max(1.2, s * 0.1);
+        // Shine in the head's upper left, or down the left side toward the point.
+        const left = [x + Math.cos(Math.PI / 2 + alpha) * R, cy + Math.sin(Math.PI / 2 + alpha) * R];
+        const along = (t, k) => [left[0] + (x - left[0]) * t + k * 0.94, left[1] + (y - left[1]) * t - k * 0.34];
+        const arc = (a0, a1, rr) => {
+            const p0 = [x + Math.cos(a0) * rr, cy + Math.sin(a0) * rr];
+            const p1 = [x + Math.cos(a1) * rr, cy + Math.sin(a1) * rr];
+            return `<path d="M${p0[0].toFixed(2)} ${p0[1].toFixed(2)}A${rr} ${rr} 0 0 1 ${p1[0].toFixed(2)} ${p1[1].toFixed(2)}" stroke="${white}" stroke-width="${W.toFixed(2)}" stroke-linecap="round" fill="none"/>`;
+        };
+        const shine = {
+            oval: `<ellipse cx="${(x - R * 0.36).toFixed(2)}" cy="${(cy - R * 0.4).toFixed(2)}" rx="${(R * 0.34).toFixed(2)}" ry="${(R * 0.2).toFixed(2)}" fill="${white}" transform="rotate(-35 ${(x - R * 0.36).toFixed(2)} ${(cy - R * 0.4).toFixed(2)})"/>`,
+            arc: arc((200 * Math.PI) / 180, (262 * Math.PI) / 180, R * 0.7),
+            blade: `<path d="${d([along(0.06, 1.4), along(0.7, 1.2), along(0.16, 3.6)])}" fill="${white}"/>`,
+            line: `<path d="M${along(0.08, 2).map((v) => v.toFixed(2)).join(" ")}L${along(0.58, 1.6).map((v) => v.toFixed(2)).join(" ")}" stroke="${white}" stroke-width="${(W * 0.9).toFixed(2)}" stroke-linecap="round" fill="none"/>`,
+            none: "",
+        }[o.shine ?? "oval"];
+        const whiteDot = dot === "white" ? `<circle cx="${x}" cy="${cy.toFixed(2)}" r="${(s * 0.22).toFixed(2)}" fill="${white}" stroke="#000" stroke-width="${Math.max(1, s * 0.09).toFixed(2)}"/>` : "";
+        return `<g><defs><clipPath id="${id}"><path d="${d(loop)}"/></clipPath></defs><path d="${d(loop)}${hole}" fill="${o.color ?? RED}" fill-rule="evenodd" stroke="#000" stroke-width="${Math.max(1, s * 0.1).toFixed(2)}" stroke-linejoin="round"/>${whiteDot}<g clip-path="url(#${id})">${shine}</g></g>`;
+    }
+
+    /**
      * A tick with a sharp corner, one filled shape: a short arm that thickens
      * down into a mitred point, and a long arm that leaves it at full width
      * and narrows to a point. Each side wobbles a little by hand; the corner
@@ -1362,6 +1410,7 @@
         stubArrow,
         bigCheck,
         sharpCheck,
+        glossPin,
         mapPin,
         tuck,
         blackout,
