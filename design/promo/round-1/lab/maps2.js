@@ -117,7 +117,14 @@
         datadotsclean: { look: "dots", drop: "detail", prune: 60 },
         // Revived from the tile days, redrawn from the data.
         datablackroads: "blackroads", datablackdots: "blackdots", datafigure: "figure",
+        // The three looks left (S11, S20, S14), showing only what the key keeps.
+        dataoutlinekey: { look: "outline", key: 3 }, datablackdotskey: { look: "blackdots", key: 3 }, datadotskey: { look: "dots", key: 3 },
+        // The key's fourth pass, and S20 drawn with it (hand edits from the key editor included).
+        datakey4: "key4", datablackdotskey4: { look: "blackdots", key: 4 },
     };
+    // The map under every screen that doesn't name its own skin (the hints
+    // layer, the questions): S20, picked, with the key's rules.
+    const MAP_SKIN = "datablackdotskey4";
 
     // The app around the map (direction E): header with MAP open, the question box.
     function chrome(box) {
@@ -182,6 +189,12 @@
         }
         if (part === "lead") return moved ? `<div style="position:absolute;left:${x - 1.5}px;top:${top + h}px;width:3px;height:${y - top - h}px;background:#000;box-shadow:0 0 0 2px #fff"></div>` : "";
         const dark = TAGS === "ink" ? !self : self;
+        // A white tag is one outlined shape, box and pointer together (Ta's
+        // bubble): no filled triangle under a white box.
+        if (TAGS === "base" && !dark && !moved) {
+            const bb = bubble(x, y, label, w, h);
+            return `<svg width="${W}" height="${H}" style="position:absolute;left:0;top:0;overflow:visible"><path d="M${bb.pts.map((p) => p.join(" ")).join("L")}Z" fill="#fff" stroke="#000" stroke-width="3" stroke-linejoin="miter"/>${tagText(bb.cx, bb.cy, label)}</svg>`;
+        }
         // Every style but the original gets a 3px white ring, so it reads on black too.
         const ring = plain(t) ? "" : ";box-shadow:0 0 0 3px #fff";
         const border = TAGS === "ink" && self ? "border:3px solid #000;outline:3px solid #fff;box-shadow:0 0 0 6px #000,0 0 0 9px #fff" : `border:3px solid #000${ring}`;
@@ -193,9 +206,9 @@
         if (TAGS === "big" || TAGS === "sticker" || TAGS === "shadow" || moved) out += `<div style="position:absolute;left:${x - 5}px;top:${y - 5}px;width:10px;height:10px;background:#000;box-shadow:0 0 0 3px #fff"></div>`;
         return out;
     }
-    /** A player: queued, so the tags can be spread out before drawing. */
-    function tag(x, y, label, self) {
-        PENDING.push({ x, y, label, self, dy: 0 });
+    /** A player (or, with place, a landmark): queued, so the tags can be spread out before drawing. */
+    function tag(x, y, label, self, place = false) {
+        PENDING.push({ x, y, label, self, place, dy: 0 });
         return "";
     }
     /** Draw every queued tag; any that would overlap one already placed moves up. */
@@ -213,8 +226,10 @@
         }
         // Leaders first, so no line crosses over a tag. Then the tags from the
         // top of the screen down: where two overlap, the lower one is on top.
-        // YOU goes last, over everything, so it is never hidden.
-        const order = [...list].sort((a, b) => a.self - b.self || boxes.get(a).y + a.dy - (boxes.get(b).y + b.dy));
+        // A landmark's tag goes over the players'; YOU goes last, over
+        // everything, so it is never hidden.
+        const lvl = (t) => (t.self ? 2 : t.place ? 1 : 0);
+        const order = [...list].sort((a, b) => lvl(a) - lvl(b) || boxes.get(a).y + a.dy - (boxes.get(b).y + b.dy));
         for (const t of order) html += tagHtml(t, boxes.get(t), "lead");
         for (const t of order) html += tagHtml(t, boxes.get(t), "body");
         PENDING = [];
@@ -249,29 +264,35 @@
     const VARIANTS = {
         "8.1": { pins: "push" },
         "8.2": { pins: "push", popup: true },
-        "10.1": { pins: "push" },
+        // No pin: the circle is the one red thing; the landmark gets a white tag.
+        "10.1": { mark: "tag" },
+        // N08 with the map pins filled in, the dot a hole; and a café tapped.
+        "8a": { pins: "filled" },
+        "8.2a": { pins: "filled", popup: true },
     };
 
     async function draw(root, code) {
-        const v = Math.floor(code);
-        const o = { ...LIST[v - 1], ...(VARIANTS[String(code)] ?? {}) };
+        const v = parseInt(String(code), 10);
+        // "08.2a" and "8.2a" are the same variant.
+        const o = { ...LIST[v - 1], ...(VARIANTS[String(code).replace(/^0+(?=\d)/, "")] ?? {}) };
+        const skin = o.skin ?? MAP_SKIN;
         TAGS = o.tags ?? "base";
         const g = state(o.game, o.upTo);
         root.style.background = "#fff";
         root.insertAdjacentHTML("beforeend", FILTER);
         // The colour-coded key map is shown bare: the whole screen is map, no app around it.
-        const bare = ["datakey", "datakey2", "datakey3"].includes(o.skin);
+        const bare = ["datakey", "datakey2", "datakey3", "datakey4"].includes(skin);
         const mapEl = document.createElement("div");
         mapEl.style.cssText = `position:absolute;left:0;top:${bare ? 0 : HEAD}px;width:${W}px;height:${bare ? H : H - HEAD}px;z-index:0;background:#fff`;
         root.appendChild(mapEl);
         const map = L.map(mapEl, { zoomControl: false, attributionControl: true, zoomSnap: 0, fadeAnimation: false, zoomAnimation: false });
         map.attributionControl.setPrefix(false);
-        const redraw = RETRACE[o.skin];
-        const data = DATA_SKINS[o.skin];
+        const redraw = RETRACE[skin];
+        const data = DATA_SKINS[skin];
         // Redrawn tiles are stretched a pixel so no seam shows between them.
         if (redraw) mapEl.insertAdjacentHTML("beforeend", `<style>.leaflet-tile{width:${redraw.sharp ? 129 : 257}px!important;height:${redraw.sharp ? 129 : 257}px!important}</style>`);
         const tiles = data ? null : (redraw ? Retrace.layer(redraw) : L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" })).addTo(map);
-        if (tiles) mapEl.querySelector(".leaflet-tile-pane").style.filter = redraw ? redraw.filter ?? "none" : SKINS[o.skin ?? "xerox"];
+        if (tiles) mapEl.querySelector(".leaflet-tile-pane").style.filter = redraw ? redraw.filter ?? "none" : SKINS[skin];
         else map.attributionControl.addAttribution("© OpenStreetMap");
         // The whole campus, below the question box: no auto-zoom.
         const ring = Campus.layers.campus.ring;
@@ -319,7 +340,7 @@
         // The question on the table, and only that, in red.
         const q = o.ask;
         // A pin on an exact spot: the map pin's point, or B29's pushpin centred on it.
-        const pinAt = (x, y, size, seed) => (o.pins === "push" ? Ink.pin(x, y, { size: size * 0.55 }) : Ink.mapPin(x, y, { size, seed, color: R }));
+        const pinAt = (x, y, size, seed) => (o.pins === "push" ? Ink.pin(x, y, { size: size * 0.55 }) : Ink.mapPin(x, y, { size, seed, color: R, fill: o.pins === "filled" }));
         let popup = "";
         if (q) {
             const who = g.pos[q.by];
@@ -329,9 +350,9 @@
                 // little further out than EAST: its T reads closer to the line.
                 red += dashed([c[0], HEAD + 110], [c[0], H + 10], `m2d${v}`, 6.2);
                 const y = HEAD + 340;
-                const west = { size: 26, seed: `w${v}`, tilt: -3, importance: "key" };
+                const west = { size: 26, seed: `w${v}`, tilt: -3, importance: "key", weight: 26 * 0.21 };
                 red += Ink.write("WEST", { ...west, x: c[0] - 30 - Ink.write("WEST", west).width, y }).svg;
-                red += Ink.write("EAST", { x: c[0] + 28, y, size: 26, seed: `e${v}`, tilt: -3, importance: "key" }).svg;
+                red += Ink.write("EAST", { x: c[0] + 28, y, size: 26, seed: `e${v}`, tilt: -3, importance: "key", weight: 26 * 0.21 }).svg;
             } else if (q.radius) {
                 // Circles are exact (centre and radius), only drawn by hand.
                 const rp = q.radius * pxPerM;
@@ -360,7 +381,9 @@
                 const lm = Campus.at("landmarks", q.closer);
                 const [lx, ly] = P(lm);
                 const rp = dist(lm, who) * pxPerM;
-                red += Ink.ring(lx, ly, rp, { seed: `m2k${v}`, weight: 4.5 }) + pinAt(lx, ly, 15, "m2lm");
+                red += Ink.ring(lx, ly, rp, { seed: `m2k${v}`, weight: 4.5 });
+                if (o.mark === "tag") tag(lx, ly, q.closer.toUpperCase(), false, true);
+                else red += pinAt(lx, ly, 15, "m2lm");
             }
         }
 
@@ -388,14 +411,21 @@
             red += Ink.cross(e[0], e[1], 10, { seed: "m2x", weight: 5 });
         }
 
-        // People: computer-drawn name tags.
-        const me = o.view === "hider" ? null : g.me;
+        // People: everyone else gets a white tag; YOU is Yn, the red arrow that
+        // points the way your phone faces (a stalker's toward the hider, the
+        // hider's toward the closest stalker), drawn over everything.
+        const bearing = (a, b) => (turf.bearing(turf.point(a), turf.point(b)) + 360) % 360;
+        let you = "";
         if (o.view === "hider") {
             const hp = P(g.hider);
-            html += tag(hp[0], hp[1], "YOU", true);
-            for (const [n, p] of Object.entries(g.pos)) html += tag(...P(p), n.toUpperCase(), false);
+            const [, near] = Object.entries(g.pos).sort((a, b) => dist(g.hider, a[1]) - dist(g.hider, b[1]))[0];
+            you = youMark(hp[0], hp[1], "n", bearing(g.hider, near));
+            for (const [n, p] of Object.entries(g.pos)) tag(...P(p), n.toUpperCase(), false);
         } else {
-            for (const [n, p] of Object.entries(g.pos)) html += tag(...P(p), n === me ? "YOU" : n.toUpperCase(), n === me);
+            for (const [n, p] of Object.entries(g.pos)) {
+                if (n !== g.me) tag(...P(p), n.toUpperCase(), false);
+                else you = youMark(...P(p), "n", bearing(p, g.hider));
+            }
         }
 
         // Design rule: the players' names are the one thing drawn over the red.
@@ -406,6 +436,7 @@
         layer(6, html.split("<!--tags-->")[0]);
         layer(40, red, true);
         layer(50, tagsHtml);
+        layer(52, you, true);
         layer(55, popup);
         layer(60, c.html);
         layer(65, c.ink, true);
@@ -426,15 +457,15 @@
         { game: G, upTo: 2, view: "stalker", hints: { out: "delete", edge: "hand" }, box: next(3, "3:12", "The map only shows where she can be."), name: "Hints: deleted, red line by hand" },
         { game: G, upTo: 2, view: "stalker", hints: { out: "delete" }, box: next(3, "3:12", "The map only shows where she can be."), name: "Hints: deleted, no line" },
         // A question waiting: only what it needs is red; the hints step aside.
-        { game: G, upTo: 2, view: "stalker", ask: { nearest: "cafe", by: "noah_b" }, box: asked(3, "noah_b", "Which café on campus are you closest to?", "1:02"), name: "Q3 nearest café: the cafés, pinned in red (stalker)" },
-        { game: G, upTo: 2, view: "hider", ask: { nearest: "cafe", by: "noah_b" }, box: asked(3, "noah_b", "Which café on campus are you closest to?", "1:02"), name: "Same question, the hider's map" },
-        { game: G, upTo: 3, view: "stalker", ask: { closer: "greenhouses", by: "noah_b" }, box: asked(4, "noah_b", "Are you closer to the greenhouses than I am?", "0:48"), name: "Q4 closer than me: the circle through noah_b" },
+        { game: G, upTo: 2, view: "stalker", ask: { nearest: "cafe", by: "noah" }, box: asked(3, "noah", "Which café on campus are you closest to?", "1:02"), name: "Q3 nearest café: the cafés, pinned in red (stalker)" },
+        { game: G, upTo: 2, view: "hider", ask: { nearest: "cafe", by: "noah" }, box: asked(3, "noah", "Which café on campus are you closest to?", "1:02"), name: "Same question, the hider's map" },
+        { game: G, upTo: 3, view: "stalker", ask: { closer: "greenhouses", by: "noah" }, box: asked(4, "noah", "Are you closer to the greenhouses than I am?", "0:48"), name: "Q4 closer than me: the circle through noah" },
         { game: G, upTo: 4, view: "stalker", ask: { ew: true, by: "camille" }, box: asked(5, "camille", "Are you east or west of me?", "2:40"), name: "Q5 east or west: the line, which side is which" },
         { game: G, upTo: 4, view: "hider", ask: { ew: true, by: "camille" }, box: asked(5, "camille", "Are you east or west of me?", "2:40"), name: "Same question, the hider's map" },
         { game: "pubu", upTo: 3, view: "stalker", ask: { radius: 200, by: "lea" }, box: asked(4, "lea", "Are you within 200 m of me?", "4:05"), name: "Game 2, within 200 m: the circle (stalker)" },
         { game: "pubu", upTo: 3, view: "hider", ask: { radius: 200, by: "lea" }, box: asked(4, "lea", "Are you within 200 m of me?", "4:05"), name: "Same question, the hider's map" },
         // The hider between questions: one string, to the closest stalker.
-        { game: G, upTo: 2, view: "hider", tether: true, box: next(3, "3:12", "Closest stalker, as the crow flies."), name: "Hider between questions: one string, the closest stalker" },
+        { game: G, upTo: 2, view: "hider", tether: true, box: next(3, "3:12"), name: "Hider between questions: one string, the closest stalker" },
         // For the receipt: her walk, and where they got her.
         { game: G, upTo: 4, view: "hider", path: true, box: { kicker: "FOUND · 13:32", text: "Your walk, from the start to the X." }, name: "For the receipt: her walk, the X where they found her" },
         // The skins, on the same moment (nothing waiting, no hints): just the map and the players.
@@ -448,7 +479,7 @@
     // Skin samples: every skin at three zoom levels (a: whole campus, b: a few buildings, c: close up).
     const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold", "dotsonly", "tone", "tonelight", "tonegrey", "dotsclean", "streetsclean", "grainclean", "grainnotext", "blackbuildings"];
     // Variants numbered after the skin they come from.
-    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "27.1": "grainsamegreen", "27.2": "grainlightgreen", "1.1": "xeroxnotext", "2.1": "xeroxdarknotext", "11.1": "greynotext", "27.3": "grainreorder", "27.4": "grainshift", "2.2": "xeroxsolid", "16.2": "vector16", "16.3": "vector161", "16.31": "vector161s", "16.32": "vector161ss", "16.4": "vector16g", "24.1": "dotsgreen", "30.2": "dataoutline", "30.3": "datasolid", "30.9": "datagrain", "30.5": "datadots", "30.0": "datakey", "30.01": "datakey2", "30.02": "datakey3", "30.21": "dataoutlinenopaths", "30.22": "dataoutlinepruned", "30.23": "dataoutlineclean", "30.51": "datadotsclean", "31.1": "datablackroads", "31.2": "datablackdots", "31.3": "datafigure" };
+    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "27.1": "grainsamegreen", "27.2": "grainlightgreen", "1.1": "xeroxnotext", "2.1": "xeroxdarknotext", "11.1": "greynotext", "27.3": "grainreorder", "27.4": "grainshift", "2.2": "xeroxsolid", "16.2": "vector16", "16.3": "vector161", "16.31": "vector161s", "16.32": "vector161ss", "16.4": "vector16g", "24.1": "dotsgreen", "30.2": "dataoutline", "30.3": "datasolid", "30.9": "datagrain", "30.5": "datadots", "30.0": "datakey", "30.01": "datakey2", "30.02": "datakey3", "30.21": "dataoutlinenopaths", "30.22": "dataoutlinepruned", "30.23": "dataoutlineclean", "30.51": "datadotsclean", "31.1": "datablackroads", "31.2": "datablackdots", "31.3": "datafigure", "30.24": "dataoutlinekey", "31.21": "datablackdotskey", "30.52": "datadotskey", "30.03": "datakey4", "31.22": "datablackdotskey4" };
     const ZOOMS = { a: null, b: 16.6, c: 18.2 };
     function drawSkin(root, code) {
         const [, n, z] = /^([\d.]+)([abc])$/.exec(code);
@@ -456,13 +487,13 @@
         return draw(root, LIST.length);
     }
 
-    // The hints layer, third pass: N01-N03 only, on S16 (no text), each with
-    // the five ways of making the players visible.
+    // The hints layer, third pass: N01-N03 only, each with the five ways of
+    // making the players visible. On S20 now (it was S16, the traced tiles).
     const TAG_LIST = ["base", "big", "ink", "sticker", "shadow", "marker"];
     function drawHint(root, code) {
         const [, n, t] = /^(\d)([a-f])$/.exec(code);
         const base = LIST[Number(n) - 1];
-        LIST.push({ ...base, skin: "tracedthin", tags: TAG_LIST["abcdef".indexOf(t)] });
+        LIST.push({ ...base, skin: MAP_SKIN, tags: TAG_LIST["abcdef".indexOf(t)] });
         return draw(root, LIST.length);
     }
 

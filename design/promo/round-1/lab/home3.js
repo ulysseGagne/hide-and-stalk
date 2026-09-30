@@ -52,12 +52,14 @@
         host.insertAdjacentHTML("afterbegin", K().filters);
         const items = [];
         const strings = [];
+        const avoid = []; // what's not a piece but must stay clear: the title
         const reds = []; // red marks inside items: [x, y, r]
         const s = {
             b,
             W,
             H,
             items,
+            avoid,
             add(html, { x, y, w, h, rot = 0 }) {
                 const it = b.item(html, { x, y, w, h, rot });
                 const poly = [it.at(0, 0), it.at(1, 0), it.at(1, 1), it.at(0, 1)];
@@ -79,7 +81,7 @@
                 reds.push([x, y, r]);
             },
             done() {
-                check(items, strings, W, H);
+                check(items, strings, W, H, avoid);
                 b.done();
             },
         };
@@ -108,10 +110,11 @@
         }
         return true;
     };
-    function check(items, strings, W, H) {
+    function check(items, strings, W, H, avoid = []) {
         const near = (a, b, d) => Math.hypot(a[0] - b[0], a[1] - b[1]) < d;
         for (const [i, st] of strings.entries()) {
             for (const pt of st.pts) {
+                if (avoid.some((q) => inside(q, pt, 2))) return warn(`string ${i} crosses the title`);
                 if (near(pt, st.p, 24) || near(pt, st.q, 24)) continue;
                 for (const [j, it] of items.entries()) if (inside(it.poly, pt, 2)) return warn(`string ${i} crosses item ${j}`);
             }
@@ -122,6 +125,7 @@
         }
         for (const [i, a] of items.entries()) {
             for (const [j, c] of items.entries()) if (j > i && (a.poly.some((p) => inside(c.poly, p, 4)) || c.poly.some((p) => inside(a.poly, p, 4)))) warn(`items ${i} and ${j} overlap`);
+            if (avoid.some((q) => a.poly.some((p) => inside(q, p, 4)) || q.some((p) => inside(a.poly, p, 4)))) warn(`item ${i} overlaps the title`);
             if (a.poly.some(([x, y]) => x < 20 || y < 6 || x > W - 20 || y > H - 6)) warn(`item ${i} is off the edge`);
         }
     }
@@ -217,20 +221,23 @@
         return it;
     }
 
-    /** The file: typeset like a printout, what's not known yet blacked out. */
+    /** The file: typeset like a printout, what's not known yet blacked out. File Nº 005 is always HIDER LOCATION. */
     function file(s, { x, y, w = 170, rot = 0, rows }) {
         const bar = (n) => `<span style="display:inline-block;width:${n}px;height:11px;background:#000;vertical-align:-1px"></span>`;
         const body = rows.map(([k, v]) => `<div style="display:flex;justify-content:space-between;gap:8px;white-space:nowrap"><span>${k}</span><b>${typeof v === "number" ? bar(v) : v}</b></div>`).join("");
         const html = `<div style="${BOX};width:${w}px;padding:12px 13px 13px;font:12px/1.75 ${FONT}">
             <div style="font-size:10px;font-weight:700;letter-spacing:.14em">FILE Nº 005</div>
-            <div class="subj" style="display:inline-block;font-size:${fitSize(["SUBJECT: HIDER"], w - 32, 22)}px;font-weight:700;letter-spacing:-.01em;line-height:1.2;margin-top:4px">SUBJECT: HIDER</div>
+            <div class="subj" style="display:inline-block;font-size:${fitSize(["HIDER LOCATION"], w - 32, 22)}px;font-weight:700;letter-spacing:-.01em;line-height:1.2;margin-top:4px">HIDER LOCATION</div>
             <div style="height:${LW}px;background:#000;margin:8px 0 6px"></div>${body}</div>`;
         return s.add(html, { x, y, w, rot });
     }
 
-    /** B29's file: what's known so far, and its one red mark, 500 m underlined by hand. */
+    /**
+     * B29's file: what's known so far, and its one red mark, 500 m underlined
+     * by hand. Two lines: within 500 m and the closest café (where exactly is gone).
+     */
     function file29(s, o) {
-        const rows = [["Within <span class=\"u\">500 m</span>?", "NO"], ...ROWS.slice(2)];
+        const rows = [["Within <span class=\"u\">500 m</span>?", "NO"], ...ROWS.slice(2, 3)];
         const f = file(s, { ...o, rows });
         const u = f.el.querySelector(".u");
         let ox = 0;
@@ -276,6 +283,22 @@
         const [hx, hy] = f.at((ox + (stacked ? 2 : 4)) / f.w, (oy + hand.offsetHeight - (stacked ? 3 : 2)) / f.h);
         s.b.draw(Ink.write("NORTH", { x: hx, y: hy, size, seed: "NORTH", tilt: rot - 2, importance: "key" }).svg);
         return f;
+    }
+
+    /**
+     * B29's north-or-south card, answered the way W53's file answers it: the
+     * question in bold, NORTH big (W53's size, same seed) across the card.
+     */
+    function nsCard(s, { x, y, w = 178, rot = 0 }) {
+        const pad = 13;
+        const inner = w - pad * 2 - LW * 2;
+        const size = fitWrite("NORTH", inner, 34, { seed: "NORTH", importance: "key" });
+        const h = Math.round(LW * 2 + pad + 2 * 15 * 1.3 + 12 + size * 1.05 + pad);
+        const html = `<div style="${BOX};width:${w}px;height:${h}px;padding:${pad}px;font:700 15px/1.3 ${FONT};white-space:nowrap">Are you north or<br>south of me?</div>`;
+        const it = s.add(html, { x, y, w, h, rot });
+        const [ax, ay] = it.at((LW + pad) / w, (h - pad - 5) / h);
+        s.b.draw(Ink.write("NORTH", { x: ax, y: ay, size, seed: "NORTH", tilt: rot - 2, importance: "key" }).svg);
+        return it;
     }
 
     // Cut-out letters, laid out in lines that stay inside the note.
@@ -646,16 +669,85 @@
     // B26, final: the bench instead of the door, the north/south card instead
     // of CLOSER CLOSER CLOSER, and that answer taken off the file (it's on the
     // card now). One red mark on the file: 500 m underlined.
-    BOARDS[29] = board((s) => {
-        const f = file29(s, { x: 30, y: 30, w: 184, rot: -2.5 });
-        const pr = profile(s, { x: 246, y: 44, w: 96, rot: 5 });
-        const ph = photo(s, { x: 40, y: 262, w: 140, rot: 4, scene: "sit", caption: "PLACE TO SIT" });
-        const c = card(s, { x: 222, y: 290, w: 124, rot: -5, q: Q.ns, answer: "NORTH", square: true });
-        s.link(s.pin(f, 0.93, 0.07), s.pin(pr, 0.12, 0.05), { sag: 3 });
-        s.link(s.pin(f, 0.34, 0.96), s.pin(ph, 0.42, 0.04), { sag: 1 });
-        s.link(s.pin(pr, 0.5, 0.97), s.pin(c, 0.55, 0.06), { sag: 2 });
-    });
+    // Since W53, B29 is the source of truth, and it takes W53's pieces: the
+    // Polaroid with the coordinates, and NORTH big on the card. The file keeps
+    // two lines (within 500 m, the closest café).
+    const coords = (s, o) => photo(s, { ...o, scene: "sit", caption: "46.7797 N\n71.2756 W", bold: 1.6 });
+    /**
+     * B29's four pieces and three strings. at: where each piece goes, if not
+     * where B29 has it ({ f, pr, ph, c }: { x, y }), dy: everything moved
+     * down, pins: other pin spots.
+     */
+    function b29(s, { at = {}, dy = 0, pins = {} } = {}) {
+        const put = (o, k) => ({ ...o, ...at[k], y: (at[k]?.y ?? o.y) + dy });
+        const f = file29(s, put({ x: 30, y: 30, w: 184, rot: -2.5 }, "f"));
+        const pr = profile(s, put({ x: 246, y: 44, w: 96, rot: 5 }, "pr"));
+        const ph = coords(s, put({ x: 40, y: 262, w: 122, rot: 4 }, "ph"));
+        const c = nsCard(s, put({ x: 180, y: 312, w: 168, rot: -4 }, "c"));
+        const p = { f1: [0.93, 0.07], pr1: [0.12, 0.05], f2: [0.34, 0.96], ph: [0.42, 0.04], pr2: [0.5, 0.97], c: [0.66, 0.07], ...pins };
+        s.link(s.pin(f, ...p.f1), s.pin(pr, ...p.pr1), { sag: 3 });
+        s.link(s.pin(f, ...p.f2), s.pin(ph, ...p.ph), { sag: 1 });
+        s.link(s.pin(pr, ...p.pr2), s.pin(c, ...p.c), { sag: 2 });
+    }
+    BOARDS[29] = board((s) => b29(s));
     for (const [n, f] of Object.entries(BOARDS)) Board.extra[n] = f;
+
+    // -----------------------------------------------------------------
+    // Home screens, sixth pass (W54.1-W54.6): L16.6b and all of B29 on one
+    // screen. B29's pieces and strings as they are; the title moves around,
+    // with and without LET ME IN. The title and the button are obstacles:
+    // no piece or string may cross them (checked like the rest).
+    // -----------------------------------------------------------------
+    /** L16.6b at scale k, its box's top-left at (x, y) (x "center": centred on the screen). Returns the box. */
+    function titleBox(root, k, x, y) {
+        const NS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(NS, "svg");
+        svg.setAttribute("width", W);
+        svg.setAttribute("height", 520);
+        svg.style.cssText = "position:absolute;left:0;top:0;overflow:visible;z-index:30;transform-origin:0 0";
+        root.appendChild(svg);
+        Logo.draw(svg, FINAL, W, 520);
+        const b = svg.getBBox();
+        const left = x === "center" ? (W - b.width * k) / 2 : x;
+        svg.style.transform = `translate(${left - b.x * k}px,${y - b.y * k}px) scale(${k})`;
+        return [[left, y], [left + b.width * k, y], [left + b.width * k, y + b.height * k], [left, y + b.height * k]];
+    }
+    const box = (x, y, w, h) => [[x, y], [x + w, y], [x + w, y + h], [x, y + h]];
+    function homeBoard({ k, x = 17, y, btn = false, place }) {
+        return async (root) => {
+            root.style.background = "#fff";
+            const t = titleBox(root, k, x, y);
+            if (btn) button(root);
+            const host = document.createElement("div");
+            host.style.cssText = `position:absolute;left:0;top:0;width:${W}px;height:${H}px;z-index:20`;
+            root.appendChild(host);
+            const s = surface(host, W, H);
+            s.avoid.push(t);
+            if (btn) s.avoid.push(box(BTN.x, BTN.y, BTN.w, BTN.h));
+            b29(s, place);
+            s.done();
+            host.style.background = "transparent";
+            await K().settle(root);
+        };
+    }
+    // The middle: the file and the profile above the title, the Polaroid and
+    // the card below it, the two long strings pinned at the outer corners so
+    // they run down the sides, clear of the title.
+    const sides = { f2: [0.08, 0.96], ph: [0.14, 0.04], pr2: [0.78, 0.97], c: [0.84, 0.07] };
+    Object.assign(Welcome.extra, {
+        // The title on top, W53's way (left, a bit smaller); B29 under it, whole.
+        54.1: homeBoard({ k: 0.76, y: 52, place: { dy: 339 } }),
+        // The same with LET ME IN: the title smaller, B29's two rows closer.
+        54.2: homeBoard({ k: 0.66, y: 50, btn: true, place: { dy: 298, at: { ph: { y: 212 }, c: { y: 258 } } } }),
+        // B29 first, the title under it, as big as in W53, centred.
+        54.3: homeBoard({ k: 0.84, x: "center", y: 462 }),
+        // The same with LET ME IN: the title smaller.
+        54.4: homeBoard({ k: 0.61, x: "center", y: 452, btn: true }),
+        // The title in the middle of the board.
+        54.5: homeBoard({ k: 0.68, x: "center", y: 261, place: { at: { ph: { y: 612 }, c: { y: 650 } }, pins: sides } }),
+        // The same with LET ME IN: the bottom row higher, the title smaller.
+        54.6: homeBoard({ k: 0.62, x: "center", y: 227, btn: true, place: { at: { ph: { y: 520 }, c: { y: 562 } }, pins: sides } }),
+    });
 
     // -----------------------------------------------------------------
     // What the ransom note says (C01-C12): just the note

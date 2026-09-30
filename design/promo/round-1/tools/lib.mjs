@@ -38,7 +38,9 @@ const UNPKG = {
 };
 
 export async function browser() {
-    const b = await chromium.launch(fs.existsSync(CHROME) ? { executablePath: CHROME } : {});
+    // Grey text edges everywhere: Linux Chromium otherwise tints them (LCD
+    // text), which the Mac's Chrome never does.
+    const b = await chromium.launch({ ...(fs.existsSync(CHROME) ? { executablePath: CHROME } : {}), args: ["--disable-lcd-text"] });
     return b;
 }
 

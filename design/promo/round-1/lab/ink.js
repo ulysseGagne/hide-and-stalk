@@ -1200,8 +1200,23 @@
             const a = (i / 14) * Math.PI * 2;
             hole.push([x + Math.cos(a) * s * 0.2, cy + Math.sin(a) * s * 0.2]);
         }
+        const edge = pressed(loop, (u) => 0.5 + 0.5 * Math.sin(Math.PI * u), { size: Math.max(2.2, s * 0.13), color: o.color, thinning: 0.5, taperStart: 2, taperEnd: 4, wobbleAmp: 0.6 });
+        if (o.fill) {
+            // Filled in: the pin solid, its dot a hole cut through it (the map
+            // shows in it), a touch wider and not quite round; the hand-drawn
+            // edge on top.
+            const hr = r.range(0.25, 0.27);
+            const cut = [];
+            for (let i = 0; i < 16; i++) {
+                const a = -(i / 16) * Math.PI * 2;
+                const k = s * hr * (1 + r.range(-0.06, 0.06));
+                cut.push([x + Math.cos(a) * k, cy + Math.sin(a) * k]);
+            }
+            const d = (pts) => `M${pts.map((p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join("L")}Z`;
+            return `<path d="${d(loop)}${d(cut)}" fill="${o.color ?? RED}" fill-rule="evenodd"/>` + edge;
+        }
         // Outline, then a small coloured-in dot where the hole would be.
-        return pressed(loop, (u) => 0.5 + 0.5 * Math.sin(Math.PI * u), { size: Math.max(2.2, s * 0.13), color: o.color, thinning: 0.5, taperStart: 2, taperEnd: 4, wobbleAmp: 0.6 }) + colorIn([hole], { seed: `${o.seed}f`, weight: Math.max(2, s * 0.12), overshoot: 1 , color: o.color });
+        return edge + colorIn([hole], { seed: `${o.seed}f`, weight: Math.max(2, s * 0.12), overshoot: 1 , color: o.color });
     }
 
     /** An imperfect box: four strokes, corners overshooting or not meeting. */
