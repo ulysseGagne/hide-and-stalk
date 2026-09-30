@@ -86,6 +86,7 @@
         grainlightgreen: { mode: "clean", filter: "url(#m2n)", greenAs: "residential" },
         xeroxnotext: { mode: "clean", filter: "url(#m2x)" },
         xeroxdarknotext: { mode: "clean", filter: "url(#m2k)" },
+        greynotext: { mode: "clean", filter: "grayscale(1)" },
         // Sixth round.
         tracedoutline: { thin: true, roads: "outline" },
         centerline: { roads: "center", lineW: 2, dots: ["green"] },
@@ -378,7 +379,7 @@
     // Skin samples: every skin at three zoom levels (a: whole campus, b: a few buildings, c: close up).
     const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold", "dotsonly", "tone", "tonelight", "tonegrey", "dotsclean", "streetsclean", "grainclean", "grainnotext", "blackbuildings"];
     // Variants numbered after the skin they come from.
-    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "27.1": "grainsamegreen", "27.2": "grainlightgreen", "1.1": "xeroxnotext", "2.1": "xeroxdarknotext", "24.1": "dotsgreen" };
+    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "27.1": "grainsamegreen", "27.2": "grainlightgreen", "1.1": "xeroxnotext", "2.1": "xeroxdarknotext", "11.1": "greynotext", "24.1": "dotsgreen" };
     const ZOOMS = { a: null, b: 16.6, c: 18.2 };
     function drawSkin(root, code) {
         const [, n, z] = /^([\d.]+)([abc])$/.exec(code);
