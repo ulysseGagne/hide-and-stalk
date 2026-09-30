@@ -27,7 +27,7 @@
         (async () => {
             const q = new URLSearchParams(location.search);
             const set = q.get("set");
-            const v = set === "logo" ? q.get("v") : Number(q.get("v"));
+            const v = set === "logo" || set === "skin" ? q.get("v") : Number(q.get("v"));
             const W = Number(q.get("w") ?? 375);
             const H = Number(q.get("h") ?? 460);
             await document.fonts.load("700 40px Arimo");
@@ -52,6 +52,8 @@
                 Wild.draw(root, v);
             } else if (set === "arrow") {
                 Arrows.draw(root, v);
+            } else if (set === "skin") {
+                await Maps2.drawSkin(root, v);
             } else if (set === "map2") {
                 await Maps2.draw(root, v);
             } else if (set === "map") {

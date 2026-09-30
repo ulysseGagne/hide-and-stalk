@@ -29,13 +29,35 @@
     }
 
     const LUMA = `<feColorMatrix type="matrix" values="0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0 0 0 1 0"/>`;
-    const step = Array.from({ length: 40 }, (_, i) => (i / 40 < 0.7 ? 0 : 1)).join(" ");
-    const cut = (c) => Array.from({ length: 40 }, (_, i) => (i / 40 < c ? 0 : 1)).join(" ");
-    const tf = (id, c) => `<filter id="${id}" color-interpolation-filters="sRGB">${LUMA}<feComponentTransfer><feFuncR type="discrete" tableValues="${cut(c)}"/><feFuncG type="discrete" tableValues="${cut(c)}"/><feFuncB type="discrete" tableValues="${cut(c)}"/></feComponentTransfer></filter>`;
-    const FILTER = `<svg width="0" height="0" style="position:absolute"><defs>${tf("m2x", 0.7)}${tf("m2g", 0.86)}
-        <filter id="m2l" color-interpolation-filters="sRGB">${LUMA}<feConvolveMatrix order="3" kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1" preserveAlpha="true"/><feComponentTransfer><feFuncR type="discrete" tableValues="1 1 0 0 0 0 0 0 0 0"/><feFuncG type="discrete" tableValues="1 1 0 0 0 0 0 0 0 0"/><feFuncB type="discrete" tableValues="1 1 0 0 0 0 0 0 0 0"/></feComponentTransfer></filter></defs></svg>`;
-    // The skins: how the tiles are printed.
-    const SKINS = { xerox: "url(#m2x)", ground: "url(#m2g)", lines: "url(#m2l)", grey: "grayscale(1) contrast(1.3)", osm: "none" };
+    // A luma threshold: below c goes to `lo`, above to `hi` (200 steps, so c can be fine).
+    const cut = (c, lo = 0, hi = 1) => Array.from({ length: 200 }, (_, i) => (i / 200 < c ? lo : hi)).join(" ");
+    const ct = (c, attrs = "", lo, hi) => `<feComponentTransfer ${attrs}><feFuncR type="discrete" tableValues="${cut(c, lo, hi)}"/><feFuncG type="discrete" tableValues="${cut(c, lo, hi)}"/><feFuncB type="discrete" tableValues="${cut(c, lo, hi)}"/></feComponentTransfer>`;
+    const tf = (id, c) => `<filter id="${id}" color-interpolation-filters="sRGB">${LUMA}${ct(c)}</filter>`;
+    const EDGE = `<feConvolveMatrix order="3" kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1" preserveAlpha="true"/>${ct(0.01, "", 1, 0).replace(/tableValues="[^"]*"/g, 'tableValues="1 1 0 0 0 0 0 0 0 0"')}`;
+    const pat = (w, body) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${w}'><rect width='${w}' height='${w}' fill='white'/>${body}</svg>`)}`;
+    const HATCH = pat(7, "<path d='M-1 8L8 -1M-1 1L1 -1M6 8L8 6' stroke='black' stroke-width='1.6'/>");
+    const DOTS = pat(6, "<circle cx='1.5' cy='1.5' r='1.1'/><circle cx='4.5' cy='4.5' r='1.1'/>");
+    // Buildings (OSM's tan, luma ~0.83) filled with a pattern; lines and labels (luma < 0.7) black.
+    const patterned = (id, href, w) => `<filter id="${id}" color-interpolation-filters="sRGB">${LUMA.replace("/>", ' result="l"/>')}
+        ${ct(0.845, 'in="l" result="b"')}${ct(0.7, 'in="l" result="x"')}
+        <feImage href="${href}" x="0" y="0" width="${w}" height="${w}" result="p"/><feTile in="p" result="t"/>
+        <feBlend in="b" in2="t" mode="lighten" result="bt"/><feBlend in="bt" in2="x" mode="darken"/></filter>`;
+    const FILTER = `<svg width="0" height="0" style="position:absolute"><defs>${tf("m2x", 0.7)}${tf("m2k", 0.8)}${tf("m2g", 0.86)}
+        <filter id="m2l" color-interpolation-filters="sRGB">${LUMA}${EDGE}</filter>
+        <filter id="m2L" color-interpolation-filters="sRGB">${LUMA}${EDGE}<feMorphology operator="erode" radius="0.8"/></filter>
+        <filter id="m2w" color-interpolation-filters="sRGB">${LUMA}${EDGE.replace("/>", ' result="e"/>')}<feMorphology operator="erode" radius="0.5" result="e2"/>
+            <feTurbulence type="fractalNoise" baseFrequency="0.025" numOctaves="2" seed="7" result="n"/><feDisplacementMap in="e2" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G"/></filter>
+        ${patterned("m2h", HATCH, 7)}${patterned("m2d", DOTS, 6)}
+        <filter id="m2n" color-interpolation-filters="sRGB">${LUMA.replace("/>", ' result="l"/>')}
+            <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="1" seed="3"/><feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1" result="n"/>
+            <feComposite in="l" in2="n" operator="arithmetic" k2="1" k3="0.45" k4="-0.225"/>${ct(0.845)}</filter>
+        <filter id="m2s" color-interpolation-filters="sRGB">${LUMA.replace("/>", ' result="l"/>')}${ct(0.995, 'in="l" result="r"', 1, 0)}${ct(0.62, 'in="l" result="x"')}<feBlend in="r" in2="x" mode="darken"/></filter>
+        </defs></svg>`;
+    // The skins: how the tiles are printed. Every one is the same OpenStreetMap tiles, filtered.
+    const SKINS = {
+        xerox: "url(#m2x)", xeroxdark: "url(#m2k)", ground: "url(#m2g)", grain: "url(#m2n)", hatch: "url(#m2h)", dots: "url(#m2d)",
+        lines: "url(#m2l)", linesbold: "url(#m2L)", sketch: "url(#m2w)", streets: "url(#m2s)", grey: "grayscale(1) contrast(1.3)", osm: "none",
+    };
 
     // The app around the map (direction E): header with MAP open, the question box.
     function chrome(box) {
@@ -103,6 +125,11 @@
         // The whole campus, below the question box: no auto-zoom.
         const ring = Campus.layers.campus.ring;
         map.fitBounds(L.latLngBounds(ring.map(([lng, lat]) => [lat, lng])), { paddingTopLeft: [10, 118], paddingBottomRight: [10, 16], animate: false });
+        // Skin samples only: the same moment, zoomed in on YOU.
+        if (o.zoom) {
+            const [lng, lat] = g.pos[g.me];
+            map.setView([lat, lng], o.zoom, { animate: false });
+        }
         await new Promise((ok) => {
             if (!tiles.isLoading()) ok();
             tiles.once("load", ok);
@@ -238,5 +265,14 @@
         { game: G, upTo: 2, view: "stalker", skin: "osm", box: next(3, "3:12"), name: "Skin: plain OpenStreetMap (breaks the palette)" },
     ];
 
-    window.Maps2 = { list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw };
+    // Skin samples: every skin at three zoom levels (a: whole campus, b: a few buildings, c: close up).
+    const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm"];
+    const ZOOMS = { a: null, b: 16.6, c: 18.2 };
+    function drawSkin(root, code) {
+        const [, n, z] = /^(\d+)([abc])$/.exec(code);
+        LIST.push({ game: G, upTo: 2, view: "stalker", skin: SKIN_LIST[n - 1], zoom: ZOOMS[z], box: next(3, "3:12") });
+        return draw(root, LIST.length);
+    }
+
+    window.Maps2 = { list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, SKIN_LIST };
 })();
