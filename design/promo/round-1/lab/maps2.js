@@ -268,6 +268,8 @@
         "8.2": { pins: "push", popup: true },
         // No pin: the circle is the one red thing; the landmark gets a white tag.
         "10.1": { mark: "tag" },
+        // The hints layer with one player tapped: her name shows above her pin.
+        "3a.1": { tapped: "camille" },
         // N08 with the map pins filled in, the dot a hole; and a café tapped.
         "8a": { pins: "filled" },
         "8.2a": { pins: "filled", popup: true },
@@ -413,20 +415,27 @@
             red += Ink.cross(e[0], e[1], 10, { seed: "m2x", weight: 5 });
         }
 
-        // People: everyone else gets a white tag; YOU is Yn, the red arrow that
-        // points the way your phone faces (a stalker's toward the hider, the
-        // hider's toward the closest stalker), drawn over everything.
+        // People: everyone else is one of B29's pushpins on their exact spot,
+        // no name (a tap shows it: o.tapped); YOU is Yp, B29's pin look on Yn's
+        // arrow, pointing the way your phone faces (a stalker's toward the
+        // hider, the hider's toward the closest stalker), over everything.
         const bearing = (a, b) => (turf.bearing(turf.point(a), turf.point(b)) + 360) % 360;
         let you = "";
+        let pins = "";
+        const other = (n, p) => {
+            const [px, py] = P(p);
+            pins += Ink.pin(px, py, { size: 8 });
+            if (o.tapped === n) tag(px, py - 7, n.toUpperCase(), false);
+        };
         if (o.view === "hider") {
             const hp = P(g.hider);
             const [, near] = Object.entries(g.pos).sort((a, b) => dist(g.hider, a[1]) - dist(g.hider, b[1]))[0];
-            you = youMark(hp[0], hp[1], "n", bearing(g.hider, near));
-            for (const [n, p] of Object.entries(g.pos)) tag(...P(p), n.toUpperCase(), false);
+            you = youMark(hp[0], hp[1], "p", bearing(g.hider, near));
+            for (const [n, p] of Object.entries(g.pos)) other(n, p);
         } else {
             for (const [n, p] of Object.entries(g.pos)) {
-                if (n !== g.me) tag(...P(p), n.toUpperCase(), false);
-                else you = youMark(...P(p), "n", bearing(p, g.hider));
+                if (n !== g.me) other(n, p);
+                else you = youMark(...P(p), "p", bearing(p, g.hider));
             }
         }
 
@@ -437,6 +446,7 @@
         layer(4, under, true);
         layer(6, html.split("<!--tags-->")[0]);
         layer(40, red, true);
+        layer(49, pins, true);
         layer(50, tagsHtml);
         layer(52, you, true);
         layer(55, popup);
@@ -524,6 +534,13 @@
         return { pts, left, cx: x, cy: top + h / 2 };
     }
     function otherTag(t, x, y, label) {
+        // p: B29's pushpin, no name; p.1: tapped, the name above it.
+        if (t === "p" || t === "p.1") {
+            const pin = Ink.pin(x, y, { size: 8 });
+            if (t === "p") return pin;
+            const bb = bubble(x, y - 7, label);
+            return `${pin}<path d="M${bb.pts.map((q) => q.join(" ")).join("L")}Z" fill="#fff" stroke="#000" stroke-width="3" stroke-linejoin="miter"/>${tagText(bb.cx, bb.cy, label)}`;
+        }
         if (t === "a" || t === "k" || t === "k.1" || t === "l") {
             // k.1: k with the name written by hand too, in red like its edge; the tag fits the handwriting.
             const hand = { size: 15, seed: `tk1${label}`, tilt: -2, importance: "info" };
@@ -561,6 +578,29 @@
         const edge = (seed) => Ink.wobble([...pts, pts[0], pts[1]].map((p, i, all) => (i === all.length - 1 ? [(p[0] + all[i - 1][0]) / 2, (p[1] + all[i - 1][1]) / 2] : p)), { seed, weight: 3.4, amp: 0.7 });
         if (kind === "m") return `<polygon points="${poly}" fill="#fff"/>${edge("youm")}`;
         if (kind === "n") return `<polygon points="${poly}" fill="${R}"/>${edge("youn")}`;
+        if (kind === "p") {
+            // Yn in B29's pin look: the pin's red, its thin black edge (a touch
+            // uneven, as the pin's is), and its white shine, here a streak
+            // along the arrow's left side, kept inside the arrow.
+            const n = Ink.noise1(Ink.rng(`yp${Math.round(x)},${Math.round(y)}`));
+            const ring = [];
+            pts.forEach((q, i) => {
+                const nx = pts[(i + 1) % pts.length];
+                for (let k = 0; k < 6; k++) ring.push([q[0] + ((nx[0] - q[0]) * k) / 6, q[1] + ((nx[1] - q[1]) * k) / 6]);
+            });
+            const cx = pts.reduce((t, q) => t + q[0], 0) / 4;
+            const cy = pts.reduce((t, q) => t + q[1], 0) / 4;
+            const d = `M${ring.map(([px, py], i) => {
+                // Corners stay put; between them the edge moves by up to 0.7 px.
+                const k = i % 6 === 0 ? 0 : n(i * 0.45) * 0.7;
+                const l = Math.hypot(px - cx, py - cy) || 1;
+                return `${(px + ((px - cx) / l) * k).toFixed(1)} ${(py + ((py - cy) / l) * k).toFixed(1)}`;
+            }).join("L")}Z`;
+            const id = `yp${Math.round(x)}x${Math.round(y)}`;
+            const [sx, sy] = [x + -5 * Math.cos(r) - 0 * Math.sin(r), y + -5 * Math.sin(r) + 0 * Math.cos(r)];
+            const sa = (Math.atan2(36, -15) * 180) / Math.PI + deg;
+            return `<defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="${R}" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/><ellipse cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" rx="5.2" ry="1.9" fill="#fff" transform="rotate(${sa.toFixed(1)} ${sx.toFixed(1)} ${sy.toFixed(1)})" clip-path="url(#${id})"/>`;
+        }
         return `<polygon points="${poly}" fill="#000" stroke="#fff" stroke-width="5" stroke-linejoin="round" paint-order="stroke"/>`;
     }
 

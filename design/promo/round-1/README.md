@@ -16,7 +16,7 @@ work it out (`key` < `info` < `aside` < `vibe`; bigger text leans wilder).
 `write()` and `note()` use it whenever no explicit `mess` is given.
 
 Gallery (all images, with Keep + notes): https://claude.ai/artifact/He5TXmq1iCTb7XiyVuGYRk
-(the up-to-date one, version 7, Sept 30, on the ugagne08 login). Color Map
+(the up-to-date one, version 8, Sept 30, on the ugagne08 login). Color Map
 Editor: https://claude.ai/artifact/Y6kmr77pJjn1JwPpUyfp9n (same login). Older
 galleries: https://claude.ai/artifact/6LoZgEJAQMzaR6Z6AintGP (version 14, the
 other login) and https://claude.ai/artifact/LdRszjr2qKJ9ckB1ZLNKgJ (this
@@ -33,7 +33,10 @@ with its `shots/` to that login's own artifact. The user reviews live:
 republish after every change they might want to see.
 
 - **Decided:** logo L16.6b, handwriting H06, board B29, ransom notes C19,
-  notification arrow R10.3, skin S20, YOU = Yn on every map.
+  notification arrow R10.3; on every map, everyone else is one of B29's
+  pushpins with no name (a tap shows it above the pin: Tp, Tp.1, N3a.1) and
+  YOU is Yp, Yn's arrow in the pin's look (`youMark(..., "p")`). S20 or S21
+  (every road, or only the editor's) is the user's pick to make.
 - **B29 is the source of truth** for the board and its pieces: File Nº 005
   is always HIDER LOCATION (two lines: within 500 m, closest café; where
   exactly is gone), the hider's profile, W53's Polaroid with the coordinates,
@@ -79,8 +82,9 @@ republish after every change they might want to see.
 - **Map screens:** section 2 (N2a, N3a) and 3 (N08, N08a with filled pins,
   N08.2a the café tapped, N10.1 with a white GREENHOUSES tag, N11 with WEST
   and EAST bolder, N13, N15 without its subtitle) all on S20. White tags are
-  one outlined shape, pointer included; YOU is Yn, facing the hider (or, for
-  the hider, the closest stalker).
+  one outlined shape, pointer included; players are pushpins (`o.tapped`
+  shows one name); YOU is Yp, facing the hider (or, for the hider, the
+  closest stalker).
 - **Rendering on Linux:** `tools/lib.mjs` turns off LCD text (grey edges, as
   on the Mac), and `tools/shoot-app.mjs` gives pages the iPhone's compass
   permission hook so the compass notice shows, as it always did on the Mac.
@@ -132,7 +136,9 @@ node tools/shoot-lab.mjs welcome 54.1,54.1a,54.1b,54.1c,54.1d,54.1e,55.1,55.2 0 
 node tools/shoot-lab.mjs osmkey 4 4 375 640 K  # K04, the key's legend, fourth pass
 node tools/shoot-lab.mjs skin 30.03a,31.23a,31.23b,31.22a,31.22b 0 375 812 S  # the key map; S20 (every road) and S21 (the editor's), whole campus and a few blocks
 node tools/shoot-lab.mjs hint 2a,3a 0 375 812 N  # the hints layer on S20
-node tools/shoot-lab.mjs map2 08,08a,08.2a,10.1,11,13,15 0 375 812 N  # the question screens on S20
+node tools/shoot-lab.mjs map2 3a.1,08,08a,08.2a,10.1,11,13,15 0 375 812 N  # a player tapped, and the question screens, on S21
+node tools/shoot-lab.mjs tags p,p.1 0 240 175 T  # Tp, Tp.1: everyone else as B29's pushpin, and tapped
+node tools/shoot-lab.mjs tags Yp,Yn 0 240 175 ""  # YOU: Yp (on every map) and Yn before it
 node tools/shoot-app.mjs e                     # E-01 ... E-24b (needs app/bench.svg: node tools/export-bench.mjs)
 node tools/export-key-editor.mjs               # key-editor/ways.json, for the Color Map Editor
 node tools/bake-key-overrides.mjs <dir>        # the editor's choices -> lab/data/key-overrides.json
