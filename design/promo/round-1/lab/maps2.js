@@ -82,6 +82,11 @@
         grainclean: { mode: "tone", pixel: true, road: "pixel" },
         // S04 exactly (the same grain filter), on tiles with the text taken out.
         grainnotext: { mode: "clean", filter: "url(#m2n)" },
+        // Sixth round.
+        tracedoutline: { thin: true, roads: "outline" },
+        centerline: { roads: "center", lineW: 2, dots: ["green"] },
+        dotsgreen: { roads: "outline", outlines: ["building"], dots: ["building", "green"] },
+        blackbuildings: { thin: true, outlines: [], solid: ["building"], dots: ["green"] },
     };
 
     // The app around the map (direction E): header with MAP open, the question box.
@@ -215,8 +220,8 @@
         const map = L.map(mapEl, { zoomControl: false, attributionControl: true, zoomSnap: 0, fadeAnimation: false, zoomAnimation: false });
         map.attributionControl.setPrefix(false);
         const redraw = RETRACE[o.skin];
-        // Under a filter, tiles are stretched a pixel so no seam shows between them.
-        if (redraw?.filter) mapEl.insertAdjacentHTML("beforeend", "<style>.leaflet-tile{width:257px!important;height:257px!important}</style>");
+        // Redrawn tiles are stretched a pixel so no seam shows between them.
+        if (redraw) mapEl.insertAdjacentHTML("beforeend", "<style>.leaflet-tile{width:257px!important;height:257px!important}</style>");
         const tiles = (redraw ? Retrace.layer(redraw) : L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" })).addTo(map);
         mapEl.querySelector(".leaflet-tile-pane").style.filter = redraw ? redraw.filter ?? "none" : SKINS[o.skin ?? "xerox"];
         // The whole campus, below the question box: no auto-zoom.
@@ -366,11 +371,13 @@
     ];
 
     // Skin samples: every skin at three zoom levels (a: whole campus, b: a few buildings, c: close up).
-    const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold", "dotsonly", "tone", "tonelight", "tonegrey", "dotsclean", "streetsclean", "grainclean", "grainnotext"];
+    const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold", "dotsonly", "tone", "tonelight", "tonegrey", "dotsclean", "streetsclean", "grainclean", "grainnotext", "blackbuildings"];
+    // Variants numbered after the skin they come from.
+    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "24.1": "dotsgreen" };
     const ZOOMS = { a: null, b: 16.6, c: 18.2 };
     function drawSkin(root, code) {
-        const [, n, z] = /^(\d+)([abc])$/.exec(code);
-        LIST.push({ game: G, upTo: 2, view: "stalker", skin: SKIN_LIST[n - 1], zoom: ZOOMS[z], box: next(3, "3:12") });
+        const [, n, z] = /^([\d.]+)([abc])$/.exec(code);
+        LIST.push({ game: G, upTo: 2, view: "stalker", skin: SKIN_ALIAS[n] ?? SKIN_LIST[n - 1], zoom: ZOOMS[z], box: next(3, "3:12") });
         return draw(root, LIST.length);
     }
 

@@ -171,25 +171,18 @@ const MAPPART = [
     ["answer", "4 · Answering it (hider)", "The same questions on the hider's map, plus the hider between questions: one string, to the closest stalker.", [[9, "Nearest café"], [12, "East or west"], [14, "Within 200 m"], [15, "Between questions: the closest stalker"]]],
 ];
 const SKINS = [
-    [4, "Toner grain, the original", "exactly as it was, text and all"],
-    [27, "Toner grain, the original, without text", "S04's own filter on the same tiles, with every label and icon taken out first"],
-    [20, "S16 with dotted buildings, no outlines", "thin black roads; buildings are only dots; nothing has an edge"],
-    [16, "Redrawn, thinner roads", "your pick so far"],
-    [17, "Redrawn, dotted buildings", "outlines and dots, for comparison with S20"],
-    [18, "Redrawn, dotted green", ""],
-    [15, "Redrawn: roads black, shapes outlined", ""],
-    [21, "S14 without edges: shapes in grain, roads coloured in", "no line anywhere; every shape is a field of grain as dark as its map colour; roads solid black"],
-    [22, "S21, the middle lowered", "whites stay white and blacks stay black; the greys in between get lighter"],
-    [23, "S22 with grey roads", "roads in dense grain instead of solid black"],
-    [26, "S14 again, without text", "toner grain from each pixel's own colour, so edges stay"],
-    [24, "S06 again, without text", "roads as two edges, buildings outlined and dotted"],
-    [25, "S10 again, without text", "just the roads, black"],
+    ["27", "Toner grain, the original, without text", "S04's own filter, every label and icon taken out first"],
+    ["16.1", "S16 with roads as outlines", "thin roads, drawn as their two edges instead of filled in"],
+    ["18.1", "S18 with roads as single lines", "each road is one line down its middle; greens dotted"],
+    ["24.1", "S24 with the greens back", "greens dotted like the buildings, with no outline"],
+    ["28", "Black buildings", "buildings solid black, roads black, greens dotted, everything else white"],
+    ["15", "Redrawn: roads black, shapes outlined", ""],
 ];
 const ZOOM = { a: "whole campus", b: "a few blocks", c: "a few buildings" };
 html += `<section id="maps"><h2>Map</h2><p>Everything you need is computer-drawn: the map, the hints layer, the players (name tags, you in black) and the question. Red is the one thing to look at right now. The map opens on the whole campus, with no auto-zoom.</p></section>`;
-html += `<section id="maps-skins"><h2>1 · Skins: how the tiles are printed</h2><p>Each at three zoom levels: a, the whole campus (what the map opens on); b, a few blocks; c, a few buildings, zoomed in on YOU. Every skin is now redrawn from the tiles pixel by pixel, so there is no text on any of them, and the ones you discarded are gone. S20–S23 are new.</p>`;
+html += `<section id="maps-skins"><h2>1 · Skins: how the tiles are printed</h2><p>Each at three zoom levels: a, the whole campus (what the map opens on); b, a few blocks; c, a few buildings, zoomed in on YOU. No text on any of them. What's left after your cleanup, plus the four new variants.</p>`;
 SKINS.forEach(([num, name, note]) => {
-    const n = String(num).padStart(2, "0");
+    const n = String(num).includes(".") ? String(num) : String(num).padStart(2, "0");
     html += `<h3>S${n} · ${name}${note ? ` <span class="note">(${note})</span>` : ""}</h3><div class="grid">`;
     for (const z of "abc") html += tile(`S${n}${z}`, ZOOM[z], `shots/S${num}${z}.png`);
     html += `</div>`;

@@ -78,7 +78,7 @@
         const cls = new Uint8Array(N * N);
         for (let i = 0; i < N * N; i++) {
             let c = classify(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]);
-            if (o.roads === "fill" && c === CLASS.road) {
+            if ((o.roads === "fill" || o.thin) && c === CLASS.road) {
                 const r = d[i * 4];
                 const g = d[i * 4 + 1];
                 const b = d[i * 4 + 2];
@@ -89,7 +89,7 @@
         // Labels and their halos: grow the label mask, then fill it in from
         // the classes around it, one ring at a time.
         // Clean mode keeps colours, so it needs a wider cut around each label.
-        const grow = o.mode === "clean" ? 3 : 2;
+        const grow = 3;
         let unknown = new Uint8Array(N * N);
         for (let i = 0; i < N * N; i++) if (cls[i] === LABEL) unknown[i] = 1;
         for (let k = 0; k < grow; k++) {
@@ -188,11 +188,27 @@
         const isShape = (c) => c === CLASS.building || c === CLASS.green;
         const w = o.outline ?? 1;
         const dotted = new Set((o.dots ?? []).map((k) => CLASS[k]));
+        const solid = new Set((o.solid ?? []).map((k) => CLASS[k]));
+        // Roads as one line down their middle: the road mask thinned to its skeleton.
+        let centre = null;
+        if (o.roads === "center") {
+            const m = new Uint8Array(N * N);
+            for (let i = 0; i < N * N; i++) m[i] = cls[i] === CLASS.road ? 1 : 0;
+            centre = skeleton(m, N);
+            if (o.lineW > 1) {
+                const g = centre.slice();
+                for (let y = 1; y < N - 1; y++)
+                    for (let x = 1; x < N - 1; x++) if (centre[y * N + x]) for (const j of [y * N + x + 1, (y + 1) * N + x, (y + 1) * N + x + 1]) g[j] = 1;
+                centre = g;
+            }
+        }
         for (let y = 0; y < N; y++)
             for (let x = 0; x < N; x++) {
                 const i = y * N + x;
                 const c = cls[i];
                 let black = c === CLASS.road;
+                if (centre) black = !!centre[i];
+                if (solid.has(c)) black = true;
                 // Roads drawn as their two edges only.
                 if (black && o.roads === "outline") {
                     black = (x > 0 && cls[i - 1] !== c) || (x < N - 1 && cls[i + 1] !== c) || (y > 0 && cls[i - N] !== c) || (y < N - 1 && cls[i + N] !== c);
@@ -220,6 +236,33 @@
                 o4[i * 4 + 3] = 255;
             }
         return out;
+    }
+
+    /** Zhang-Suen thinning: a binary mask down to 1-pixel lines. */
+    function skeleton(m, N) {
+        const at = (x, y) => (x < 0 || y < 0 || x >= N || y >= N ? 0 : m[y * N + x]);
+        for (let iter = 0; iter < 30; iter++) {
+            let changed = false;
+            for (const step of [0, 1]) {
+                const del = [];
+                for (let y = 0; y < N; y++)
+                    for (let x = 0; x < N; x++) {
+                        if (!m[y * N + x]) continue;
+                        const p = [at(x, y - 1), at(x + 1, y - 1), at(x + 1, y), at(x + 1, y + 1), at(x, y + 1), at(x - 1, y + 1), at(x - 1, y), at(x - 1, y - 1)];
+                        const b = p.reduce((a, v) => a + v, 0);
+                        if (b < 2 || b > 6) continue;
+                        let a = 0;
+                        for (let k = 0; k < 8; k++) if (!p[k] && p[(k + 1) % 8]) a++;
+                        if (a !== 1) continue;
+                        if (step === 0 ? p[0] * p[2] * p[4] || p[2] * p[4] * p[6] : p[0] * p[2] * p[6] || p[0] * p[4] * p[6]) continue;
+                        del.push(y * N + x);
+                    }
+                for (const i of del) m[i] = 0;
+                if (del.length) changed = true;
+            }
+            if (!changed) break;
+        }
+        return m;
     }
 
     /**
