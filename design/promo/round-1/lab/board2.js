@@ -132,7 +132,7 @@
      * o: { center [lng, lat], zoom, excluded: turf polygon | "region" (use the
      *      scenario's region: everything else gets coloured), ink(P, w, h) }
      */
-    function scrap(b, { x, y, w, h, rot = 0, center, zoom = 15.4, region, pins4 = true, pin = false, ink }) {
+    function scrap(b, { x, y, w, h, rot = 0, center, zoom = 15.4, region, pins4 = true, pin = false, ink, border = 2 }) {
         const tz = Math.min(18, Math.ceil(zoom));
         const k = 2 ** (zoom - tz);
         const [cx, cy] = worldPx(center[0], center[1], tz);
@@ -157,7 +157,7 @@
             svg += Ink.colorIn([[[-pad, -pad], [w + pad, -pad], [w + pad, h + pad], [-pad, h + pad]], ...holes], { seed: `sc${x}${y}`, weight: 12, overshoot: 5 });
         }
         if (ink) svg += ink(P, w, h);
-        const html = `<div style="position:relative;width:${w}px;height:${h}px;border:2px solid ${b.ink};box-sizing:border-box;overflow:hidden;background:${b.paper}">
+        const html = `<div style="position:relative;width:${w}px;height:${h}px;border:${border}px solid ${b.ink};box-sizing:border-box;overflow:hidden;background:${b.paper}">
             <div style="position:absolute;inset:0;filter:url(#bx)${b.dark ? " invert(1)" : ""}">${imgs}</div>
             <svg width="${w}" height="${h}" style="position:absolute;left:-2px;top:-2px;overflow:visible">${svg}</svg></div>`;
         const it = b.item(html, { x, y, w, h, rot });
@@ -424,4 +424,19 @@
     void W0;
     void H0;
     Board.SCENE = { w: SCENE_W, h: SCENE_H };
+    // Shared with the third pass (home3.js).
+    Board.kit2 = {
+        photo(scene, color) {
+            STROKE = color;
+            return SCENES[scene]();
+        },
+        scrap,
+        settle,
+        filters: FILTERS,
+        Q,
+        SC,
+        HIDER,
+        centroid,
+        cafeName,
+    };
 })();

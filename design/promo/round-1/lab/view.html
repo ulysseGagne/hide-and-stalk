@@ -23,6 +23,7 @@
     <script src="maps.js"></script>
     <script src="maps2.js"></script>
     <script src="arrows.js"></script>
+    <script src="home3.js"></script>
     <script>
         (async () => {
             const q = new URLSearchParams(location.search);
@@ -58,6 +59,8 @@
                 await Maps2.draw(root, v);
             } else if (set === "map") {
                 await Maps.draw(root, v);
+            } else if (set === "note") {
+                await Home3.note(root, v);
             } else if (set === "hand") {
                 Welcome.hand(root, v, W, H);
             }

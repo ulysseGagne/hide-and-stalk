@@ -12,6 +12,8 @@ const vs = from.includes(",") || from.includes(".") ? from.split(",") : Array.fr
 for (const v of vs) {
     await page.goto(`${base}/design/promo/round-1/lab/view.html?set=${set}&v=${v}&w=${w}&h=${h}`);
     await page.waitForSelector("body[data-ready='1']", { timeout: 60000 });
+    const w8 = await page.evaluate(() => window.__warn);
+    if (w8) console.log(v, "WARN", w8.join("; "));
     const out = path.join(ROUND, "shots", `${prefix}${typeof v === "string" ? v : String(v).padStart(2, "0")}.png`);
     await page.locator("#root").screenshot({ path: out });
     console.log("wrote", path.basename(out));

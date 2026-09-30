@@ -75,7 +75,7 @@ body.only-kept .tile:not(.kept) { display: none; }
     </header>
 
     <nav class="bar" aria-label="Sections">
-        <a href="#logo2">Logo</a><a href="#hand">Handwriting</a><a href="#board2">Board</a><a href="#welcome2">Home screen</a><a href="#styles">App</a><a href="#arrows">Arrow</a><a href="#maps">Maps</a>
+        <a href="#logo2">Logo</a><a href="#hand">Handwriting</a><a href="#board2">Board</a><a href="#welcome2">Home screen</a><a href="#notes">Ransom note</a><a href="#styles">App</a><a href="#arrows">Arrow</a><a href="#maps">Maps</a>
         <span class="spacer"></span>
         <span class="count" id="count">0 kept</span>
         <label for="onlykept"><input type="checkbox" id="onlykept"> Kept only</label>
@@ -113,27 +113,28 @@ const SETS = [
         ["H04", "The band: score 0 to 1, with H1 and H3 for reference"],
         ["H05", "Real app lines, scored automatically"],
     ]},
-    { id: "board2", title: "Board", intro: "For the poster illustration: centred, a mix of objects, the real map coloured in, hand-drawn photos. B22–B24 are the candidates.", wide: false, items: [
-        ["B13", "B1, minimal: two cards, no labels, a bolder string, the thought underneath"],
-        ["B14", "B2, rebalanced: tighter and centred, a photo in place of the fourth card"],
-        ["B15", "The real map, pinned at four corners, coloured in, HERE?"],
-        ["B16", "500 m made visual: the circle is coloured in because she isn't in it"],
-        ["B17", "Black board: a card, the scribbled-out face, a big question mark"],
-        ["B18", "White post-its with thoughts, one red one coloured in with nothing on it"],
-        ["B19", "The dossier as one element: WANTED over it, NEVER RUNS underlined"],
-        ["B20", "CLASSIFIED by hand over the file of what she's admitted"],
-        ["B21", "Obsessive: WHERE ARE YOU, over and over"],
-        ["B22", "Everything together: map, card, photo, post-it"],
-        ["B23", "B22 with the ransom note (X24): WHERE ARE YOU in cut-out letters"],
-        ["B24", "The redacted file (X07) as evidence, CLASSIFIED by hand"],
+    { id: "board2", title: "Board", intro: "Your notes on B13–B24, applied: one composition made from the pieces you liked (cards, Polaroids, post-its, the profile, the file with its classified bars, the ransom note, the map). Everything is at real size with one 3px line. No string crosses a card, a photo, red writing or another string; each one runs through a gap between pins, and the code checks every one. Pieces never overlap and nothing covers a pin. Words are only on post-its. The map is a stand-in (plain, nothing coloured in) until you pick a skin.", wide: false, items: [
+        ["B25", "The map in the middle, four pieces around it, one string to each corner"],
+        ["B26", "The file and the profile on top; a photo and the CLOSER CLOSER CLOSER post-it underneath"],
+        ["B27", "The profile in the middle, what's known pinned around it"],
+        ["B28", "Everything: map, two cards, photo, post-it, ransom note"],
     ]},
-    { id: "welcome2", title: "Home screen", intro: "Layouts only. Every screen uses the same lockup (L1.1, swappable for whichever you pick), a plain button, and no red except the title's.", wide: false, items: [
-        ["W25", "Title up top, button at the bottom"],
-        ["W26", "Same, one small red arrow at the button"],
-        ["W27", "Title in the middle of the screen"],
-        ["W28", "Title and a scene: card and photo"],
-        ["W29", "Title and a scene: the map"],
-        ["W30", "Title and a scene: the ransom note"],
+    { id: "welcome2", title: "Home screen", intro: "W28 kept as the base: title, two pinned things, the button. The pair sits exactly halfway between STALK and the button, the question fills its card, and the title is the new L13.1, 84% size. W39–W41 are W26's arrow, redone: as thick as STALK's strokes, short with a wide head, the point touching LET ME IN.", wide: false, items: [
+        ["W31", "W28 again: card and photo"],
+        ["W32", "Card and ransom note"],
+        ["W33", "Hider's profile and a post-it with a question mark"],
+        ["W34", "The file and a photo"],
+        ["W35", "A post-it and a photo"],
+        ["W36", "W29's idea: the map (a stand-in) and a photo, pins on top"],
+        ["W37", "Ransom note and a photo"],
+        ["W38", "The file and a post-it"],
+        ["W39", "No scene, arrow from the left"],
+        ["W40", "No scene, arrow from above"],
+        ["W41", "No scene, arrow from the right"],
+    ]},
+    { id: "notes", title: "Ransom note", intro: "Only the note: twelve things it could say. All from the stalker to the hider.", wide: false, items: [
+        ["C01", "I SEE YOU"], ["C02", "FOUND YOU"], ["C03", "READY OR NOT"], ["C04", "NOT FAR NOW"], ["C05", "GETTING WARMER"], ["C06", "I'M CLOSE"],
+        ["C07", "NOWHERE TO HIDE"], ["C08", "LOOK BEHIND YOU"], ["C09", "COMING FOR YOU"], ["C10", "I KNOW WHERE YOU ARE"], ["C11", "SAY CHEESE"], ["C12", "RUN"],
     ]},
 ];
 
