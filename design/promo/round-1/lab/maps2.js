@@ -11,6 +11,8 @@
 //     the hints layer steps aside.
 //   - No auto-zoom: the map opens on the whole campus; players move it.
 //   - Tiles in pure black and white. No text halos, no percentages.
+//   - The players' name tags are the only thing ever drawn over the red:
+//     above the hints, the question's marks and the answer's marks.
 
 (function () {
     const W = 375;
@@ -317,13 +319,14 @@
             for (const [n, p] of Object.entries(g.pos)) html += tag(...P(p), n === me ? "YOU" : n.toUpperCase(), n === me);
         }
 
-        // Above the inverted layer, so the tags never get flipped.
-        html += `<div style="position:absolute;inset:0;z-index:20">${flushTags()}</div>`;
+        // Design rule: the players' names are the one thing drawn over the red.
+        const tagsHtml = flushTags();
         const c = chrome(o.box);
         const layer = (z, inner, svg) => root.insertAdjacentHTML("beforeend", svg ? `<svg width="${W}" height="${H}" style="position:absolute;left:0;top:0;pointer-events:none;z-index:${z};overflow:visible">${inner}</svg>` : `<div style="position:absolute;inset:0;pointer-events:none;z-index:${z}">${inner}</div>`);
         layer(4, under, true);
         layer(6, html.split("<!--tags-->")[0]);
         layer(40, red, true);
+        layer(50, tagsHtml);
         layer(60, c.html);
         layer(65, c.ink, true);
         const attr = mapEl.querySelector(".leaflet-control-attribution");
