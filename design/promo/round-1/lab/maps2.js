@@ -104,11 +104,77 @@
         return { html: hdr + q, ink: hdrInk };
     }
 
-    /** A player: a name tag pointing at where they are. */
+    /**
+     * Ways to make the players stand out, still black and white only:
+     *   big      bigger tags, a heavier pointer, a dot on the exact spot
+     *   ink      every tag solid black; YOU white with a double edge
+     *   sticker  each tag cut out of the map: a wide white margin around it
+     *   shadow   a solid black block offset under each tag, like a raised card
+     *   marker   a black square with a white ring on the spot, the name beside it
+     */
+    let TAGS = "base";
+    let PENDING = [];
+    const tagFont = (fs) => `700 ${fs}px/1 ${FONT}`;
+    const cv = document.createElement("canvas").getContext("2d");
+    /** Size of a tag in the current style. */
+    function tagBox(t) {
+        const fs = TAGS === "big" ? 15 : TAGS === "base" ? 12 : 13;
+        cv.font = tagFont(fs);
+        const w = cv.measureText(t.label).width + fs * 1.3 + 12;
+        const h = TAGS === "big" ? 30 : TAGS === "base" ? 24 : 26;
+        if (TAGS === "marker") return { fs: 14, w: w + 2, h: 26, x: t.x + 14, y: t.y - 13 };
+        return { fs, w, h, x: t.x - w / 2, y: t.y - h - 12 };
+    }
+    /** Draw one tag at its (possibly moved) box, with a leader line if it was moved. */
+    function tagHtml(t, bx, part) {
+        const { x, y, label, self } = t;
+        const { fs, w, h } = bx;
+        const left = bx.x;
+        const top = bx.y + t.dy;
+        let out = "";
+        const moved = t.dy !== 0;
+        if (TAGS === "marker") {
+            const sq = self ? 16 : 13;
+            out += `<div style="position:absolute;left:${x - sq / 2 - 4}px;top:${y - sq / 2 - 4}px;width:${sq + 8}px;height:${sq + 8}px;background:#fff"></div><div style="position:absolute;left:${x - sq / 2}px;top:${y - sq / 2}px;width:${sq}px;height:${sq}px;background:#000"></div>`;
+            if (part === "lead") return moved ? `<div style="position:absolute;left:${x - 1.5}px;top:${top + h / 2}px;width:3px;height:${y - top - h / 2}px;background:#000"></div><div style="position:absolute;left:${x}px;top:${top + h / 2 - 1.5}px;width:${left - x}px;height:3px;background:#000"></div>` : "";
+            return out + `<div style="position:absolute;left:${left}px;top:${top}px;height:${h}px;width:${w}px;box-sizing:border-box;padding:0 7px;background:${self ? "#000" : "#fff"};color:${self ? "#fff" : "#000"};border:3px solid #000;box-shadow:0 0 0 3px #fff;font:${tagFont(fs)};line-height:${h - 6}px;letter-spacing:.06em">${label}</div>`;
+        }
+        if (part === "lead") return moved ? `<div style="position:absolute;left:${x - 1.5}px;top:${top + h}px;width:3px;height:${y - top - h}px;background:#000;box-shadow:0 0 0 2px #fff"></div>` : "";
+        const dark = TAGS === "ink" ? !self : self;
+        // Every style but the original gets a 3px white ring, so it reads on black too.
+        const ring = TAGS === "base" ? "" : ";box-shadow:0 0 0 3px #fff";
+        const border = TAGS === "ink" && self ? "border:3px solid #000;outline:3px solid #fff;box-shadow:0 0 0 6px #000,0 0 0 9px #fff" : `border:3px solid #000${ring}`;
+        if (TAGS === "sticker") out += `<div style="position:absolute;left:${left - 7}px;top:${top - 7}px;width:${w + 14}px;height:${h + 14}px;background:#fff"></div>`;
+        if (TAGS === "shadow") out += `<div style="position:absolute;left:${left + 5}px;top:${top + 5}px;width:${w}px;height:${h}px;background:#000"></div>`;
+        const pw = TAGS === "big" ? 9 : 7;
+        if (!moved) out += `<div style="position:absolute;left:${x - pw}px;top:${top + h - 1}px;width:0;height:0;border-left:${pw}px solid transparent;border-right:${pw}px solid transparent;border-top:${TAGS === "big" ? 12 : 10}px solid #000"></div>`;
+        out += `<div style="position:absolute;left:${left}px;top:${top}px;width:${w}px;height:${h}px;box-sizing:border-box;background:${dark ? "#000" : "#fff"};color:${dark ? "#fff" : "#000"};${border};font:${tagFont(fs)};line-height:${h - 6}px;letter-spacing:.06em;text-align:center">${label}</div>`;
+        if (TAGS === "big" || TAGS === "sticker" || TAGS === "shadow" || moved) out += `<div style="position:absolute;left:${x - 5}px;top:${y - 5}px;width:10px;height:10px;background:#000;box-shadow:0 0 0 3px #fff"></div>`;
+        return out;
+    }
+    /** A player: queued, so the tags can be spread out before drawing. */
     function tag(x, y, label, self) {
-        const w = label.length * 8.6 + 16;
-        return `<div style="position:absolute;left:${x - w / 2}px;top:${y - 34}px;width:${w}px;height:24px;box-sizing:border-box;background:${self ? "#000" : "#fff"};color:${self ? "#fff" : "#000"};border:3px solid #000;font:700 12px/18px ${FONT};letter-spacing:.06em;text-align:center">${label}</div>
-            <div style="position:absolute;left:${x - 6}px;top:${y - 11}px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid #000"></div>`;
+        PENDING.push({ x, y, label, self, dy: 0 });
+        return "";
+    }
+    /** Draw every queued tag; any that would overlap one already placed moves up. */
+    function flushTags() {
+        const placed = [];
+        const list = PENDING.sort((a, b) => b.y - a.y);
+        const hit = (a, b) => a.x < b.x + b.w + 6 && b.x < a.x + a.w + 6 && a.y < b.y + b.h + 6 && b.y < a.y + a.h + 6;
+        let html = "";
+        const boxes = new Map();
+        for (const t of list) {
+            const bx = tagBox(t);
+            if (TAGS !== "base") while (placed.some((p) => hit({ ...bx, y: bx.y + t.dy }, p))) t.dy -= 8;
+            placed.push({ ...bx, y: bx.y + t.dy });
+            boxes.set(t, bx);
+        }
+        // Leaders first, so no line crosses over a tag.
+        for (const t of list) html += tagHtml(t, boxes.get(t), "lead");
+        for (const t of list) html += tagHtml(t, boxes.get(t), "body");
+        PENDING = [];
+        return html;
     }
 
     const ringsOf = (geom) => (geom.type === "Polygon" ? [geom.coordinates] : geom.coordinates);
@@ -135,6 +201,7 @@
 
     async function draw(root, v) {
         const o = LIST[v - 1];
+        TAGS = o.tags ?? "base";
         const g = state(o.game, o.upTo);
         root.style.background = "#fff";
         root.insertAdjacentHTML("beforeend", FILTER);
@@ -246,6 +313,8 @@
             for (const [n, p] of Object.entries(g.pos)) html += tag(...P(p), n === me ? "YOU" : n.toUpperCase(), n === me);
         }
 
+        // Above the inverted layer, so the tags never get flipped.
+        html += `<div style="position:absolute;inset:0;z-index:20">${flushTags()}</div>`;
         const c = chrome(o.box);
         const layer = (z, inner, svg) => root.insertAdjacentHTML("beforeend", svg ? `<svg width="${W}" height="${H}" style="position:absolute;left:0;top:0;pointer-events:none;z-index:${z};overflow:visible">${inner}</svg>` : `<div style="position:absolute;inset:0;pointer-events:none;z-index:${z}">${inner}</div>`);
         layer(4, under, true);
@@ -298,5 +367,15 @@
         return draw(root, LIST.length);
     }
 
-    window.Maps2 = { list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, SKIN_LIST };
+    // The hints layer, third pass: N01-N03 only, on S16 (no text), each with
+    // the five ways of making the players visible.
+    const TAG_LIST = ["base", "big", "ink", "sticker", "shadow", "marker"];
+    function drawHint(root, code) {
+        const [, n, t] = /^(\d)([a-f])$/.exec(code);
+        const base = LIST[Number(n) - 1];
+        LIST.push({ ...base, skin: "tracedthin", tags: TAG_LIST["abcdef".indexOf(t)] });
+        return draw(root, LIST.length);
+    }
+
+    window.Maps2 = { list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, drawHint, SKIN_LIST };
 })();
