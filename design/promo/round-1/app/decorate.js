@@ -199,7 +199,7 @@
     function permSheet(perm) {
         const row = (n, key, icon, name, state, notes) => {
             const btn =
-                state === "on" ? (perm.loc === "on" && perm.compass === "on" ? `<span class="perm-on"></span>` : `<span class="perm-on">On</span>`)
+                state === "on" ? `<span class="perm-on">On</span>`
                 : state === "asking" ? `<button type="button" class="perm-btn" disabled>Asking…</button>`
                 : state === "blocked" ? `<button type="button" class="perm-btn">How to fix</button>`
                 : `<button type="button" class="perm-btn${notes.next ? " next" : ""}">Turn on</button>`;
@@ -333,13 +333,14 @@
             const next = $("#perm-sheet .perm-btn.next");
             if (next) {
                 const b = P.box(next);
-                P.add(Ink.stubArrow(b.x - 50, b.y + b.h + 62, b.x + 8, b.y + b.h + 6, { seed: `pa${perm.loc}`, weight: 13 }));
+                P.add(Ink.stubArrow(b.x - 36, b.y + b.h + 50, b.x + 16, b.y + b.h - 10, { seed: `pa${perm.loc}`, weight: 11 }));
             }
+            // Both on: each On gets its own big check.
             if (perm.loc === "on" && perm.compass === "on") {
-                const rows = $$("#perm-sheet .perm-row").map((r) => P.box(r));
-                const top = rows[0].y;
-                const bot = rows[rows.length - 1].y + rows[rows.length - 1].h;
-                P.add(Ink.bigCheck(innerWidth - 124, top + 14, Math.min(96, bot - top - 24), { seed: "pdone", weight: 16 }));
+                for (const [i, on] of $$("#perm-sheet .perm-on").entries()) {
+                    const b = P.box(on);
+                    P.add(Ink.bigCheck(b.x + b.w + 2, b.y - 16, 40, { seed: `pdone${i}`, weight: 9 }));
+                }
             }
             const fix = $("#perm-sheet .perm-row[data-perm=loc] .perm-btn");
             if (perm.loc === "blocked" && fix) {
@@ -359,7 +360,7 @@
                 const tip = [cx - 6, bb.y + bb.h + 6];
                 P.add(Ink.stubArrow(tip[0] - 78, tip[1] + 96, tip[0], tip[1], { seed: `bella${screen}`, weight: 13 }));
                 // Beside the arrow, in the empty end of the badge row.
-                P.add(Ink.write("NEW", { x: tip[0] + 8, y: tip[1] + 82, size: 44, weight: 9, seed: `belln${screen}`, tilt: -8, importance: "key" }).svg);
+                P.add(Ink.write("NEW", { x: tip[0] - 22, y: tip[1] + 104, size: 44, weight: 9, seed: `belln${screen}`, tilt: -8, importance: "key" }).svg);
             } else {
                 P.add(Ink.circle(cx, cy, bb.w / 2 + 8, bb.h / 2 + 7, { seed: "bell", weight: 4.5 }));
                 P.add(Ink.handArrow(cx - 150, cy + 96, cx - 16, cy + 18, { seed: `bella${screen}`, weight: 7, head: 26, bend: -0.18 }));
@@ -403,6 +404,8 @@
         }
 
         // The stalker's three cards: pick just one, and there are more below.
+        // (Room above them for the note.)
+        if (S.prune && screen === "cards" && $("#card-row")) $("#card-row").style.marginTop = "34px";
         const cards = $$("#card-row .card").filter(visible);
         if (cards.length) {
             const first = L.box(cards[0]);
@@ -413,8 +416,8 @@
                 });
             } else if (styleKey !== "b") {
                 if (S.prune && screen !== "selected") {
-                    // Above the rule, over the end of UNTIL QUESTION, running out of room and curling up.
-                    L.add(Ink.write("PICK JUST ONE.", { x: first.x + 118, y: first.y - 22, size: 34, weight: 7, seed: "pick1", tilt: -5, maxWidth: first.w - 120, importance: "key" }).svg);
+                    // Between the rule and the first card (UNTIL QUESTION stays readable), curling up.
+                    L.add(Ink.write("PICK JUST ONE.", { x: first.x + 96, y: first.y - 10, size: 32, weight: 5.6, spacing: 0.3, seed: "pick1", tilt: -5, maxWidth: first.w - 98, importance: "key" }).svg);
                 }
                 else if (!S.prune) noteAt(L, "PICK JUST ONE.", first.x + first.w - 190, first.y + 30, { maxWidth: 200, size: 22, tilt: -5, importance: "key" });
             }
@@ -485,12 +488,14 @@
         if (screen === "login") {
             const reg = L.box($$(".auth-switch-btn")[1]);
             const cx = reg.x + reg.w / 2;
-            // In the empty username field, the arrow up from it to Register.
-            const user = L.box($("#auth-username") ?? $$("#view-menu input")[0]);
-            const nw = Ink.write("NEW? CLICK HERE", { x: 0, y: 0, size: 24, seed: "NEW? CLICK HERE", tilt: -4, importance: "info", weight: 5 }).width;
-            const base = user.y + user.h - 12;
-            noteAt(L, "NEW? CLICK HERE", innerWidth - 24 - nw, base, { size: 24, tilt: -4, maxWidth: 320, importance: "info", weight: 5 });
-            L.add(Ink.stubArrow(cx + 6, base - 34, cx - 2, reg.y + reg.h + 7, { seed: "reg", weight: 11, head: 24 }));
+            // Just under the tabs, so the username field still reads as empty;
+            // the arrow comes up from the note's start, as thick as its letters.
+            const nw = Ink.write("NEW? CLICK HERE", { x: 0, y: 0, size: 21, seed: "NEW? CLICK HERE", tilt: -4, importance: "info", weight: 4.6 }).width;
+            const base = reg.y + reg.h + 50;
+            const nx = innerWidth - 22 - nw;
+            noteAt(L, "NEW? CLICK HERE", nx, base, { size: 21, tilt: -4, maxWidth: 320, importance: "info", weight: 4.6 });
+            L.add(Ink.stubArrow(nx - 20, base - 4, reg.x + 22, reg.y + reg.h + 6, { seed: "reg", weight: 6, head: 18 }));
+            void cx;
         }
         // Black = press me now: only once there's something to log in with.
         if (screen === "loginfilled") $("#auth-submit").classList.add("cta");
@@ -511,7 +516,10 @@
 
         }
         if (screen === "hiding" && tb) {
-            noteAt(L, "WALK. DON'T RUN.", tb.x + 150, tb.y + 4, { size: 24, maxWidth: 190, tilt: -5, importance: "key" });
+            // Under the paragraph, just over its last line and the rule.
+            const p = $("#status-text");
+            const pb = p && visible(p) ? L.box(p) : { x: tb.x, y: tb.y + 200, w: 300, h: 0 };
+            noteAt(L, "WALK. DON'T RUN.", pb.x + 8, pb.y + pb.h + 36, { size: 30, maxWidth: 330, tilt: -4, importance: "key", weight: 6.2 });
         }
         if ((screen === "found" || screen === "win") && tb) {
             if (S.prune) {
@@ -535,11 +543,19 @@
             const head = $(".modal-head", hm);
             if (head) head.style.display = "none";
         }
+        // Always something red telling you what to do: with nothing else
+        // marked, an arrow at the button to press now.
+        if (S.prune && !L.has() && !P.has() && screen !== "history") {
+            const cta = $$(".cta, .big-btn.cta, #auth-submit.cta").find(visible);
+            if (cta) {
+                const b = P.box(cta);
+                P.add(Ink.stubArrow(b.x + b.w - 34, b.y + b.h + 64, b.x + b.w - 70, b.y + b.h - 8, { seed: `cta${screen}`, weight: 11 }));
+            }
+        }
         L.done();
         P.done();
-        // The header's red is the brand; once anything else on the screen is
-        // red, it steps back to black so the red means "look here".
-        const quiet = S.quietHeader && (L.has() || P.has() || screen === "history");
+        // The header's STALK is always black in the app: red means "look here".
+        const quiet = S.quietHeader || L.has() || P.has();
         headerLogo(S.dark, quiet ? ink : Ink.RED);
 
         // History modal: answers written in.

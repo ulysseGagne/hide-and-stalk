@@ -51,7 +51,7 @@
     const tip = [bx - 6, by + 6];
     const from = (dx, dy) => [tip[0] + dx, tip[1] + dy];
     const S = [
-        ["Short, from below left", from(-78, 96), { weight: 13 }, [14, 84]],
+        ["Short, from below left", from(-78, 96), { weight: 13 }, [-22, 98]],
         ["Straight up from below", from(-6, 112), { weight: 14 }, [20, 96]],
         ["Wider head", from(-80, 92), { weight: 13, spread: 0.78 }, [14, 84]],
         ["Heaviest, shortest", from(-62, 78), { weight: 17 }, [14, 76]],
