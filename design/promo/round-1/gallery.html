@@ -132,6 +132,8 @@ const SETS = [
         ["B20", "CLASSIFIED by hand over the file of what she's admitted"],
         ["B21", "Obsessive: WHERE ARE YOU, over and over"],
         ["B22", "Everything together: map, card, photo, post-it"],
+        ["B23", "B22 with the ransom note (X24): WHERE ARE YOU in cut-out letters"],
+        ["B24", "The redacted file (X07) as evidence, CLASSIFIED by hand"],
     ]},
     { id: "board", title: "B · Boards (first pass)", intro: "The stalker's board, for the bottom of the welcome screen. The evidence is the real game: real question cards with the answers an honest hider near the greenhouses would give, the real campus border and pavilions, and the eliminated area hatched out exactly as the app's Hints map computes it. Polaroids are drawn stand-ins for now: the free-photo sites (Wikimedia Commons, Unsplash, Pexels) are blocked here too, so real photos come with the same network change as the maps.", wide: false, items: [
         ["B01", "Minimal: two cards, one string"],
@@ -181,12 +183,14 @@ const SCREENS = [
     ["01", "login", "Log in"], ["02", "loginfilled", "Both fields typed: Log in turns black"],
     ["03", "permask", "Before you start: location to turn on (black = now)"], ["04", "permasking", "Asking: choose Allow in the iPhone's popup"],
     ["05", "permhalf", "Location on (ticked); the compass is next"], ["06", "permdone", "Both on: Done"], ["07", "permblocked", "Location blocked: How to fix"],
-    ["08", "lobby", "Waiting for a team: Discord and rules, before the game only"], ["09", "ready", "Ready: role stamped, Start in black"],
-    ["10", "hiding", "Hider: go hide"], ["11", "cards", "Stalker: three cards, numbered, pick just one"],
-    ["12", "selected", "Picked, not sent: Send in black"], ["13", "waiting", "Sent, locked in"], ["14", "sent", "Answered"],
-    ["15", "photo", "Photo answer: no gap, nothing on the photo"], ["16", "question", "Hider: new question, the bell arrow"],
-    ["17", "choice", "Hider: which pavilion"], ["18", "tagcode", "Hider: tag code"], ["19", "history", "Questions so far"],
-    ["20", "found", "Stalkers win"], ["21", "win", "Hider wins"],
+    ["08", "lobby", "Waiting for a team: Discord and rules, before the game only"],
+    ["09", "rules1", "The rules, one at a time: rule 1, OK"], ["10", "rules5", "Four initialled, rule 5 up"], ["11", "rulesdone", "All eight initialled: Done"],
+    ["12", "ready", "Ready: role stamped, Start in black"],
+    ["13", "hiding", "Hider: go hide"], ["14", "cards", "Stalker: three cards, numbered, pick just one"],
+    ["15", "selected", "Picked, not sent: Send in black"], ["16", "waiting", "Sent, locked in"], ["17", "sent", "Answered"],
+    ["18", "photo", "Photo answer: no gap, nothing on the photo"], ["19", "question", "Hider: new question, the bell arrow"],
+    ["20", "choice", "Hider: which pavilion"], ["21", "tagcode", "Hider: tag code"], ["22", "history", "Questions so far"],
+    ["23", "found", "Stalkers win: the round's receipt"], ["24", "win", "Hider wins: the receipt, where she was redacted"],
 ];
 const STYLES = [
     ["E", "The app", "One direction, rebuilt from every note on A, B and C."],
@@ -207,7 +211,7 @@ for (const s of SETS) {
     for (const [code, cap] of s.items) html += tile(code, cap, `shots/${code}.png`);
     html += `</div></section>`;
 }
-html += `<section id="styles"><h2>E · The app</h2><p>A, B, C and D are retired. E is one direction rebuilt from all your notes, with every screen reconsidered from zero and not stitched from earlier passes. <b>The system:</b><br>• One line weight: 3 px for every border, rule, input and tab.<br>• Text inside a bordered box is bold and big enough to hold its border.<br>• Nothing is rounded, not even the tabs or the bell. The answer radios are the one exception: round means "pick one".<br>• Buttons: white = not yet, black = press this now, drawn red = pressed or picked.<br>• At most two red marks per screen. The header's STALK turns black whenever something else on the screen is red, so red always means "look here".<br><b>Cut, because it wasn't useful at that moment:</b> Logged in as, the team roll call, the GPS line, the hint count, the question tags, the card note once picking replaced tapping, the status text during the hunt (the timer and the cards already say it), "Answer truthfully" under the questions, and the tag-code paragraph (the handwritten line says it). The Discord button and the rules appear before the game only. The camera icon has left the header; the scanner is a button in the page, where the round ends.<br><b>New:</b> the first-launch "Before you start" sheet (03–07), copied from pacer's two-permission card: location (needed) and compass (optional), one button each, in this app's grammar. Cards are numbered 1 OF 3. NOT SENT YET is big and runs over the Send button. The bell gets a long arrow from low on the screen and no circle: pick the arrow in R below.</p></section>`;
+html += `<section id="styles"><h2>E · The app</h2><p>A, B, C and D are retired. E is one direction rebuilt from all your notes, with every screen reconsidered from zero and not stitched from earlier passes. <b>The system:</b><br>• One line weight: 3 px for every border, rule, input and tab.<br>• Text inside a bordered box is bold and big enough to hold its border.<br>• Nothing is rounded, not even the tabs or the bell. The answer radios are the one exception: round means "pick one".<br>• Buttons: white = not yet, black = press this now, drawn red = pressed or picked.<br>• At most two red marks per screen. The header's STALK turns black whenever something else on the screen is red, so red always means "look here".<br><b>Cut, because it wasn't useful at that moment:</b> Logged in as, the team roll call, the GPS line, the hint count, the question tags, the card note once picking replaced tapping, the status text during the hunt (the timer and the cards already say it), "Answer truthfully" under the questions, and the tag-code paragraph (the handwritten line says it). The Discord button and the rules appear before the game only. The camera icon has left the header; the scanner is a button in the page, where the round ends.<br><b>From your notes on the wild ideas:</b> the rules come one at a time before the game (09–11, from X45): each one gets OK, and the player's initials go on its line, in black like a signature. The end screens get the round as a receipt (23–24, from X02, X34 and X42). The receipt is typeset like a till slip. The only drawn thing on it is the campus-left bar, coloured in, and it stays inside the paper. When the hider gets away, "where" is redacted (X07). The chat idea (X01) stays a principle rather than a screen: every question already reads as sent and answered, and I haven't added anything that would make the app a hybrid.<br><b>New:</b> the first-launch "Before you start" sheet (03–07), copied from pacer's two-permission card: location (needed) and compass (optional), one button each, in this app's grammar. Cards are numbered 1 OF 3. NOT SENT YET is big and runs over the Send button. The bell gets a long arrow from low on the screen and no circle: pick the arrow in R below.</p></section>`;
 for (const [k, name, intro] of STYLES) {
     html += `<section id="style-${k.toLowerCase()}"><h2>${k} · ${name}</h2><p>${intro}</p><div class="grid">`;
     for (const [n, slug, cap] of SCREENS) html += tile(`${k}/${n}`, cap, `shots/${k}-${n}-${slug}.png`);

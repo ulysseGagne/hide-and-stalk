@@ -370,6 +370,37 @@
             const p = postit(b, { x: 140, y: 26, w: 90, rot: 5, text: "WHERE ARE YOU", size: 15 });
             b.string(s2.pinAt, p.pinAt, { width: 2.6 });
         },
+        // B22 with the ransom note (X24): cut-out letters pinned to the board.
+        23(root, W, H) {
+            const b = start(root, W, H);
+            const sc = SC();
+            const m = scrap(b, { x: 48, y: 160, w: 280, h: 196, rot: 1.5, center: turf.centroid(sc.region).geometry.coordinates, zoom: 16.2, region: sc.region });
+            const c = card(b, { x: 34, y: 34, w: 148, rot: -5, q: Q.green, answer: sc.answered[3].answer });
+            const note = b.item(`<div style="position:relative;width:230px;height:118px;background:#fff;border:2px solid #000">${WildKit.ransom("WHERE", 14, 12, 30, "bn1")}${WildKit.ransom("ARE YOU", 34, 62, 30, "bn2")}</div>`, { x: 120, y: 344, w: 230, h: 118, rot: -4 });
+            const pn = note.at(0.5, 0.06);
+            b.pin(pn);
+            b.string(c.pinAt, m.pinAt, BOLD);
+            b.string(pn, m.toBoard(HIDER), BOLD);
+            b.pin(m.toBoard(HIDER), { size: 6.5 });
+            const ph = polaroid(b, { x: 214, y: 24, w: 116, rot: 5, scene: "sit", caption: "PLACE TO SIT" });
+            b.string(ph.pinAt, m.pinR, BOLD);
+        },
+        // The redacted file (X07) as one piece of evidence: what she's admitted, the rest blacked out.
+        24(root, W, H) {
+            const b = start(root, W, H);
+            const sc = SC();
+            const bar = (n) => `<span style="display:inline-block;width:${n}px;height:13px;background:#000;vertical-align:-2px"></span>`;
+            const m = scrap(b, { x: 150, y: 196, w: 196, h: 230, rot: 2.5, center: turf.centroid(sc.region).geometry.coordinates, zoom: 16.4, region: sc.region, pins4: false, pin: true });
+            const doc = b.item(`<div style="border:2px solid #000;background:#fff;font:14px/1.9 ${FONT};padding:14px 16px">
+                <div style="font-weight:700;letter-spacing:.14em;font-size:11px">SUBJECT: ${bar(70)}</div>
+                <div>Last seen ${bar(96)}</div><div>North of ${bar(60)}</div><div>Not within ${bar(44)} m</div><div>Closest café ${bar(88)}</div><div>Hiding ${bar(120)}</div></div>`, { x: 28, y: 40, w: 220, rot: -3 });
+            const dp = doc.at(0.5, 0.05);
+            b.pin(dp);
+            const [sx, sy] = doc.at(0.46, 0.93);
+            b.draw(Ink.box(sx - 96, sy - 22, 196, 48, { seed: "b24b", weight: 4 }));
+            b.draw(Ink.write("CLASSIFIED", { x: sx - 86, y: sy + 14, size: 26, seed: "b24c", tilt: -8, mess: 0.8 }).svg);
+            b.string(dp, m.pinAt, BOLD);
+        },
     });
 
     for (const [n, f] of Object.entries(BOARDS)) {

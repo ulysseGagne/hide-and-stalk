@@ -175,7 +175,47 @@
         document.body.insertAdjacentHTML("beforeend", html);
     }
 
-    function decorate(styleKey, screen, perm = null) {
+    // ---------------------------------------------------------------------
+    // Before the game: the rules one at a time (from X45). Each gets an OK,
+    // and the player's initials go on its line. Round 2 builds it into src/.
+    // ---------------------------------------------------------------------
+    function rulesSheet(signed) {
+        const items = $$(".rules-list li").map((li) => li.innerHTML);
+        const total = items.length;
+        const done = Math.min(signed, total);
+        let rows = "";
+        items.slice(0, done).forEach((html, i) => (rows += `<div class="rule-row signed"><span class="rule-n">${i + 1}</span><p>${html}</p><span class="rule-sign" data-i="${i}"></span></div>`));
+        const current = done < total ? `<div class="rule-row current"><span class="rule-n">${done + 1}</span><p>${items[done]}</p></div><button type="button" class="big-btn cta rule-ok">OK</button>` : "";
+        const html = `<div id="rules-sheet" class="modal"><div class="modal-card">
+            <div class="modal-head"><h2>Rules</h2><span class="rule-count">${done < total ? `${done + 1} OF ${total}` : `${total} OF ${total}`}</span></div>
+            <div class="rules-body">${rows}${current}${done >= total ? `<button type="button" class="big-btn cta rule-ok">Done</button>` : ""}</div></div></div>`;
+        document.body.insertAdjacentHTML("beforeend", html);
+        const body = $("#rules-sheet .rules-body");
+        body.scrollTop = body.scrollHeight;
+    }
+
+    // ---------------------------------------------------------------------
+    // The end: the round as a receipt (from X02, X34, X42). Typeset like a
+    // till slip; the only drawn thing is the campus-left bar, coloured in,
+    // and it stays inside the paper.
+    // ---------------------------------------------------------------------
+    function receiptEl(rc) {
+        const row = ([a, b]) => `<div class="rc-row"><span>${a}</span><b>${b === "REDACTED" ? '<i class="rc-redact"></i>' : b}</b></div>`;
+        const html = `<div class="receipt"><div class="rc-paper">
+            <div class="rc-title">HIDE AND STALK</div>
+            <div class="rc-head">${rc.head}</div>
+            <div class="rc-rule"></div>${rc.lines.map(row).join("")}
+            <div class="rc-rule"></div>${rc.totals.map(row).join("")}
+            <div class="rc-rule"></div>
+            <div class="rc-row"><span>Campus left</span><b>${rc.left}%</b></div>
+            <div class="rc-bar"></div>
+        </div></div>`;
+        const btn = $("#team-again-btn");
+        btn.insertAdjacentHTML("afterend", html);
+    }
+
+    function decorate(styleKey, screen, extra = null) {
+        const perm = extra?.perm ?? null;
         const S = STYLES[styleKey];
         document.body.dataset.style = styleKey;
         if (S.prune) prune(screen);
@@ -206,6 +246,24 @@
         const L = layer(menu);
         const P = screenLayer();
 
+        if (extra?.rules) {
+            rulesSheet(extra.rules.signed);
+            const who = ($("#logged-in-name")?.textContent || "jules").slice(0, 2).toUpperCase();
+            // Initials in the player's own hand: black, like a signature (red stays for "look here").
+            for (const sign of $$("#rules-sheet .rule-sign")) {
+                const b = P.box(sign);
+                if (b.y + b.h < 0 || b.y > innerHeight) continue;
+                P.add(Ink.write(who, { x: b.x + 6, y: b.y + b.h - 6, size: 22, seed: `ini${sign.dataset.i}`, color: ink, importance: "info", tilt: -6 }).svg);
+            }
+        }
+        if (extra?.receipt && S.prune && visible($("#team-again-btn"))) {
+            receiptEl(extra.receipt);
+            const bar = $(".rc-bar");
+            const b = L.box(bar);
+            const w = (b.w - 6) * (1 - extra.receipt.left / 100);
+            // Ruled out, coloured in by hand; stays inside the bar.
+            L.add(Ink.colorIn([[[b.x + 8, b.y + 8], [b.x + 3 + w, b.y + 8], [b.x + 3 + w, b.y + b.h - 8], [b.x + 8, b.y + b.h - 8]]], { seed: `bar${screen}`, weight: 7, overshoot: 0 }));
+        }
         if (perm) {
             permSheet(perm);
             for (const on of $$("#perm-sheet .perm-on")) {

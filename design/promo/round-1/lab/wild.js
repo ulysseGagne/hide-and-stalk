@@ -747,6 +747,13 @@
     };
 
     window.WildKit = { t, box, hw, note, lockup, campus, photo, mw, concept, QS, HIDER, F, M, S, R, W, H, esc };
+    // Shared with the boards (without the red cut: red is only ever drawn).
+    window.WildKit.ransom = (txt, x, y, size, seed) => {
+        const keep = CUTS.splice(0, CUTS.length, ...CUTS.filter((c) => c[1] !== R));
+        const out = ransom(txt, x, y, size, seed);
+        CUTS.splice(0, CUTS.length, ...keep);
+        return out;
+    };
     window.Wild = {
         get list() {
             return flat().map(({ code, name, pitch, key, label }) => ({ code, name, pitch, key, label }));

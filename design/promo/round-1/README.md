@@ -32,7 +32,7 @@ Gallery (all images, with Keep + notes): https://claude.ai/artifact/LdRszjr2qKJ9
 npm install                                   # here, in design/promo/round-1
 node tools/shoot-lab.mjs logo 1 12 375 480    # L01-L12
 node tools/shoot-lab.mjs board 1 12 375 440   # B01-B12
-node tools/shoot-lab.mjs board 13 22 375 480  # B13-B22, second pass (lab/board2.js)
+node tools/shoot-lab.mjs board 13 24 375 480  # B13-B24, second pass (lab/board2.js)
 node tools/shoot-lab.mjs welcome 1 12 375 812 # W01-W12
 node tools/shoot-lab.mjs welcome 13 24 375 812 # W13-W24, second pass (lab/welcome2.js)
 node tools/shoot-lab.mjs logo 1.1,1.2,1.3,1.4,1.5,1.6,2.1,2.2,3.1,3.2,7.1,7.2,7.3,7.4,12.1 0 375 520 L
@@ -83,3 +83,7 @@ to build. Round 2 also needs:
   in-page "Found them? Scan their code" button.
 - Everything prune() hides gets removed from src/ for that phase.
 - The header's red goes black while anything else on screen is red.
+- Before the game: the rules one at a time, OK on each, the player's
+  initials drawn on its line; Done after the last (X45).
+- End screens: the round as a receipt (questions, answers, hide and hunt
+  time, found by / where redacted, campus left as a hand-coloured bar).

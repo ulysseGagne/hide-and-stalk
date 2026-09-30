@@ -152,6 +152,10 @@ export const SCREENS = {
         position: POS.jules,
         state: { serverNow: NOW, settings, me: { ...me("jules"), groupId: null, role: null }, team: null, users: [], cards: null },
     },
+    // Before the game: the rules, one at a time, each OK'd and initialled.
+    rules1: { position: POS.jules, rules: { signed: 0 }, state: { serverNow: NOW, settings, me: me("jules"), team: team("ready"), users: users("jules", { hunting: false }), cards: null } },
+    rules5: { position: POS.jules, rules: { signed: 4 }, state: { serverNow: NOW, settings, me: me("jules"), team: team("ready"), users: users("jules", { hunting: false }), cards: null } },
+    rulesdone: { position: POS.jules, rules: { signed: 8 }, state: { serverNow: NOW, settings, me: me("jules"), team: team("ready"), users: users("jules", { hunting: false }), cards: null } },
     ready: {
         position: POS.jules,
         state: { serverNow: NOW, settings, me: me("jules"), team: team("ready"), users: users("jules", { hunting: false }), cards: null },
@@ -302,6 +306,12 @@ export const SCREENS = {
     },
     found: {
         position: POS.jules,
+        receipt: {
+            head: "TEAM 3 · MON 5 OCT · 13:32",
+            lines: [["Q1 North or south?", "NORTH"], ["Q2 Within 500 m?", "NO"], ["Q3 Closest café?", "P'TIT CAAF"], ["Q4 Closer to the greenhouses?", "YES"]],
+            totals: [["Hide", "10:00"], ["Hunt", "23:14"], ["Found by", "jules"]],
+            left: 4,
+        },
         state: (() => {
             const p = plays(4);
             return {
@@ -316,6 +326,12 @@ export const SCREENS = {
     },
     win: {
         position: HIDER,
+        receipt: {
+            head: "TEAM 3 · MON 5 OCT · 13:39",
+            lines: [["Q1 North or south?", "NORTH"], ["Q2 Within 500 m?", "NO"], ["Q3 Closest café?", "P'TIT CAAF"], ["Q4 Closer to the greenhouses?", "YES"], ["Q5 Nearest door", "PHOTO"], ["Q6 Nearest building?", "ABP"]],
+            totals: [["Hide", "10:00"], ["Hunt", "30:00"], ["Where", "REDACTED"]],
+            left: 2,
+        },
         state: (() => {
             const p = plays(4);
             return {
