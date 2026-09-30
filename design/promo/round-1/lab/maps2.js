@@ -30,7 +30,12 @@
 
     const LUMA = `<feColorMatrix type="matrix" values="0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0 0 0 1 0"/>`;
     const step = Array.from({ length: 40 }, (_, i) => (i / 40 < 0.7 ? 0 : 1)).join(" ");
-    const FILTER = `<svg width="0" height="0" style="position:absolute"><defs><filter id="m2x" color-interpolation-filters="sRGB">${LUMA}<feComponentTransfer><feFuncR type="discrete" tableValues="${step}"/><feFuncG type="discrete" tableValues="${step}"/><feFuncB type="discrete" tableValues="${step}"/></feComponentTransfer></filter></defs></svg>`;
+    const cut = (c) => Array.from({ length: 40 }, (_, i) => (i / 40 < c ? 0 : 1)).join(" ");
+    const tf = (id, c) => `<filter id="${id}" color-interpolation-filters="sRGB">${LUMA}<feComponentTransfer><feFuncR type="discrete" tableValues="${cut(c)}"/><feFuncG type="discrete" tableValues="${cut(c)}"/><feFuncB type="discrete" tableValues="${cut(c)}"/></feComponentTransfer></filter>`;
+    const FILTER = `<svg width="0" height="0" style="position:absolute"><defs>${tf("m2x", 0.7)}${tf("m2g", 0.86)}
+        <filter id="m2l" color-interpolation-filters="sRGB">${LUMA}<feConvolveMatrix order="3" kernelMatrix="-1 -1 -1 -1 8 -1 -1 -1 -1" preserveAlpha="true"/><feComponentTransfer><feFuncR type="discrete" tableValues="1 1 0 0 0 0 0 0 0 0"/><feFuncG type="discrete" tableValues="1 1 0 0 0 0 0 0 0 0"/><feFuncB type="discrete" tableValues="1 1 0 0 0 0 0 0 0 0"/></feComponentTransfer></filter></defs></svg>`;
+    // The skins: how the tiles are printed.
+    const SKINS = { xerox: "url(#m2x)", ground: "url(#m2g)", lines: "url(#m2l)", grey: "grayscale(1) contrast(1.3)", osm: "none" };
 
     // The app around the map (direction E): header with MAP open, the question box.
     function chrome(box) {
@@ -94,7 +99,7 @@
         const map = L.map(mapEl, { zoomControl: false, attributionControl: true, zoomSnap: 0, fadeAnimation: false, zoomAnimation: false });
         map.attributionControl.setPrefix(false);
         const tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
-        mapEl.querySelector(".leaflet-tile-pane").style.filter = "url(#m2x)";
+        mapEl.querySelector(".leaflet-tile-pane").style.filter = SKINS[o.skin ?? "xerox"];
         // The whole campus, below the question box: no auto-zoom.
         const ring = Campus.layers.campus.ring;
         map.fitBounds(L.latLngBounds(ring.map(([lng, lat]) => [lat, lng])), { paddingTopLeft: [10, 118], paddingBottomRight: [10, 16], animate: false });
@@ -225,6 +230,12 @@
         { game: G, upTo: 2, view: "hider", tether: true, box: next(3, "3:12", "Closest stalker, as the crow flies."), name: "Hider between questions: one string, the closest stalker" },
         // For the receipt: her walk, and where they got her.
         { game: G, upTo: 4, view: "hider", path: true, box: { kicker: "FOUND · 13:32", text: "Your walk, from the start to the X." }, name: "For the receipt: her walk, the X where they found her" },
+        // The skins, on the same moment (nothing waiting, no hints): just the map and the players.
+        { game: G, upTo: 2, view: "stalker", skin: "xerox", box: next(3, "3:12"), name: "Skin: xerox (pure black and white, light)" },
+        { game: G, upTo: 2, view: "stalker", skin: "ground", box: next(3, "3:12"), name: "Skin: figure-ground (buildings black)" },
+        { game: G, upTo: 2, view: "stalker", skin: "lines", box: next(3, "3:12"), name: "Skin: traced (outlines only)" },
+        { game: G, upTo: 2, view: "stalker", skin: "grey", box: next(3, "3:12"), name: "Skin: grey (breaks the no-grey rule)" },
+        { game: G, upTo: 2, view: "stalker", skin: "osm", box: next(3, "3:12"), name: "Skin: plain OpenStreetMap (breaks the palette)" },
     ];
 
     window.Maps2 = { list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw };

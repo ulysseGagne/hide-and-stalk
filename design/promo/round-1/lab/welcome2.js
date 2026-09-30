@@ -52,7 +52,7 @@
         const y = BTN.y;
         svg.innerHTML =
             side === "left"
-                ? Ink.handArrow(46, y - 96, 92, y - 12, { seed, weight: 4, bend: -0.12, head: 16 })
+                ? Ink.bigArrow(40, y - 120, 96, y - 12, { seed, weight: 4.5, bend: -0.18 })
                 : Ink.handArrow(W - 48, y - 100, W - 100, y - 12, { seed, weight: 4, bend: 0.12, head: 16 });
         root.appendChild(svg);
     }
@@ -67,10 +67,10 @@
         box.style.background = "transparent";
     }
 
-    function screen({ logo, label = "LET ME IN", arrowSide = null, illo = null, dark = false }) {
+    function screen({ logo, label = "LET ME IN", arrowSide = null, illo = null, dark = false, centre = false }) {
         return async (root) => {
             root.style.background = dark ? "#000" : "#fff";
-            const l = lockup(root, logo, { dark, k: illo ? 0.8 : 1 });
+            const l = lockup(root, logo, { dark, k: illo ? 0.8 : 1, top: centre ? 170 : 40 });
             if (illo) {
                 // Between the title and the button, never touching either.
                 const k = 1.3;
@@ -96,6 +96,16 @@
         23: { logo: "1.5", label: "LET ME IN", arrowSide: "right", dark: true, name: "Dark mode of W15" },
         24: { logo: "1.5", label: "LET ME IN", illo: "w1", dark: true, name: "Dark mode of W19" },
     };
+    // Home screen layouts (one lockup throughout, so only the layout changes).
+    const LOGO = "1.1";
+    Object.assign(SCREENS, {
+        25: { logo: LOGO, label: "LET ME IN", name: "Title up top, button at the bottom" },
+        26: { logo: LOGO, label: "LET ME IN", arrowSide: "left", name: "Same, one small red arrow at the button" },
+        27: { logo: LOGO, label: "LET ME IN", centre: true, name: "Title in the middle of the screen" },
+        28: { logo: LOGO, label: "LET ME IN", illo: "w1", name: "Title and a scene: card and photo" },
+        29: { logo: LOGO, label: "LET ME IN", illo: "w2", name: "Title and a scene: the map" },
+        30: { logo: LOGO, label: "LET ME IN", illo: "w4", name: "Title and a scene: the ransom note" },
+    });
     for (const [n, spec] of Object.entries(SCREENS)) Welcome.extra[n] = screen(spec);
     Welcome.second = SCREENS;
 })();

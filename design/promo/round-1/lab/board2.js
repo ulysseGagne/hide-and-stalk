@@ -363,6 +363,16 @@
             const c = card(b, { x: 10, y: 22, w: 112, rot: -5, q: Q.green, answer: sc.answered[3].answer, answerSize: 20 });
             b.string(c.pinAt, m.pinAt, { width: 2.6 });
         },
+        // The ransom note, pinned to the map.
+        w4(root, W, H, o) {
+            const b = start(root, W, H, o);
+            const sc = SC();
+            const m = scrap(b, { x: 118, y: 12, w: 122, h: 132, rot: 3, center: turf.centroid(sc.region).geometry.coordinates, zoom: 15.9, region: sc.region, pins4: false, pin: true });
+            const note = b.item(`<div style="position:relative;width:128px;height:96px;background:#fff;border:2px solid #000">${WildKit.ransom("WHERE", 8, 8, 19, "wn1")}${WildKit.ransom("ARE YOU", 12, 50, 19, "wn2")}</div>`, { x: 8, y: 34, w: 128, h: 96, rot: -5 });
+            const pn = note.at(0.5, 0.07);
+            b.pin(pn);
+            b.string(pn, m.pinAt, { width: 2.6 });
+        },
         // The subject and a post-it.
         w3(root, W, H, o) {
             const b = start(root, W, H, o);

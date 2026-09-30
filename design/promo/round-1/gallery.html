@@ -73,7 +73,7 @@ body.only-kept .tile:not(.kept) { display: none; }
     </header>
 
     <nav class="bar" aria-label="Sections">
-        <a href="#logo2">Logo</a><a href="#hand">Handwriting</a><a href="#board2">Boards</a><a href="#welcome2">Welcome</a><a href="#styles">App</a><a href="#arrows">Arrows</a><a href="#maps">Maps</a>
+        <a href="#logo2">Logo</a><a href="#hand">Handwriting</a><a href="#board2">Board</a><a href="#welcome2">Home screen</a><a href="#styles">App</a><a href="#arrows">Arrow</a><a href="#maps">Maps</a>
         <span class="spacer"></span>
         <span class="count" id="count">0 kept</span>
         <label for="onlykept"><input type="checkbox" id="onlykept"> Kept only</label>
@@ -86,7 +86,7 @@ body.only-kept .tile:not(.kept) { display: none; }
 
 <script>
 const SETS = [
-    { id: "logo2", title: "L · Logo", intro: "Your L1, L2, L3, L7 and L8 notes applied. SEEK is crossed out with pen pressure, and STALK never touches the scribble or the screen edge. In the tucked versions (emboîté), each letter has its own size and height.", wide: false, items: [
+    { id: "logo2", title: "Logo", intro: "Your L1, L2, L3, L7 and L8 notes applied. SEEK is crossed out with pen pressure, and STALK never touches the scribble or the screen edge. In the tucked versions (emboîté), each letter has its own size and height.", wide: false, items: [
         ["L1.1", "L1, pressure scribble, STALK lowered clear of it"],
         ["L1.2", "L1.1 with tucked letters, gentle"],
         ["L1.3", "L1 with L8's STALK and spacing"],
@@ -103,11 +103,11 @@ const SETS = [
         ["L7.4", "The whole unit one width, STALK included"],
         ["L12.1", "Header + icons: H & in type, S by hand (one dark-mode icon)"],
     ]},
-    { id: "hand", title: "H · Handwriting", intro: "All app handwriting sits between 30% and 70% of the way from H1 (calm) to H3 (unhinged). Small or important text leans calm; big text, or text that's just for the vibe, leans wild.", wide: true, items: [
+    { id: "hand", title: "Handwriting", intro: "All app handwriting sits between 30% and 70% of the way from H1 (calm) to H3 (unhinged). Small or important text leans calm; big text, or text that's just for the vibe, leans wild.", wide: true, items: [
         ["H04", "The band: score 0 to 1, with H1 and H3 for reference"],
         ["H05", "Real app lines, scored automatically"],
     ]},
-    { id: "board2", title: "B · Boards", intro: "For the poster illustration: centred, a mix of objects, the real map coloured in, hand-drawn photos. B22–B24 are the candidates.", wide: false, items: [
+    { id: "board2", title: "Board", intro: "For the poster illustration: centred, a mix of objects, the real map coloured in, hand-drawn photos. B22–B24 are the candidates.", wide: false, items: [
         ["B13", "B1, minimal: two cards, no labels, a bolder string, the thought underneath"],
         ["B14", "B2, rebalanced: tighter and centred, a photo in place of the fourth card"],
         ["B15", "The real map, pinned at four corners, coloured in, HERE?"],
@@ -121,19 +121,13 @@ const SETS = [
         ["B23", "B22 with the ransom note (X24): WHERE ARE YOU in cut-out letters"],
         ["B24", "The redacted file (X07) as evidence, CLASSIFIED by hand"],
     ]},
-    { id: "welcome2", title: "W · Welcome", intro: "Each title is an exact copy of its L lockup. The only red is the title's (plus, on some, one small arrow), and the button is plain. W22–W24 are dark mode.", wide: false, items: [
-        ["W13", "L1.1, plain button: LET ME IN"],
-        ["W14", "L1.1, plain button, one small red arrow"],
-        ["W15", "L1.5 (tucked), arrow from the right"],
-        ["W16", "L1.3 (L8's STALK), I'M IN"],
-        ["W17", "L7.4 (one-width block), arrow"],
-        ["W18", "L2.1 (& SEEK), ENTER"],
-        ["W19", "With a scene: card and photo, drawn heavy"],
-        ["W20", "With a scene: the map scrap and a card"],
-        ["W21", "With a scene: the scribbled-out face and a post-it"],
-        ["W22", "Dark mode of W14"],
-        ["W23", "Dark mode of W15"],
-        ["W24", "Dark mode of W19"],
+    { id: "welcome2", title: "Home screen", intro: "Layouts only. Every screen uses the same lockup (L1.1, swappable for whichever you pick), a plain button, and no red except the title's.", wide: false, items: [
+        ["W25", "Title up top, button at the bottom"],
+        ["W26", "Same, one small red arrow at the button"],
+        ["W27", "Title in the middle of the screen"],
+        ["W28", "Title and a scene: card and photo"],
+        ["W29", "Title and a scene: the map"],
+        ["W30", "Title and a scene: the ransom note"],
     ]},
 ];
 
@@ -169,27 +163,26 @@ for (const s of SETS) {
     for (const [code, cap] of s.items) html += tile(code, cap, `shots/${code}.png`);
     html += `</div></section>`;
 }
-html += `<section id="styles"><h2>E · The app</h2><p>One direction, rebuilt from all your notes.<br>• One line weight (3 px), nothing rounded.<br>• White button = not yet, black = press this now, drawn red = pressed or picked.<br>• At most two red marks per screen; the header's STALK turns black when anything else is red.<br>• Anything not useful at that moment is gone.<br>New: the first-launch permissions (03–07), the rules signed one by one (09–11), and the receipt on both end screens (23–24).</p></section>`;
+html += `<section id="styles"><h2>App</h2><p>One direction, rebuilt from all your notes.<br>• One line weight (3 px), nothing rounded.<br>• White button = not yet, black = press this now, drawn red = pressed or picked.<br>• At most two red marks per screen; the header's STALK turns black when anything else is red.<br>• Anything not useful at that moment is gone.<br>New: the first-launch permissions (03–07), the rules signed one by one (09–11), and the receipt on both end screens (23–24).</p></section>`;
 for (const [k, name, intro] of STYLES) {
     html += `<section id="style-${k.toLowerCase()}"><h2>${k} · ${name}</h2><p>${intro}</p><div class="grid">`;
     for (const [n, slug, cap] of SCREENS) html += tile(`${k}/${n}`, cap, `shots/${k}-${n}-${slug}.png`);
     html += `</div></section>`;
 }
 const ARROWS = ["Long curve, one flick, sharp point", "Straighter and heavier", "Coloured-in head", "Open head, long sides", "Double shaft", "Curl at the tail", "Dashed shaft", "From the other side"];
-html += `<section id="arrows"><h2>R · The notification arrow</h2><p>Options for the one thing that must never be missed. Each points at the bell from low on the screen, with NEW at its tail and no circle. The screens above use R01; say which one to keep.</p><div class="grid">`;
+html += `<section id="arrows"><h2>Notification arrow</h2><p>Options for the one thing that must never be missed. Each points at the bell from low on the screen, with NEW at its tail and no circle. The screens above use R01; say which one to keep.</p><div class="grid">`;
 ARROWS.forEach((cap, i) => (html += tile(`R${String(i + 1).padStart(2, "0")}`, cap, `shots/R${String(i + 1).padStart(2, "0")}.png`)));
 html += `</div></section>`;
-const MAPS2 = [
-    ["Hints: the map unchanged, the red line is all (hand-drawn)", "hints"], ["Hints: ruled out inverted to black, no line", "hints"], ["Hints: inverted, red line by hand", "hints"], ["Hints: inverted, a computer line", "hints"],
-    ["Hints: ruled out deleted, a computer line", "hints"], ["Hints: deleted, red line by hand", "hints"], ["Hints: deleted, no line", "hints"],
-    ["Q3 nearest café: the cafés, pinned in red (stalker)", "ask"], ["Same question, the hider's map", "ask"], ["Q4 closer than me: the circle through noah_b", "ask"],
-    ["Q5 east or west: the line, which side is which", "ask"], ["Same question, the hider's map", "ask"], ["Game 2, within 200 m: the circle (stalker)", "ask"], ["Same question, the hider's map", "ask"],
-    ["Hider between questions: one string, the closest stalker", "other"], ["For the receipt: her walk, the X where they found her", "other"],
+const MAPPART = [
+    ["skins", "1 · Skins: how the tiles are printed", "The same moment on five tile treatments, with no hints and nothing waiting.", [[17, "Xerox: pure black and white, light"], [18, "Figure-ground: buildings black"], [19, "Traced: outlines only"], [20, "Grey (breaks the no-grey rule)"], [21, "Plain OpenStreetMap (breaks the palette)"]]],
+    ["hints", "2 · The hints layer", "Where she can still be, after two answers, with nothing waiting. This is the one red thing on the stalker's map between questions. Pick a treatment.", [[1, "The map unchanged; a hand-drawn red line"], [2, "Ruled out inverted to black, no line"], [3, "Inverted, hand-drawn red line"], [4, "Inverted, a computer line"], [5, "Ruled out deleted, a computer line"], [6, "Deleted, hand-drawn red line"], [7, "Deleted, no line"]]],
+    ["ask", "3 · Asking a question (stalker)", "The question sits in the box at the top. Only what it needs is red, and the hints layer steps aside. The first stalker to send it asks for the team, and lines and circles start where they stood.", [[8, "Nearest café: the cafés, pinned in red"], [10, "Closer than me: the circle through the asker"], [11, "East or west: the line, which side is which"], [13, "Within 200 m: the circle"]]],
+    ["answer", "4 · Answering it (hider)", "The same questions on the hider's map, plus the hider between questions: one string, to the closest stalker.", [[9, "Nearest café"], [12, "East or west"], [14, "Within 200 m"], [15, "Between questions: the closest stalker"]]],
 ];
-html += `<section id="maps"><h2>M · Maps</h2><p>Redone from scratch.<br>• Everything you need is computer-drawn: the map, the hints layer, the players (name tags, you in black) and the question, in a plain box at the top. With the red taken away, the map still works.<br>• Red is the one thing to look at, and only one: the hints layer when nothing is waiting (pick a treatment in N01–N07), or only what the waiting question needs (N08–N14), with the hints layer out of the way.<br>• The map opens on the whole campus, with no auto-zoom.<br>• Who asks? The first stalker on the team to send a card. It goes for the whole team, and the others get "your team already sent a question". Lines and circles start where that stalker stood when they sent it.</p></section>`;
-for (const [label, grp] of [["The hints layer (stalker, after two answers, nothing waiting)", "hints"], ["A question waiting: only that question in red", "ask"], ["The hider, and the receipt", "other"]]) {
-    html += `<section id="maps-${grp}"><h2>${label}</h2><div class="grid">`;
-    MAPS2.forEach(([cap, g], i) => { if (g === grp) html += tile(`N${String(i + 1).padStart(2, "0")}`, cap, `shots/N${String(i + 1).padStart(2, "0")}.png`); });
+html += `<section id="maps"><h2>Map</h2><p>Everything you need is computer-drawn: the map, the hints layer, the players (name tags, you in black) and the question. Red is the one thing to look at right now. The map opens on the whole campus, with no auto-zoom.</p></section>`;
+for (const [id, title, intro, items] of MAPPART) {
+    html += `<section id="maps-${id}"><h2>${title}</h2><p>${intro}</p><div class="grid">`;
+    for (const [n, cap] of items) html += tile(`N${String(n).padStart(2, "0")}`, cap, `shots/N${String(n).padStart(2, "0")}.png`);
     html += `</div></section>`;
 }
 document.getElementById("sections").innerHTML = html;
