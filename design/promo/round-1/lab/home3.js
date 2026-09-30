@@ -139,7 +139,10 @@
         const h = square ? w : LW * 2 + pad + q.length * fs * 1.16 + 12 + ansSize * 1.05 + pad + 4;
         const html = `<div style="${BOX};width:${w}px;height:${h}px;padding:${pad}px;font:700 ${fs}px/1.16 ${FONT};letter-spacing:0;white-space:nowrap">${q.join("<br>")}</div>`;
         const it = s.add(html, { x, y, w, h, rot });
-        const [ax, ay] = it.at((LW + pad) / w, (h - pad - 6) / h);
+        // On a square card the answer sits higher: halfway between the question and the bottom.
+        const qb = LW + pad + q.length * fs * 1.16;
+        const base = square ? (qb + 10 + ansSize + (h - pad - 6)) / 2 : h - pad - 6;
+        const [ax, ay] = it.at((LW + pad) / w, base / h);
         s.b.draw(Ink.write(answer, { x: ax, y: ay, size: ansSize, seed: seed ?? answer, tilt: rot - 2, importance: "key" }).svg);
         return it;
     }
