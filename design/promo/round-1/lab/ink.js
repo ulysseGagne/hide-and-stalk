@@ -891,15 +891,25 @@
         const R = s * 0.6;
         const cy = y - s * 1.4;
         const alpha = Math.acos(R / (s * 1.4));
-        const loop = [[x, y]];
-        for (let i = 0; i <= 36; i++) {
-            const f = Math.PI / 2 + alpha + (i / 36) * (2 * Math.PI - 2 * alpha);
-            // A touch uneven, slowly: no bumps.
-            const k = R * (1 + n(i * 0.22) * 0.025);
-            loop.push([x + Math.cos(f) * k, cy + Math.sin(f) * k]);
+        // A little less clean, like the round pin: the head in 16 facets, each a
+        // little in or out; the straight sides with a little give; the point
+        // exactly on the spot.
+        const head = [];
+        for (let i = 0; i <= 16; i++) {
+            const f = Math.PI / 2 + alpha + (i / 16) * (2 * Math.PI - 2 * alpha);
+            const k = R * (1 + n(i * 0.7) * 0.06);
+            head.push([x + Math.cos(f) * k, cy + Math.sin(f) * k]);
         }
+        const side = (a, b, at) => {
+            const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+            return [1, 2, 3].map((k) => {
+                const off = n(at + k * 0.9) * s * 0.03;
+                return [a[0] + ((b[0] - a[0]) * k) / 4 - ((b[1] - a[1]) / len) * off, a[1] + ((b[1] - a[1]) * k) / 4 + ((b[0] - a[0]) / len) * off];
+            });
+        };
+        const loop = [[x, y], ...side([x, y], head[0], 40), ...head, ...side(head[head.length - 1], [x, y], 80)];
         const d = (pts) => `M${pts.map((p) => `${p[0].toFixed(2)} ${p[1].toFixed(2)}`).join("L")}Z`;
-        const circ = (cx0, cy0, rr, m = 18) => Array.from({ length: m }, (_, i) => [cx0 + Math.cos((-i / m) * Math.PI * 2) * rr, cy0 + Math.sin((-i / m) * Math.PI * 2) * rr]);
+        const circ = (cx0, cy0, rr, m = 14) => Array.from({ length: m }, (_, i) => [cx0 + Math.cos((-i / m) * Math.PI * 2) * rr * (1 + n(60 + i * 0.8) * 0.07), cy0 + Math.sin((-i / m) * Math.PI * 2) * rr * (1 + n(60 + i * 0.8) * 0.07)]);
         const dot = o.dot ?? "cut";
         const hole = dot === "cut" ? d(circ(x, cy, s * 0.22)) : "";
         const id = `gp${Math.round(x * 10)}x${Math.round(y * 10)}`;

@@ -433,12 +433,12 @@
         if (o.view === "hider") {
             const hp = P(g.hider);
             const [, near] = Object.entries(g.pos).sort((a, b) => dist(g.hider, a[1]) - dist(g.hider, b[1]))[0];
-            you = youMark(hp[0], hp[1], "p", bearing(g.hider, near));
+            you = youMark(hp[0], hp[1], "p.6.5", bearing(g.hider, near));
             for (const [n, p] of Object.entries(g.pos)) other(n, p);
         } else {
             for (const [n, p] of Object.entries(g.pos)) {
                 if (n !== g.me) other(n, p);
-                else you = youMark(...P(p), "p", bearing(p, g.hider));
+                else you = youMark(...P(p), "p.6.5", bearing(p, g.hider));
             }
         }
 
@@ -537,12 +537,14 @@
         return { pts, left, cx: x, cy: top + h / 2 };
     }
     function otherTag(t, x, y, label) {
-        // p: B29's pushpin, no name; p.1: tapped, the name above it.
+        // p: B29's pushpin as everyone else is shown: no name, and (right) tapped,
+        // the name above it. p.1: the tapped pin alone.
         if (t === "p" || t === "p.1") {
-            const pin = Ink.pin(x, y, { size: 8 });
-            if (t === "p") return pin;
-            const bb = bubble(x, y - 7, label);
-            return `${pin}<path d="M${bb.pts.map((q) => q.join(" ")).join("L")}Z" fill="#fff" stroke="#000" stroke-width="3" stroke-linejoin="miter"/>${tagText(bb.cx, bb.cy, label)}`;
+            const tapped = (px) => {
+                const bb = bubble(px, y - 7, label);
+                return `${Ink.pin(px, y, { size: 8 })}<path d="M${bb.pts.map((q) => q.join(" ")).join("L")}Z" fill="#fff" stroke="#000" stroke-width="3" stroke-linejoin="miter"/>${tagText(bb.cx, bb.cy, label)}`;
+            };
+            return t === "p" ? Ink.pin(x - 62, y, { size: 8 }) + tapped(x + 44) : tapped(x);
         }
         if (t === "a" || t === "k" || t === "k.1" || t === "l") {
             // k.1: k with the name written by hand too, in red like its edge; the tag fits the handwriting.
@@ -632,6 +634,8 @@
                 // or running into it, cut by the edge itself (p.8).
                 "p.7": tri(inset(0.14, 1.8), inset(0.86, 1.8), inset(0.76, 4.6)),
                 "p.8": tri(inset(0.14, 1.8), inset(1.08, 1.8), inset(0.9, 5.6)),
+                // Between p.6 and p.7: the one decided, on every map.
+                "p.6.5": tri(inset(0.14, 1.8), inset(0.76, 1.8), inset(0.66, 4.5)),
             }[kind];
             return `<defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="${R}"/><g clip-path="url(#${id})">${shine}</g><path d="${d}" fill="none" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/>`;
         }
