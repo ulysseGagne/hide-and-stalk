@@ -31,7 +31,7 @@
             const q = new URLSearchParams(location.search);
             const set = q.get("set");
             // A code that isn't a plain number ("54.1a") is passed as it is.
-            const v = set === "logo" || set === "skin" || set === "hint" || set === "tags" || set === "map2" || (set === "arrow" && q.get("v").includes(".")) || Number.isNaN(Number(q.get("v"))) ? q.get("v") : Number(q.get("v"));
+            const v = set === "logo" || set === "skin" || set === "hint" || set === "tags" || set === "you" || set === "map2" || (set === "arrow" && q.get("v").includes(".")) || Number.isNaN(Number(q.get("v"))) ? q.get("v") : Number(q.get("v"));
             const W = Number(q.get("w") ?? 375);
             const H = Number(q.get("h") ?? 460);
             await document.fonts.load("700 40px Arimo");
@@ -60,6 +60,8 @@
                 await OSMDraw.ready;
                 root.style.background = "#fff";
                 root.innerHTML = OSMDraw.legend(v);
+            } else if (set === "you") {
+                Maps2.youOnly(root, String(q.get("v")));
             } else if (set === "tags") {
                 Maps2.tagsOnly(root, String(q.get("v")));
             } else if (set === "hint") {

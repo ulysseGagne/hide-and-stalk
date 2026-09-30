@@ -16,7 +16,7 @@ work it out (`key` < `info` < `aside` < `vibe`; bigger text leans wilder).
 `write()` and `note()` use it whenever no explicit `mess` is given.
 
 Gallery (all images, with Keep + notes): https://claude.ai/artifact/He5TXmq1iCTb7XiyVuGYRk
-(the up-to-date one, version 9, Sept 30, on the ugagne08 login). Color Map
+(the up-to-date one, version 10, Sept 30, on the ugagne08 login). Color Map
 Editor: https://claude.ai/artifact/Y6kmr77pJjn1JwPpUyfp9n (same login). Older
 galleries: https://claude.ai/artifact/6LoZgEJAQMzaR6Z6AintGP (version 14, the
 other login) and https://claude.ai/artifact/LdRszjr2qKJ9ckB1ZLNKgJ (this
@@ -35,7 +35,9 @@ republish after every change they might want to see.
 - **Decided:** logo L16.6b, handwriting H06, board B29, ransom notes C19,
   notification arrow R10.3; on every map, everyone else is one of B29's
   pushpins with no name (a tap shows it above the pin: Tp, Tp.1, N3a.1) and
-  YOU is Yp, Yn's arrow in the pin's look (`youMark(..., "p")`). The map is
+  YOU is Yp, Yn's arrow in the pin's look (`youMark(..., "p")`); its shine is
+  open: the oval (p, on the maps) or p.1-p.5 (line, triangle, blade, fold,
+  two strokes). The map is
   S20, decided: every road and path OpenStreetMap has (tunnels never), the
   key's areas, streets and buildings solid black, woods in close dots, grass
   in sparse ones, the stadium and track hatched; S20a, S20b, S20c are the
@@ -142,7 +144,7 @@ node tools/shoot-lab.mjs skin 30.03a,31.22a,31.22b 0 375 812 S  # retired: the k
 node tools/shoot-lab.mjs hint 2a,3a 0 375 812 N  # the hints layer, on S20
 node tools/shoot-lab.mjs map2 3a.1,08,08a,08.2a,10.1,11,13,15 0 375 812 N  # a player tapped, and the question screens, on S20
 node tools/shoot-lab.mjs tags p,p.1 0 240 175 T  # Tp, Tp.1: everyone else as B29's pushpin, and tapped
-node tools/shoot-lab.mjs tags Yp,Yn 0 240 175 ""  # YOU: Yp (on every map) and Yn before it
+node tools/shoot-lab.mjs you p,p.1,p.2,p.3,p.4,p.5 0 240 175 Y  # YOU's shine six ways, 3x: oval (on the maps), line, triangle, blade, fold, two strokes
 node tools/shoot-app.mjs e                     # E-01 ... E-24b (needs app/bench.svg: node tools/export-bench.mjs)
 node tools/export-key-editor.mjs               # key-editor/ways.json, for the Color Map Editor
 node tools/bake-key-overrides.mjs <dir>        # the editor's choices -> lab/data/key-overrides.json

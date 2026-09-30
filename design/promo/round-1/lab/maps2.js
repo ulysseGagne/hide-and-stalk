@@ -579,10 +579,12 @@
         const edge = (seed) => Ink.wobble([...pts, pts[0], pts[1]].map((p, i, all) => (i === all.length - 1 ? [(p[0] + all[i - 1][0]) / 2, (p[1] + all[i - 1][1]) / 2] : p)), { seed, weight: 3.4, amp: 0.7 });
         if (kind === "m") return `<polygon points="${poly}" fill="#fff"/>${edge("youm")}`;
         if (kind === "n") return `<polygon points="${poly}" fill="${R}"/>${edge("youn")}`;
-        if (kind === "p") {
+        if (kind === "p" || kind.startsWith("p.")) {
             // Yn in B29's pin look: the pin's red, its thin black edge (a touch
-            // uneven, as the pin's is), and its white shine, here a streak
-            // along the arrow's left side, kept inside the arrow.
+            // uneven, as the pin's is), and its white shine, kept inside the
+            // arrow. p: an oval streak along the left side; p.1 a straight
+            // line; p.2 a small triangle, a facet at the front; p.3 a blade
+            // along the left edge; p.4 the fold down the middle; p.5 two strokes.
             const n = Ink.noise1(Ink.rng(`yp${Math.round(x)},${Math.round(y)}`));
             const ring = [];
             pts.forEach((q, i) => {
@@ -598,19 +600,47 @@
                 return `${(px + ((px - cx) / l) * k).toFixed(1)} ${(py + ((py - cy) / l) * k).toFixed(1)}`;
             }).join("L")}Z`;
             const id = `yp${Math.round(x)}x${Math.round(y)}`;
-            const [sx, sy] = [x + -5 * Math.cos(r) - 0 * Math.sin(r), y + -5 * Math.sin(r) + 0 * Math.cos(r)];
+            // The shine, drawn in the arrow's own frame (tip up) and turned with it.
+            const S = ([px, py]) => [x + px * Math.cos(r) - py * Math.sin(r), y + px * Math.sin(r) + py * Math.cos(r)];
+            const f = (q) => S(q).map((v) => v.toFixed(1)).join(" ");
+            const T = [0, -21];
+            const Lw = [-15, 15];
+            const N = [0, 6];
+            const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+            // In from the left edge, toward the middle.
+            const inset = (t, k) => {
+                const q = lerp(T, Lw, t);
+                return [q[0] + (36 / 39) * k, q[1] + (15 / 39) * k];
+            };
+            const line = (a, b, w) => `<path d="M${f(a)}L${f(b)}" stroke="#fff" stroke-width="${w}" stroke-linecap="round" fill="none"/>`;
+            const tri = (a, b, c) => `<path d="M${f(a)}L${f(b)}L${f(c)}Z" fill="#fff"/>`;
+            const [sx, sy] = S([-5, 0]);
             const sa = (Math.atan2(36, -15) * 180) / Math.PI + deg;
-            return `<defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="${R}" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/><ellipse cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" rx="5.2" ry="1.9" fill="#fff" transform="rotate(${sa.toFixed(1)} ${sx.toFixed(1)} ${sy.toFixed(1)})" clip-path="url(#${id})"/>`;
+            const shine = {
+                p: `<ellipse cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" rx="5.2" ry="1.9" fill="#fff" transform="rotate(${sa.toFixed(1)} ${sx.toFixed(1)} ${sy.toFixed(1)})"/>`,
+                "p.1": line(inset(0.22, 2.4), inset(0.6, 2.4), 2.1),
+                "p.2": tri(inset(0.2, 2), inset(0.5, 2), [-1.2, -8.8]),
+                "p.3": tri(inset(0.18, 1.8), inset(0.66, 1.8), inset(0.27, 4.4)),
+                "p.4": line([-0.9, -15.6], lerp(T, N, 0.75).map((v, i) => (i ? v : v - 0.9)), 1.9),
+                "p.5": line(inset(0.24, 2.2), inset(0.5, 2.2), 1.9) + line(inset(0.4, 4.6), inset(0.52, 4.6), 1.9),
+            }[kind];
+            return `<defs><clipPath id="${id}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="${R}" stroke="#000" stroke-width="1.6" stroke-linejoin="round"/><g clip-path="url(#${id})">${shine}</g>`;
         }
         return `<polygon points="${poly}" fill="#000" stroke="#fff" stroke-width="5" stroke-linejoin="round" paint-order="stroke"/>`;
+    }
+
+    /** YOU alone, enlarged (3x, same proportions), to compare the shines: p, p.1 ... p.5. */
+    function youOnly(root, kind, zoom = 3) {
+        root.style.background = "#fff";
+        root.innerHTML = `<svg width="240" height="175" style="position:absolute;left:0;top:0;overflow:visible"><g transform="translate(120 90) scale(${zoom})">${youMark(0, 0, kind, 35)}</g></svg>`;
     }
 
     /** One mark alone on white: another player's tag (a, c, f, g, k, l) or YOU (Yg, Yh, Yj, Ym, Yn). */
     function tagsOnly(root, t) {
         root.style.background = "#fff";
-        const inner = t.startsWith("Y") ? youMark(120, 92, t[1], 35) : otherTag(t, 120, 108, "CAMILLE");
+        const inner = t.startsWith("Y") ? youMark(120, 92, t.slice(1), 35) : otherTag(t, 120, 108, "CAMILLE");
         root.innerHTML = `<svg width="240" height="175" style="position:absolute;left:0;top:0;overflow:visible">${inner}</svg>`;
     }
 
-    window.Maps2 = { tagsOnly, list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, drawHint, SKIN_LIST };
+    window.Maps2 = { tagsOnly, youOnly, list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, drawHint, SKIN_LIST };
 })();
