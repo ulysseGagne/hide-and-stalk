@@ -320,13 +320,14 @@
                 cursor += size * r.range(0.36, 0.5);
                 continue;
             }
-            const g = glyphFor(ch);
+            const g = o.glyphs?.[ch] ?? glyphFor(ch); // o.glyphs: per-call letter shapes
             if (!g) continue;
             const scale = size * (1 + (r() - 0.5) * 0.22 * mess);
             const [w, strokes] = g;
             items.push({ x: cursor, scale, w, strokes, ch });
             const gap = r.range(0.6, 1.4);
-            cursor += w * scale + spacing * (o.even ? 1 : gap);
+            // o.extra: more room after the i-th letter, in units of size.
+            cursor += w * scale + spacing * (o.even ? 1 : gap) + (o.extra?.[items.length - 1] ?? 0) * size;
         }
         const natural = Math.max(0, cursor - spacing);
 
@@ -677,7 +678,7 @@
         const rises = o.rises ?? [];
         const glyphs = [];
         [...text].forEach((ch, i) => {
-            const g = glyphFor(ch);
+            const g = o.glyphs?.[ch] ?? glyphFor(ch); // o.glyphs: per-call letter shapes
             if (!g) return;
             const [gw, strokes] = g;
             const k = sizes[i] ?? 1 + r.range(-1, 1) * (o.sizeVar ?? 0.22);

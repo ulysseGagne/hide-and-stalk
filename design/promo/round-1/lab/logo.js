@@ -218,7 +218,7 @@
     const scrawl = (svg, o = {}) => ink(svg, Ink.write(o.text ?? "STALK", { x: 0, y: 0, size: o.size ?? 84, weight: (o.size ?? 84) * 0.18, seed: o.seed ?? "L1s", mess: o.mess ?? 0.45, tilt: o.tilt ?? -2, spacing: 0.12 }).svg);
 
     /** STALK with its letters tucked together, drawn at the origin, to be placed. */
-    const tucked = (svg, o = {}) => ink(svg, Ink.tuck(o.text ?? "STALK", { size: o.size ?? 84, seed: o.seed ?? "t1", sizeVar: o.sizeVar, riseVar: o.riseVar, sizes: o.sizes, rises: o.rises, tilt: o.tilt ?? -3, mess: o.mess ?? 0.45, gap: o.gap, spin: o.spin, overshoot: o.overshoot, weights: o.weights, pulls: o.pulls }).svg);
+    const tucked = (svg, o = {}) => ink(svg, Ink.tuck(o.text ?? "STALK", { size: o.size ?? 84, seed: o.seed ?? "t1", sizeVar: o.sizeVar, riseVar: o.riseVar, sizes: o.sizes, rises: o.rises, tilt: o.tilt ?? -3, mess: o.mess ?? 0.45, gap: o.gap, spin: o.spin, overshoot: o.overshoot, weights: o.weights, pulls: o.pulls, glyphs: o.glyphs }).svg);
 
     /** One typeset word at whatever size makes it exactly `width` wide. */
     function fitWord(svg, text, x, top, width, o = {}) {
@@ -436,7 +436,7 @@
     });
 
     /** An earlier STALK (plain scrawl), pushed up the band, gaps made even. */
-    const loose = (svg, o) => ink(svg, Ink.write("STALK", { x: 0, y: 0, size: o.size ?? 78, weight: (o.size ?? 78) * 0.18 * (o.bold ?? 1), seed: o.seed, mess: o.mess ?? 1.15, tilt: o.tilt ?? -3, spacing: o.spacing ?? 0.15, even: true }).svg);
+    const loose = (svg, o) => ink(svg, Ink.write("STALK", { glyphs: o.glyphs, extra: o.extra, x: 0, y: 0, size: o.size ?? 78, weight: (o.size ?? 78) * 0.18 * (o.bold ?? 1), seed: o.seed, mess: o.mess ?? 1.15, tilt: o.tilt ?? -3, spacing: o.spacing ?? 0.15, even: true }).svg);
     const R14 = (s, k) => round(s, k, { seed: "r131", weight: 0.16 });
     Object.assign(LOCKUPS, {
         // L1.3's STALK, wilder, even gaps.
@@ -544,6 +544,10 @@
     // of L14.2 or L14.4 at different sizes and places.
     const P76 = (s, k) => scribble(s, k, { seed: "p71", even: true });
     const P76light = (s, k) => scribble(s, k, { seed: "p71", even: true, weight: k.h * 0.16 });
+    // Final touches: the K's stem runs longer, above and below the rest of it;
+    // the L gets a real corner (a curved one read as a J or a C).
+    const K_LONG = [0.62, [[[0, -0.14], [0, 1.12]], [[0.6, 0], [0.03, 0.56], [0.64, 1]]]];
+    const L_SHARP = [0.46, [[[0, 0], [0, 0.93], [0.01, 1], [0.07, 1.01], [0.42, 1]]]];
     const S142 = (o = {}) => (s) => loose(s, { seed: "L3s", size: 84, tilt: -8, mess: 1.1, spacing: 0.05, ...o });
     const S144 = (o = {}) => (s) => wild(s, { seed: "w144", sizes: [1.06, 0.94, 1.02, 0.96, 0.9], rises: [0.14, -0.02, 0.03, 0, 0.16], gap: 0, pulls: [0, 0, 0, 0, 0.05], ...o });
     Object.assign(LOCKUPS, {
@@ -584,13 +588,13 @@
             const ref = S144({ size: 64 })(svg);
             const r = place(ref, { top, x: seek.x + seek.w * 0.34 });
             ref.remove();
-            const g = S142({ size: 70 })(svg);
+            const g = S142({ size: 70, glyphs: { K: K_LONG, L: L_SHARP }, extra: [0, 0, 0.16, 0.4] })(svg);
             // Same width and the same vertical middle as the reference.
             const at = place(g, { top, x: r.x, width: r.w });
             g.setAttribute("transform", g.getAttribute("transform").replace(/translate\(([-\d.]+) ([-\d.]+)\)/, (_, x, y) => `translate(${x} ${Number(y) + (r.h - at.h) / 2 + 4})`));
         },
         "16.6b"(svg) {
-            lockup(svg, P76light, S144({ size: 64 }), { at: 0.34, gap: 2 });
+            lockup(svg, P76light, S144({ size: 64, glyphs: { K: K_LONG } }), { at: 0.34, gap: 2 });
         },
     });
 
