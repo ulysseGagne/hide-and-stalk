@@ -187,15 +187,15 @@ const SKINS = [
 ];
 const ZOOM = { a: "whole campus", b: "a few blocks", c: "a few buildings" };
 html += `<section id="maps"><h2>Map</h2><p>Everything you need is computer-drawn: the map, the hints layer, the players (name tags, you in black) and the question. Red is the one thing to look at right now. The map opens on the whole campus, with no auto-zoom.</p></section>`;
-html += `<section id="maps-skins"><h2>1 · Skins: how the tiles are printed</h2><p>Best first. Numbers stay as they were, so gaps are the ones you removed. Similar options are grouped so you can drop a whole family at once. Each is shown at three zoom levels: a, the whole campus (what the map opens on); b, a few blocks; c, a few buildings, zoomed in on YOU. No text on any of them.</p>`;
-SKINS.forEach((e) => {
-    // A string is a family heading; similar options sit together under it.
-    if (typeof e === "string") return void (html += `<h3 style="margin-top:36px;border-top:3px solid #000;padding-top:12px">${e}</h3>`);
-    const [num, file, name, note] = e;
-    html += `<h4 style="margin:18px 0 8px">S${num} · ${name}${note ? ` <span class="note">(${note})</span>` : ""}</h4><div class="grid">`;
-    for (const z of "abc") html += tile(`S${num}${z}`, ZOOM[z], `shots/S${file}${z}.png`);
-    html += `</div>`;
-});
+html += `<section id="maps-skins"><h2>1 · Skins: how the tiles are printed</h2><p>Best first, left to right, each at the same zoom (a few blocks around YOU). No text on any of them. S1–S3 are the hints layer's map in real lines; S6 and S9 are toner grain.</p>`;
+// Only the "a few blocks" view (b) of each, all side by side in one row.
+html += `<div class="grid">`;
+for (const e of SKINS) {
+    if (typeof e === "string") continue;
+    const [num, file, name] = e;
+    html += tile(`S${num}`, name, `shots/S${file}b.png`);
+}
+html += `</div>`;
 html += `</section>`;
 for (const [id, title, intro, items, groups] of MAPPART) {
     html += `<section id="maps-${id}"><h2>${title}</h2><p>${intro}</p>`;
