@@ -14,7 +14,7 @@ locations.
 | `tools/` | Build scripts (`npm run build:locations`) |
 | `docs/` | Feature specs, question list, playtest feedback, notes |
 | `design/game-design/` | Game design research: the original Jet Lag game and the ULaval adaptation (start with its `README.md`) |
-| `design/promo/` | Event promotion: poster drafts and inspiration, and the promo brief (`prompt.txt`) |
+| `design/promo/` | Event promotion: poster drafts and inspiration, the Discord announcement (`discord/`: the draft, and earlier posts for the tone), and the promo brief (`prompt.txt`) |
 
 ## How a game works
 
