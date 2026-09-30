@@ -70,6 +70,14 @@
         traceddots: { roads: "all", dots: ["building"] },
         tracedgreen: { roads: "all", dots: ["green"] },
         tracedbold: { roads: "all", outline: 2, dots: ["building"] },
+        // Third round: no text anywhere, so the kept filter skins are redrawn too.
+        dotsonly: { roads: "fill", outlines: [], dots: ["building"] },
+        tone: { mode: "tone", road: 1 },
+        tonelight: { mode: "tone", road: 1, gamma: 1.8 },
+        tonegrey: { mode: "tone", road: 0.72, gamma: 1.8 },
+        dotsclean: { roads: "outline", outlines: ["building"], dots: ["building"] },
+        streetsclean: { roads: "fill", outlines: [] },
+        grainclean: { mode: "tone", pixel: true, road: "pixel" },
     };
 
     // The app around the map (direction E): header with MAP open, the question box.
@@ -282,7 +290,7 @@
     ];
 
     // Skin samples: every skin at three zoom levels (a: whole campus, b: a few buildings, c: close up).
-    const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold"];
+    const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold", "dotsonly", "tone", "tonelight", "tonegrey", "dotsclean", "streetsclean", "grainclean"];
     const ZOOMS = { a: null, b: 16.6, c: 18.2 };
     function drawSkin(root, code) {
         const [, n, z] = /^(\d+)([abc])$/.exec(code);
