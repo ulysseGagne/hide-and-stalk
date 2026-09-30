@@ -62,10 +62,24 @@
         V.push([name, () => Ink.stubArrow(t[0], t[1], tip[0], tip[1], { seed: `s${i}`, ...o }), [tip[0] + nw[0], tip[1] + nw[1]]]);
     });
 
+    // Third round: nudges on the kept ones (same seeds, so the same strokes).
+    const shift = ([x, y], dx, dy) => [x + dx, y + dy];
+    const EXTRA = {
+        // R09, NEW lower and to the right, clear of the arrow.
+        "9.1": () => Ink.stubArrow(...from(-78, 96), ...tip, { seed: "s0", weight: 13 }) + Ink.write("NEW", { x: tip[0] - 4, y: tip[1] + 122, size: 44, weight: 9, seed: "new9.1", tilt: -8, importance: "key" }).svg,
+        // R11 and R12, the whole arrow a bit to the left and higher.
+        "11.1": () => Ink.stubArrow(...shift(from(-80, 92), -10, -8), ...shift(tip, -10, -8), { seed: "s2", weight: 13, spread: 0.78 }) + Ink.write("NEW", { x: tip[0] + 4, y: tip[1] + 76, size: 44, weight: 9, seed: "new11.1", tilt: -8, importance: "key" }).svg,
+        "12.1": () => Ink.stubArrow(...shift(from(-62, 78), -10, -8), ...shift(tip, -10, -8), { seed: "s3", weight: 17 }) + Ink.write("NEW", { x: tip[0] + 4, y: tip[1] + 68, size: 44, weight: 9, seed: "new12.1", tilt: -8, importance: "key" }).svg,
+    };
+
     window.Arrows = {
         list: V.map(([name], i) => ({ n: i + 1, name })),
         draw(root, v) {
             root.style.cssText += `;width:${W}px;height:${H}px;background:#fff`;
+            if (EXTRA[v]) {
+                root.innerHTML = header() + `<svg width="${W}" height="${H}" style="position:absolute;left:0;top:0;overflow:visible;z-index:5">${EXTRA[v]()}</svg>`;
+                return;
+            }
             const [, fn, beside] = V[v - 1];
             const tail = beside ?? (v === 8 ? [W - 118, T[1] + 38] : [T[0] - 20, T[1] + 44]);
             const nw = beside ? Ink.write("NEW", { x: tail[0], y: tail[1], size: 44, weight: 9, seed: `new${v}`, tilt: -8, importance: "key" }) : Ink.write("NEW", { x: tail[0], y: tail[1], size: 32, seed: `new${v}`, tilt: -8, importance: "key" });

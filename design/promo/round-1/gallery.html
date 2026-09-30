@@ -160,9 +160,12 @@ for (const [k, name, intro] of STYLES) {
     for (const [n, slug, cap] of SCREENS) html += tile(`${k}/${n}`, cap, `shots/${k}-${n}-${slug}.png`);
     html += `</div></section>`;
 }
-const ARROWS = [[1, "R1 (for reference): the head you liked"], [2, "R2 (for reference): straight"], [9, "Short, from below left"], [10, "Straight up from below"], [11, "Wider head"], [12, "Heaviest, shortest"], [13, "From below right"], [14, "A bit longer, same width"]];
-html += `<section id="arrows"><h2>Notification arrow</h2><p>Second round, from your notes on R1 and R2: short and wide, straight, R1's pointy head made much bigger, NEW big and heavy beside the arrow instead of at its tail. E19 and E20 use R09.</p><div class="grid">`;
-ARROWS.forEach(([n, cap]) => (html += tile(`R${String(n).padStart(2, "0")}`, cap, `shots/R${String(n).padStart(2, "0")}.png`)));
+const ARROWS = [["9.1", "R09 with NEW lower and to the right, clear of the arrow"], [10, "Straight up from below (unchanged)"], ["11.1", "R11, the whole arrow a bit to the left and higher"], ["12.1", "R12, the whole arrow a bit to the left and higher"]];
+html += `<section id="arrows"><h2>Notification arrow</h2><p>What's left, with your nudges. R01, R02, R13 and R14 are gone.</p><div class="grid">`;
+ARROWS.forEach(([n, cap]) => {
+    const code = `R${typeof n === "string" ? n : String(n).padStart(2, "0")}`;
+    html += tile(code, cap, `shots/${code}.png`);
+});
 html += `</div></section>`;
 const MAPPART = [
     ["hints", "2 · The hints layer", "Two separate choices. First the map: how the ruled-out part looks (the tags are the same in both). Then the name tags: six ways to make the players stand out, all on the same map (N03), in black and white only. Tags always sit over the red.", [], [
