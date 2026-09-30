@@ -228,7 +228,7 @@ export const SCREENS = {
         position: POS.camille,
         photo: true,
         state: (() => {
-            const extra = [{ q: 5, cardIds: ["photo_door", "radius_100", "floor"], picked: "photo_door", by: "camille", answer: "photo", photo: true }];
+            const extra = [{ q: 5, cardIds: ["photo_seat", "radius_100", "floor"], picked: "photo_seat", by: "camille", answer: "photo", photo: true }];
             const p = plays(5, { extra });
             return {
                 serverNow: NOW,
@@ -236,7 +236,7 @@ export const SCREENS = {
                 me: me("camille"),
                 team: team("hunting", { question: 5, nextQuestionInMs: 1 * MIN + 36_000, huntMs: 23 * MIN + 24_000 }),
                 users: users("camille"),
-                cards: { role: "stalker", batch: { id: 205, question: 5, cardIds: extra[0].cardIds, dealtAt: NOW - 3 * MIN, playedCardId: "photo_door", playedBy: 14, playedAt: NOW - 150_000 }, currentPlay: p[4], pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
+                cards: { role: "stalker", batch: { id: 205, question: 5, cardIds: extra[0].cardIds, dealtAt: NOW - 3 * MIN, playedCardId: "photo_seat", playedBy: 14, playedAt: NOW - 150_000 }, currentPlay: p[4], pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
             };
         })(),
     },

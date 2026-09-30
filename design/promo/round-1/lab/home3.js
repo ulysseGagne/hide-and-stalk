@@ -80,8 +80,9 @@
             red(x, y, r) {
                 reds.push([x, y, r]);
             },
+            loose: false, // pieces may overlap (W54.1c)
             done() {
-                check(items, strings, W, H, avoid);
+                check(items, strings, W, H, avoid, s.loose);
                 b.done();
             },
         };
@@ -110,7 +111,7 @@
         }
         return true;
     };
-    function check(items, strings, W, H, avoid = []) {
+    function check(items, strings, W, H, avoid = [], loose = false) {
         const near = (a, b, d) => Math.hypot(a[0] - b[0], a[1] - b[1]) < d;
         for (const [i, st] of strings.entries()) {
             for (const pt of st.pts) {
@@ -124,7 +125,7 @@
             }
         }
         for (const [i, a] of items.entries()) {
-            for (const [j, c] of items.entries()) if (j > i && (a.poly.some((p) => inside(c.poly, p, 4)) || c.poly.some((p) => inside(a.poly, p, 4)))) warn(`items ${i} and ${j} overlap`);
+            if (!loose) for (const [j, c] of items.entries()) if (j > i && (a.poly.some((p) => inside(c.poly, p, 4)) || c.poly.some((p) => inside(a.poly, p, 4)))) warn(`items ${i} and ${j} overlap`);
             if (avoid.some((q) => a.poly.some((p) => inside(q, p, 4)) || q.some((p) => inside(a.poly, p, 4)))) warn(`item ${i} overlaps the title`);
             if (a.poly.some(([x, y]) => x < 20 || y < 6 || x > W - 20 || y > H - 6)) warn(`item ${i} is off the edge`);
         }
@@ -747,6 +748,123 @@
         54.5: homeBoard({ k: 0.68, x: "center", y: 261, place: { at: { ph: { y: 612 }, c: { y: 650 } }, pins: sides } }),
         // The same with LET ME IN: the bottom row higher, the title smaller.
         54.6: homeBoard({ k: 0.62, x: "center", y: 227, btn: true, place: { at: { ph: { y: 520 }, c: { y: 562 } }, pins: sides } }),
+    });
+
+    // -----------------------------------------------------------------
+    // Home screens, seventh pass (W54.1a-W54.1e, W55.1-W55.2), from W54.1.
+    // One margin, 30 px, everywhere: under the title, round and between the
+    // cards, at the bottom. B29's rows closer (the strings between them are
+    // that margin long), the bottom row off the bottom. The title's black
+    // lines centred; the red keeps its place against SEEK.
+    // -----------------------------------------------------------------
+    const M = 30;
+    const TOP = 44; // HIDE's top, under the phone's status bar
+    /** L16.6b with HIDE, AND and SEEK each centred on one axis (SEEK's); the scribble and STALK stay with SEEK. Returns the title's box. */
+    function titleLines(root, k, y, { block = false } = {}) {
+        const NS = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(NS, "svg");
+        svg.setAttribute("width", W);
+        svg.setAttribute("height", 520);
+        svg.style.cssText = "position:absolute;left:0;top:0;overflow:visible;z-index:30;transform-origin:0 0";
+        root.appendChild(svg);
+        Logo.draw(svg, FINAL, W, 520);
+        const texts = [...svg.querySelectorAll(":scope > text")];
+        const seek = texts.find((t) => t.textContent.includes("SEEK"));
+        const sb = seek.getBBox();
+        const axis = sb.x + sb.width / 2;
+        if (!block) for (const t of texts) {
+            const tb = t.getBBox();
+            t.setAttribute("transform", `translate(${(axis - (tb.x + tb.width / 2)).toFixed(2)} 0)`);
+        }
+        const b = svg.getBBox();
+        // Lines: SEEK's middle on the screen's; block: the whole lockup's box centred.
+        const tx = block ? (W - b.width * k) / 2 - b.x * k : W / 2 - axis * k;
+        svg.style.transform = `translate(${tx}px,${y - b.y * k}px) scale(${k})`;
+        return box(tx + b.x * k, y, b.width * k, b.height * k);
+    }
+    // B29 with its rows 30 px apart: the Polaroid under the file, the card under the profile.
+    const tight = { at: { ph: { x: 28, y: 205 }, c: { x: 178, y: 218 } } };
+    /** B29 as a pinned stack: each piece overlaps the next by a few px of blank paper, a pin through both; no strings. */
+    function b29stack(s, dy) {
+        const f = file29(s, { x: 24, y: dy, w: 184, rot: -3 });
+        const pr = profile(s, { x: 234, y: dy + 12, w: 96, rot: 5 });
+        const ph = coords(s, { x: 30, y: dy + 128, w: 122, rot: 4 });
+        const c = nsCard(s, { x: 146, y: dy + 142, w: 168, rot: -4 });
+        s.pin(f, 0.07, 0.07);
+        s.pin(pr, 0.52, 0.05);
+        s.pin(ph, 0.5, 0.035);
+        s.pin(c, 0.76, 0.05);
+        s.pin(c, 0.035, 0.3);
+    }
+    function home7({ k, y = TOP, block = false, btn = false, place, stack, tuck = false }) {
+        return async (root) => {
+            root.style.background = "#fff";
+            const t = titleLines(root, k, y, { block });
+            if (btn) button(root);
+            const host = document.createElement("div");
+            host.style.cssText = `position:absolute;left:0;top:0;width:${W}px;height:${H}px;z-index:20`;
+            root.appendChild(host);
+            const s = surface(host, W, H);
+            // Tucked: the top cards slide under the title's bottom edge, so only strings must keep clear of it.
+            if (!tuck) s.avoid.push(t);
+            if (btn) s.avoid.push(box(BTN.x, BTN.y, BTN.w, BTN.h));
+            if (stack !== undefined) {
+                s.loose = true;
+                b29stack(s, stack);
+            } else b29(s, place);
+            s.done();
+            host.style.background = "transparent";
+            await K().settle(root);
+        };
+    }
+    // The home screen in two steps. First the title alone, as the app opens;
+    // then the board, under the app's own header, and LET ME IN.
+    function step2() {
+        return async (root) => {
+            root.style.background = "#fff";
+            const hdr = document.createElement("div");
+            hdr.style.cssText = `position:absolute;left:0;top:0;width:${W}px;height:64px;box-sizing:border-box;border-bottom:${LW}px solid #000;z-index:30`;
+            root.appendChild(hdr);
+            const cx = document.createElement("canvas").getContext("2d");
+            cx.font = `700 17px ${FONT}`;
+            const sx = 16 + cx.measureText("HIDE &").width + 7;
+            // The header's STALK in black: the board below has the screen's red.
+            const st = Logo.stalk({ color: "#000" });
+            const sk = 25 / st.box.h;
+            hdr.innerHTML = `<div style="position:absolute;left:16px;top:25px;font:700 17px ${FONT}">HIDE &amp;</div><svg width="${W}" height="64" style="position:absolute;left:0;top:0;overflow:visible"><g transform="translate(${sx - st.box.x * sk} ${46 - (st.box.y + st.box.h) * sk}) scale(${sk})">${st.svg}</g></svg>`;
+            button(root);
+            const host = document.createElement("div");
+            host.style.cssText = `position:absolute;left:0;top:${Math.round(64 + (BTN.y - 64 - 450) / 2) - 26}px;width:${W}px;height:480px;z-index:20`;
+            root.appendChild(host);
+            const s = surface(host, W, 480);
+            b29(s);
+            s.done();
+            host.style.background = "transparent";
+            await K().settle(root);
+        };
+    }
+    // With the black lines centred on the screen, STALK sits right of the
+    // middle: past 0.88 of its size it comes closer than 30 px to the edge.
+    // The title box's top is y; B29's top row starts 26 px below its dy.
+    const under = (k, y, gap = M) => y + 388 * k + gap - 26;
+    Object.assign(Welcome.extra, {
+        // a: the black lines centred; B29's rows 30 px apart; 30 px round everything.
+        "54.1a": home7({ k: 0.88, y: 58, place: { ...tight, dy: under(0.88, 58) } }),
+        // b: the same, the whole lockup centred as it is (so it can be a little bigger).
+        "54.1b": home7({ k: 0.93, block: true, place: { ...tight, dy: under(0.93, 44) } }),
+        // c: the cards overlapping a little, pinned together: more room round them.
+        "54.1c": home7({ k: 0.88, y: 70, stack: under(0.88, 70, 40) + 26 }),
+        // d: the top cards tucked 20 px under the title's bottom edge.
+        "54.1d": home7({ k: 0.88, y: 76, place: { ...tight, dy: under(0.88, 76, -20) }, tuck: true }),
+        // e: a with LET ME IN; the title smaller.
+        "54.1e": home7({ k: 0.63, y: 50, btn: true, place: { ...tight, dy: under(0.63, 50) } }),
+        // W55: two steps. 1: the title alone, as the app opens.
+        55.1: async (root) => {
+            root.style.background = "#fff";
+            titleLines(root, 0.88, Math.round((H - 388 * 0.88) / 2));
+        },
+        // 2: B29 whole under the app's header, LET ME IN.
+        55.2: step2(),
     });
 
     // -----------------------------------------------------------------

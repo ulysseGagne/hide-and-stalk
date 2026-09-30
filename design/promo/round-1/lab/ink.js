@@ -876,6 +876,46 @@
     }
 
     /** A check mark done fast and big: a hooked start, a heavy bottom, a long leg flung past the top. */
+    /**
+     * A tick with a sharp corner, one filled shape: a short arm that thickens
+     * down into a mitred point, and a long arm that leaves it at full width
+     * and narrows to a point. Each side wobbles a little by hand; the corner
+     * and the tip stay exactly where they are.
+     */
+    function sharpCheck(x, y, s, o = {}) {
+        const r = rng(o.seed ?? "sharpCheck");
+        const w = o.weight ?? s * 0.26;
+        const a = [x, y + s * r.range(0.42, 0.5)];
+        const v = [x + s * r.range(0.32, 0.37), y + s * r.range(0.96, 1.02)];
+        const b = [x + s * r.range(1.1, 1.2), y - s * r.range(0.3, 0.4)];
+        const unit = (p, q) => {
+            const l = Math.hypot(q[0] - p[0], q[1] - p[1]);
+            return [(q[0] - p[0]) / l, (q[1] - p[1]) / l];
+        };
+        const d1 = unit(a, v);
+        const d2 = unit(v, b);
+        const n1 = [-d1[1], d1[0]];
+        const n2 = [-d2[1], d2[0]];
+        const off = (p, n, k) => [p[0] + n[0] * k, p[1] + n[1] * k];
+        // Where one side of each arm meets the other's at the corner (a mitre), kept near it.
+        const meet = (k) => {
+            const p1 = off(v, n1, k);
+            const p2 = off(v, n2, k);
+            const den = d1[0] * d2[1] - d1[1] * d2[0];
+            const t = ((p2[0] - p1[0]) * d2[1] - (p2[1] - p1[1]) * d2[0]) / den;
+            const m = [p1[0] + d1[0] * t, p1[1] + d1[1] * t];
+            const far = Math.hypot(m[0] - v[0], m[1] - v[1]);
+            return far > w * 1.6 ? off(v, [(m[0] - v[0]) / far, (m[1] - v[1]) / far], w * 1.6) : m;
+        };
+        const ta = w * 0.32;
+        const mid = (k) => off([v[0] + (b[0] - v[0]) * 0.45, v[1] + (b[1] - v[1]) * 0.45], n2, k);
+        const wob = (pts) => humanize(densify(pts, 4), { wobbleAmp: o.wobbleAmp ?? 0.6 });
+        const plus = wob([off(a, n1, ta / 2), meet(w / 2), mid(w * 0.36), b]);
+        const minus = wob([b, mid(-w * 0.36), meet(-w / 2), off(a, n1, -ta / 2)]);
+        const d = `M${plus.concat(minus.slice(1)).map((p) => `${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join("L")}Z`;
+        return `<path d="${d}" fill="${o.color ?? RED}"/>`;
+    }
+
     function bigCheck(x, y, s, o = {}) {
         const r = rng(o.seed ?? "bigCheck");
         const pts = [
@@ -1321,6 +1361,7 @@
         bigArrow,
         stubArrow,
         bigCheck,
+        sharpCheck,
         mapPin,
         tuck,
         blackout,

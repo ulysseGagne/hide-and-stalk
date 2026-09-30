@@ -98,27 +98,29 @@ const SETS = [
         ["C19", "Ransom notes"],
         ["R10.3", "Notification arrow"],
     ]},
-    { id: "welcome2", title: "Home screen", cols: 4, intro: "W53 as it was, then W54: the title and the whole of B29 on one screen, six ways. The title on top, under the board, or in the middle of it; each with and without LET ME IN. B29's pieces and strings are its own; no string crosses the title or a piece.", wide: false, items: [
-        ["W53", "The file and the Polaroid, finished"],
-        ["W54.1", "The title on top, a bit smaller; B29 whole under it; no button"],
-        ["W54.2", "The same with LET ME IN: the title smaller, B29's rows closer"],
-        ["W54.3", "B29 first; the title under it, W53's size, centred; no button"],
-        ["W54.4", "The same with LET ME IN: the title smaller"],
-        ["W54.5", "The title in the middle of the board, the long strings down the sides; no button"],
-        ["W54.6", "The same with LET ME IN: the bottom row higher, the title smaller"],
+    { id: "welcome2", title: "Home screen", cols: 4, intro: "From W54.1, your pick. One margin, 30 px, everywhere: under the title, round and between the cards, at the bottom; B29's rows closer, the bottom row off the bottom. a: HIDE, AND and SEEK each centred, the red keeping its place against SEEK (past this size STALK would come closer than 30 px to the edge). b: the whole title centred as it is. c: the cards overlapping a little, pinned together, no strings. d: the top cards tucked under the title's bottom edge. e: a with LET ME IN. W55 splits the screen in two steps: the title alone as the app opens, then the board under the app's header, with LET ME IN. W54.2 to W54.6 are off the page (still in the repo). File Nº 005 reads HIDER LOCATION everywhere.", wide: false, items: [
+        ["W54.1", "The starting point"],
+        ["W54.1a", "The black lines centred; 30 px margins; rows closer"],
+        ["W54.1b", "The whole title centred as it is; the same margins"],
+        ["W54.1c", "The cards overlapping a little, pinned together"],
+        ["W54.1d", "The top cards tucked under the title"],
+        ["W54.1e", "a with LET ME IN"],
+        ["W55.1", "Two steps, 1: the title alone, as the app opens"],
+        ["W55.2", "Two steps, 2: the board, the app's header, LET ME IN"],
+        ["W53", "Before: the file and the Polaroid"],
     ]},
 ];
 
 const SCREENS = [
-    ["01", "login", "Log in"], ["02", "loginfilled", "Both fields typed: Log in turns black"],
+    ["01", "login", "Log in: the arrow starts above NEW and curves up to Register"], ["02", "loginfilled", "Both fields typed: Log in turns black"],
     ["03", "permask", "Before you start: the arrow at Turn on, Later made small"], ["04", "permasking", "Asking: choose Allow in the iPhone's popup"],
     ["05", "permhalf", "Location on; the arrow moves to the compass"], ["06", "permdone", "Both on: one big check, Done"], ["07", "permblocked", "Location blocked: How to fix"],
     ["08", "lobby", "Waiting for a team: shorter rules, rule 4 is Touch nothing"],
-    ["12", "ready", "Ready: role stamped, Start in black"],
-    ["13", "hiding", "Hider: go hide"], ["14", "cards", "Stalker: three cards, numbered, pick just one"],
+    ["12", "ready", "Ready: role stamped, box and word a little bolder; Start in black"],
+    ["13", "hiding", "Hider: go hide (the stamp bolder)"], ["14", "cards", "Stalker: three cards, pick just one; E19's arrow for MORE, MORE bolder"],
     ["15", "selected", "Picked, not sent: Send in black"], ["16", "waiting", "Sent, locked in"], ["17", "sent", "Answered: no stamp"],
-    ["18", "photo", "Photo answer: no stamp"], ["19", "question", "Hider: new question, the short arrow, NEW beside it"],
-    ["20", "choice", "Hider: which pavilion, code first"], ["21", "tagcode", "Hider: tag code, the note in the gap above it"], ["22", "history", "Questions so far, as a tab"],
+    ["18", "photo", "Photo answer: the nearest place to sit, the Polaroid's bench"], ["19", "question", "Hider: new question, NEW at the bell; the tick on its circle"],
+    ["20", "choice", "Hider: which pavilion, code first; the tick on its circle"], ["21", "tagcode", "Hider: tag code; the answered tick sharp"], ["22", "history", "Questions so far, as a tab"],
     ["23", "found", "Stalkers win: GOTCHA on top"], ["23b", "found", "The receipt, scrolled to its end"], ["24", "win", "Hider wins"], ["24b", "win", "The receipt, where she was redacted"],
 ];
 const STYLES = [
@@ -148,7 +150,7 @@ for (const s of SETS) {
     }
     html += `</section>`;
 }
-html += `<section id="styles"><h2>App</h2><p>Pretty much done. This pass: the header's STALK is now L16.6b's, on every screen. One direction, rebuilt from all your notes.<br>• One line weight (3 px), nothing rounded.<br>• White button = not yet, black = press this now, drawn red = pressed or picked.<br>• At most two red marks per screen; the header's STALK turns black when anything else is red.<br>• Anything not useful at that moment is gone.<br>From the last pass: the header is HIDE &amp; plus the logo's STALK (no SEEK, no scribble); something red always points at what to do next; shorter copy everywhere; Questions so far is a tab; the old rules screens (09–11) are gone.</p></section>`;
+html += `<section id="styles"><h2>App</h2><p>Pretty much done. This pass, from your notes: E01's arrow above NEW; E12 and E13's stamps bolder; E14's arrow bulkier with a pointed head, MORE bolder; E18 asks for the nearest place to sit; the ticks on E19 and E20 sit on their circles; E21's tick is sharp. The header's STALK is L16.6b's, on every screen. One direction, rebuilt from all your notes.<br>• One line weight (3 px), nothing rounded.<br>• White button = not yet, black = press this now, drawn red = pressed or picked.<br>• At most two red marks per screen; the header's STALK turns black when anything else is red.<br>• Anything not useful at that moment is gone.<br>From the last pass: the header is HIDE &amp; plus the logo's STALK (no SEEK, no scribble); something red always points at what to do next; shorter copy everywhere; Questions so far is a tab; the old rules screens (09–11) are gone.</p></section>`;
 for (const [k, name, intro] of STYLES) {
     html += `<section id="style-${k.toLowerCase()}"><h2>${k} · ${name}</h2><p>${intro}</p><div class="grid">`;
     for (const [n, slug, cap] of SCREENS) html += tile(`${k}/${n}`, cap, `shots/${k}-${n}-${slug}.png`);
@@ -171,7 +173,7 @@ const SKINS = [
 html += `<section id="maps"><h2>Map</h2><p>Everything you need is computer-drawn: the map, the hints layer, the players and the question. Red is the one thing to look at right now. The map opens on the whole campus, with no auto-zoom.</p></section>`;
 html += `<section id="maps-skins"><h2>1 · Skins: how the map is printed</h2><p>The map is drawn from OpenStreetMap's own data now, not recoloured from its picture tiles: every building, street, path and green is a real shape, so every edge is as straight or as smooth as it was mapped. First the key, which decides what's on the map; then S20, the look you picked, drawn with only what the key keeps. S11 and S14 are gone.</p>`;
 // The key: every kind of line and area in its own colour, to name what should stay, go or change.
-html += `<h3>The key: what's on the map</h3><p class="note">Fourth pass, from your notes. Car parks are off again; parking aisles and driveways are back. The Rouge et Or stadium and the running track are back, as their own colour. Footpaths: only the small and messy is left behind now (small loops, loose bits, knots, stubs; most under 20 m). What follows a street or a bike path, or leaves the campus, stays. Dark is on, light is left behind. To decide road by road, use the <a href="https://claude.ai/artifact/Y6kmr77pJjn1JwPpUyfp9n">Color Map Editor</a>: tap any line to switch it, or a whole group at once. Your choices come back here once they're baked in.</p>` + grid(4);
+html += `<h3>The key: what's on the map</h3><p class="note">Fourth pass, from your notes. Car parks are off again; parking aisles and driveways are back. The Rouge et Or stadium and the running track are back, as their own colour. Footpaths: only the small and messy is left behind now (small loops, loose bits, knots, stubs; most under 20 m). What follows a street or a bike path, or leaves the campus, stays. Dark is on, light is left behind. To decide road by road, use the <a href="https://claude.ai/artifact/Y6kmr77pJjn1JwPpUyfp9n">Color Map Editor</a>: tap any line to switch it, or a whole group at once. Your choices so far are baked in (1,013 ways, as of 5:37 AM): this map, S20 and every map screen below are drawn with them. Tell me when you've done more and I'll bake again.</p>` + grid(4);
 html += tile("K4", "The colours, and what's behind each", "shots/K04.png");
 html += tile("K4a", "The whole campus", "shots/S30.03a.png");
 html += `</div><h3>The skin: S20</h3>` + grid(4);
