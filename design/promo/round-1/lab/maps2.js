@@ -87,6 +87,10 @@
         xeroxnotext: { mode: "clean", filter: "url(#m2x)" },
         xeroxdarknotext: { mode: "clean", filter: "url(#m2k)" },
         greynotext: { mode: "clean", filter: "grayscale(1)" },
+        // The hints layer's map (S16), traced into straight lines instead of pixels.
+        vector16: { mode: "vector", sharp: true, thin: true, outlines: ["building"], eps: 2, minLen: 14 },
+        vector161: { mode: "vector", sharp: true, thin: true, roads: "outline", outlines: ["building"], eps: 2, minLen: 14 },
+        vector16g: { mode: "vector", sharp: true, thin: true, outlines: ["building", "green"], eps: 2, epsGreen: 3, minLen: 30 },
         // Sixth round.
         tracedoutline: { thin: true, roads: "outline" },
         centerline: { roads: "center", lineW: 2, dots: ["green"] },
@@ -227,7 +231,7 @@
         map.attributionControl.setPrefix(false);
         const redraw = RETRACE[o.skin];
         // Redrawn tiles are stretched a pixel so no seam shows between them.
-        if (redraw) mapEl.insertAdjacentHTML("beforeend", "<style>.leaflet-tile{width:257px!important;height:257px!important}</style>");
+        if (redraw) mapEl.insertAdjacentHTML("beforeend", `<style>.leaflet-tile{width:${redraw.sharp ? 129 : 257}px!important;height:${redraw.sharp ? 129 : 257}px!important}</style>`);
         const tiles = (redraw ? Retrace.layer(redraw) : L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" })).addTo(map);
         mapEl.querySelector(".leaflet-tile-pane").style.filter = redraw ? redraw.filter ?? "none" : SKINS[o.skin ?? "xerox"];
         // The whole campus, below the question box: no auto-zoom.
@@ -379,7 +383,7 @@
     // Skin samples: every skin at three zoom levels (a: whole campus, b: a few buildings, c: close up).
     const SKIN_LIST = ["xerox", "xeroxdark", "ground", "grain", "hatch", "dots", "lines", "linesbold", "sketch", "streets", "grey", "osm", "xeroxmid", "grainlight", "traced", "tracedthin", "traceddots", "tracedgreen", "tracedbold", "dotsonly", "tone", "tonelight", "tonegrey", "dotsclean", "streetsclean", "grainclean", "grainnotext", "blackbuildings"];
     // Variants numbered after the skin they come from.
-    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "27.1": "grainsamegreen", "27.2": "grainlightgreen", "1.1": "xeroxnotext", "2.1": "xeroxdarknotext", "11.1": "greynotext", "24.1": "dotsgreen" };
+    const SKIN_ALIAS = { "16.1": "tracedoutline", "18.1": "centerline", "18.2": "centerlinegreen", "27.1": "grainsamegreen", "27.2": "grainlightgreen", "1.1": "xeroxnotext", "2.1": "xeroxdarknotext", "11.1": "greynotext", "16.2": "vector16", "16.3": "vector161", "16.4": "vector16g", "24.1": "dotsgreen" };
     const ZOOMS = { a: null, b: 16.6, c: 18.2 };
     function drawSkin(root, code) {
         const [, n, z] = /^([\d.]+)([abc])$/.exec(code);

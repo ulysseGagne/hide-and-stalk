@@ -143,10 +143,28 @@
             if (!left) break;
         }
         for (let i = 0; i < N * N; i++) if (cls[i] === LABEL) cls[i] = CLASS.ground;
-        despeckle(cls, N, o.speck ?? { 1: 9, 2: 40, 3: 160 }, col);
+        // Traced maps seen from far (tiles below zoom 17): drop more crumbs.
+        const far = o.mode === "vector" && coords && coords.z <= 16;
+        despeckle(cls, N, o.speck ?? (far ? { 1: 30, 2: 40, 3: 200 } : { 1: 9, 2: 40, 3: 160 }), col);
 
         const out = new ImageData(N, N);
         const o4 = out.data;
+        if (o.mode === "vector") {
+            // Traced shapes instead of pixels (see drawVector).
+            const mask = (k) => {
+                const m = new Uint8Array(N * N);
+                for (let i = 0; i < N * N; i++) m[i] = cls[i] === k ? 1 : 0;
+                return m;
+            };
+            const road = mask(CLASS.road);
+            return {
+                vector: {
+                    roadFill: o.roads === "outline" ? null : contours(road, N, true, o.eps ?? 1.3),
+                    roadLine: o.roads === "outline" ? contours(road, N, false, o.eps ?? 1.3, (o.minLen ?? 0) * (far ? 2 : 1)) : null,
+                    shapes: (o.outlines ?? ["building", "green"]).flatMap((k) => contours(mask(CLASS[k]), N, false, k === "green" ? (o.epsGreen ?? o.eps ?? 1.3) : (o.eps ?? 1.3), (o.minLen ?? 0) * (far ? 2 : 1))),
+                },
+            };
+        }
         if (o.mode === "clean") {
             // The tile as it was, minus its text and icons: a filter prints it after.
             // o.greenAs: every green printed in the buildings' fill colour.
@@ -241,6 +259,99 @@
         return out;
     }
 
+    /**
+     * The edges of a mask as polylines: pixel-edge boundaries linked into
+     * chains, then straightened (Douglas-Peucker), so a staircase of pixels
+     * becomes one straight line. `border`: include the tile's own edges
+     * (closed shapes, for filling) or leave them out (open lines, for drawing).
+     */
+    function contours(m, N, border, eps = 1.3, minLen = 0) {
+        const inside = (x, y) => (x < 0 || y < 0 || x >= N || y >= N ? (border ? 0 : -1) : m[y * N + x]);
+        const edges = [];
+        for (let y = 0; y < N; y++)
+            for (let x = 0; x < N; x++) {
+                if (!m[y * N + x]) continue;
+                // Inside on the left of each edge.
+                if (inside(x, y - 1) === 0) edges.push([x, y, x + 1, y]);
+                if (inside(x + 1, y) === 0) edges.push([x + 1, y, x + 1, y + 1]);
+                if (inside(x, y + 1) === 0) edges.push([x + 1, y + 1, x, y + 1]);
+                if (inside(x - 1, y) === 0) edges.push([x, y + 1, x, y]);
+            }
+        const key = (x, y) => y * (N + 2) + x;
+        const from = new Map();
+        const into = new Set();
+        edges.forEach((e, i) => {
+            const k = key(e[0], e[1]);
+            if (!from.has(k)) from.set(k, []);
+            from.get(k).push(i);
+            into.add(key(e[2], e[3]));
+        });
+        const used = new Uint8Array(edges.length);
+        const out = [];
+        const walk = (start) => {
+            const pts = [[edges[start][0], edges[start][1]]];
+            let i = start;
+            while (i !== undefined && !used[i]) {
+                used[i] = 1;
+                const e = edges[i];
+                pts.push([e[2], e[3]]);
+                i = (from.get(key(e[2], e[3])) ?? []).find((j) => !used[j]);
+            }
+            return pts;
+        };
+        // Open chains first (they start where nothing comes in), then loops.
+        edges.forEach((e, i) => {
+            if (!used[i] && !into.has(key(e[0], e[1]))) out.push(walk(i));
+        });
+        edges.forEach((e, i) => {
+            if (!used[i]) out.push(walk(i));
+        });
+        // Drop crumbs: chains shorter than minLen (in tile pixels) aren't drawn.
+        const length = (p) => p.reduce((a, q, i) => (i ? a + Math.hypot(q[0] - p[i - 1][0], q[1] - p[i - 1][1]) : 0), 0);
+        return out.filter((p) => p.length > 3 && length(p) >= minLen).map((p) => simplify(p, eps));
+    }
+    function simplify(pts, eps) {
+        if (pts.length < 3) return pts;
+        const [ax, ay] = pts[0];
+        const [bx, by] = pts[pts.length - 1];
+        const len = Math.hypot(bx - ax, by - ay);
+        let far = 0;
+        let fi = 0;
+        for (let i = 1; i < pts.length - 1; i++) {
+            const [px, py] = pts[i];
+            const d = len ? Math.abs((bx - ax) * (ay - py) - (ax - px) * (by - ay)) / len : Math.hypot(px - ax, py - ay);
+            if (d > far) (far = d), (fi = i);
+        }
+        if (far <= eps) return [pts[0], pts[pts.length - 1]];
+        return simplify(pts.slice(0, fi + 1), eps).slice(0, -1).concat(simplify(pts.slice(fi), eps));
+    }
+    /** Draw a traced tile at twice its size, so the lines stay crisp on a phone. */
+    function drawVector(tile, v, o) {
+        const S = 2;
+        tile.width = tile.height = 256 * S;
+        const ctx = tile.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, tile.width, tile.height);
+        ctx.scale(S, S);
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+        const path = (chains, close) => {
+            const p = new Path2D();
+            for (const c of chains) {
+                p.moveTo(c[0][0], c[0][1]);
+                for (let i = 1; i < c.length; i++) p.lineTo(c[i][0], c[i][1]);
+                if (close) p.closePath();
+            }
+            return p;
+        };
+        ctx.fillStyle = "#000";
+        ctx.strokeStyle = "#000";
+        if (v.roadFill) ctx.fill(path(v.roadFill, true), "evenodd");
+        ctx.lineWidth = o.lineW ?? 1.1;
+        if (v.roadLine) ctx.stroke(path(v.roadLine, false));
+        ctx.stroke(path(v.shapes, false));
+    }
+
     /** Zhang-Suen thinning: a binary mask down to 1-pixel lines. */
     function skeleton(m, N) {
         const at = (x, y) => (x < 0 || y < 0 || x >= N || y >= N ? 0 : m[y * N + x]);
@@ -327,18 +438,22 @@
                     const ctx = tile.getContext("2d", { willReadFrequently: true });
                     ctx.drawImage(img, 0, 0);
                     try {
-                        ctx.putImageData(process(ctx.getImageData(0, 0, 256, 256), o, coords), 0, 0);
+                        const res = process(ctx.getImageData(0, 0, 256, 256), o, src);
+                        if (res.vector) drawVector(tile, res.vector, o);
+                        else ctx.putImageData(res, 0, 0);
                     } catch (e) {
                         console.error("retrace", e.message);
                     }
                     done(null, tile);
                 };
                 img.onerror = () => done(new Error("tile"), tile);
-                img.src = `https://tile.openstreetmap.org/${coords.z}/${coords.x}/${coords.y}.png`;
+                // o.sharp: each 256-pixel tile shown at 128, so the map has twice the detail.
+                const src = o.sharp ? { x: coords.x, y: coords.y, z: coords.z + 1 } : coords;
+                img.src = `https://tile.openstreetmap.org/${src.z}/${src.x}/${src.y}.png`;
                 return tile;
             },
         });
-        return new Layer({ maxZoom: 19, maxNativeZoom: 19, attribution: "© OpenStreetMap" });
+        return new Layer({ maxZoom: 19, maxNativeZoom: o.sharp ? 18 : 19, tileSize: o.sharp ? 128 : 256, attribution: "© OpenStreetMap" });
     }
 
     window.Retrace = { layer, classify };
