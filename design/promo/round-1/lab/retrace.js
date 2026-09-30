@@ -170,6 +170,11 @@
             // o.greenAs: every green printed in the buildings' fill colour.
             const GREEN_AS = { building: 0xd9d0c9, residential: 0xe0dfdf };
             if (GREEN_AS[o.greenAs]) for (let i = 0; i < N * N; i++) if (cls[i] === CLASS.green) col[i] = GREEN_AS[o.greenAs];
+            // o.recolor: one flat colour per class (a class left out keeps its own colours).
+            if (o.recolor) for (let i = 0; i < N * N; i++) {
+                const k = Object.keys(CLASS).find((n) => CLASS[n] === cls[i]);
+                if (o.recolor[k] !== undefined) col[i] = o.recolor[k];
+            }
             for (let i = 0; i < N * N; i++) {
                 o4[i * 4] = col[i] >>> 16;
                 o4[i * 4 + 1] = (col[i] >>> 8) & 255;
