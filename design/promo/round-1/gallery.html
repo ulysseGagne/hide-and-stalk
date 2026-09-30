@@ -88,9 +88,9 @@ body.only-kept .tile:not(.kept) { display: none; }
 
 <script>
 const SETS = [
-    { id: "logo2", title: "Logo", intro: "Only your scribble now (L7.6's), on the stack flush left. Two rows, one per STALK; the three columns are the same three sizes and places in both rows, so you can compare straight down.", wide: false, items: [], groups: [
-        ["STALK from L14.2", [["L16.1", "As in L14.2"], ["L16.2", "Big, from the left edge"], ["L16.3", "Small, under the scribble's right half"]]],
-        ["STALK from L14.4", [["L16.4", "As in L14.4"], ["L16.5", "Big, from the left edge"], ["L16.6", "Small, under the scribble's right half"]]],
+    { id: "logo2", title: "Logo", intro: "The two you kept, each next to two variants: STALK bolder, or the scribble lighter.", wide: false, items: [], groups: [
+        ["L16.3: L14.2's STALK", [["L16.3", "As it was"], ["L16.3a", "STALK bolder"], ["L16.3b", "Scribble lighter"]]],
+        ["L16.6: L14.4's STALK", [["L16.6", "As it was"], ["L16.6a", "STALK bolder"], ["L16.6b", "Scribble lighter"]]],
     ]},
     { id: "hand", title: "Handwriting", intro: "All app handwriting sits between 30% and 70% of the way from H1 (calm) to H3 (unhinged). Small or important text leans calm; big text, or text that's just for the vibe, leans wild.", wide: true, items: [
         ["H04", "The band: score 0 to 1, with H1 and H3 for reference"],
@@ -166,7 +166,10 @@ html += `<section id="arrows"><h2>Notification arrow</h2><p>Second round, from y
 ARROWS.forEach(([n, cap]) => (html += tile(`R${String(n).padStart(2, "0")}`, cap, `shots/R${String(n).padStart(2, "0")}.png`)));
 html += `</div></section>`;
 const MAPPART = [
-    ["hints", "2 · The hints layer", "Only N02 and N03 are left, now on S16 so there's no text. Each has six ways of making the players stand out, all in black and white (no red). Design rule, everywhere on the map: the names are the only thing drawn over the red. In every new style the tags spread out when players stand close together, with a straight line down to each person's spot, and each tag has a thin white ring so it reads on black as well as white.", [["N2a", "N02a: the tags as before, for comparison"], ["N2b", "N02b: bigger tags, a dot on the exact spot"], ["N2c", "N02c: every tag solid black; YOU white with a double edge"], ["N2d", "N02d: each tag on a wide white margin, cut out of the map"], ["N2e", "N02e: a solid black block under each tag, like a raised card"], ["N2f", "N02f: a black square on the spot, the name beside it"], ["N3a", "N03a: the tags as before, for comparison"], ["N3b", "N03b: bigger tags, a dot on the exact spot"], ["N3c", "N03c: every tag solid black; YOU white with a double edge"], ["N3d", "N03d: each tag on a wide white margin, cut out of the map"], ["N3e", "N03e: a solid black block under each tag, like a raised card"], ["N3f", "N03f: a black square on the spot, the name beside it"]]],
+    ["hints", "2 · The hints layer", "Two separate choices. First the map: how the ruled-out part looks (the tags are the same in both). Then the name tags: six ways to make the players stand out, all on the same map (N03), in black and white only. Tags always sit over the red.", [], [
+        ["The map", [["N2a", "N02: ruled out inverted to black, no line"], ["N3a", "N03: inverted, hand-drawn red line"]]],
+        ["The name tags", [["N3a", "a: as before"], ["N3b", "b: bigger, a dot on the exact spot"], ["N3c", "c: every tag solid black; YOU white, double edge"], ["N3d", "d: a wide white margin, cut out of the map"], ["N3e", "e: a black block underneath, like a raised card"], ["N3f", "f: a black square on the spot, the name beside it"]]],
+    ]],
     ["ask", "3 · Asking a question (stalker)", "The question sits in the box at the top. Only what it needs is red, and the hints layer steps aside. The first stalker to send it asks for the team, and lines and circles start where they stood.", [[8, "Nearest café: the cafés, pinned in red"], [10, "Closer than me: the circle through the asker"], [11, "East or west: the line, which side is which"], [13, "Within 200 m: the circle"]]],
     ["answer", "4 · Answering it (hider)", "The same questions on the hider's map, plus the hider between questions: one string, to the closest stalker.", [[9, "Nearest café"], [12, "East or west"], [14, "Within 200 m"], [15, "Between questions: the closest stalker"]]],
 ];
@@ -188,13 +191,18 @@ SKINS.forEach(([num, name, note]) => {
     html += `</div>`;
 });
 html += `</section>`;
-for (const [id, title, intro, items] of MAPPART) {
-    html += `<section id="maps-${id}"><h2>${title}</h2><p>${intro}</p><div class="grid">`;
-    for (const [n, cap] of items) {
-        const code = typeof n === "string" ? n : `N${String(n).padStart(2, "0")}`;
-        html += tile(code, cap, `shots/${code}.png`);
+for (const [id, title, intro, items, groups] of MAPPART) {
+    html += `<section id="maps-${id}"><h2>${title}</h2><p>${intro}</p>`;
+    for (const [head, list] of groups ?? [["", items]]) {
+        if (head) html += `<h3>${head}</h3>`;
+        html += `<div class="grid">`;
+        for (const [n, cap] of list) {
+            const code = typeof n === "string" ? n : `N${String(n).padStart(2, "0")}`;
+            html += tile(code, cap, `shots/${code}.png`);
+        }
+        html += `</div>`;
     }
-    html += `</div></section>`;
+    html += `</section>`;
 }
 document.getElementById("sections").innerHTML = html;
 const dlg = document.getElementById("zoom");

@@ -436,7 +436,7 @@
     });
 
     /** An earlier STALK (plain scrawl), pushed up the band, gaps made even. */
-    const loose = (svg, o) => ink(svg, Ink.write("STALK", { x: 0, y: 0, size: o.size ?? 78, weight: (o.size ?? 78) * 0.18, seed: o.seed, mess: o.mess ?? 1.15, tilt: o.tilt ?? -3, spacing: o.spacing ?? 0.15, even: true }).svg);
+    const loose = (svg, o) => ink(svg, Ink.write("STALK", { x: 0, y: 0, size: o.size ?? 78, weight: (o.size ?? 78) * 0.18 * (o.bold ?? 1), seed: o.seed, mess: o.mess ?? 1.15, tilt: o.tilt ?? -3, spacing: o.spacing ?? 0.15, even: true }).svg);
     const R14 = (s, k) => round(s, k, { seed: "r131", weight: 0.16 });
     Object.assign(LOCKUPS, {
         // L1.3's STALK, wilder, even gaps.
@@ -543,6 +543,7 @@
     // Fifth pass: the stack flush left, L7.6's scribble (even), and the STALK
     // of L14.2 or L14.4 at different sizes and places.
     const P76 = (s, k) => scribble(s, k, { seed: "p71", even: true });
+    const P76light = (s, k) => scribble(s, k, { seed: "p71", even: true, weight: k.h * 0.16 });
     const S142 = (o = {}) => (s) => loose(s, { seed: "L3s", size: 84, tilt: -8, mess: 1.1, spacing: 0.05, ...o });
     const S144 = (o = {}) => (s) => wild(s, { seed: "w144", sizes: [1.06, 0.94, 1.02, 0.96, 0.9], rises: [0.14, -0.02, 0.03, 0, 0.16], gap: 0, pulls: [0, 0, 0, 0, 0.05], ...o });
     Object.assign(LOCKUPS, {
@@ -563,6 +564,19 @@
         },
         "16.6"(svg) {
             lockup(svg, P76, S144({ size: 64 }), { at: 0.34, gap: 2 });
+        },
+        // The two kept, each with STALK bolder (a) or the scribble lighter (b).
+        "16.3a"(svg) {
+            lockup(svg, P76, S142({ size: 70, bold: 1.3 }), { at: 0.3, gap: 4 });
+        },
+        "16.3b"(svg) {
+            lockup(svg, P76light, S142({ size: 70 }), { at: 0.3, gap: 4 });
+        },
+        "16.6a"(svg) {
+            lockup(svg, P76, S144({ size: 64, weights: [1.3, 1.3, 1.3, 1.3, 1.3] }), { at: 0.34, gap: 2 });
+        },
+        "16.6b"(svg) {
+            lockup(svg, P76light, S144({ size: 64 }), { at: 0.34, gap: 2 });
         },
     });
 
