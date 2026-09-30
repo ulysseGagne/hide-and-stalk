@@ -575,6 +575,20 @@
         "16.6a"(svg) {
             lockup(svg, P76, S144({ size: 64, weights: [1.3, 1.3, 1.3, 1.3, 1.3] }), { at: 0.34, gap: 2 });
         },
+        // L14.2's STALK at the size and place L14.4's has in L16.6b.
+        "16.3c"(svg) {
+            const seek = stack(svg);
+            const m = P76light(svg, seek);
+            const b = m.getBBox();
+            const top = Math.max(b.y + b.height, seek.base) + 2;
+            const ref = S144({ size: 64 })(svg);
+            const r = place(ref, { top, x: seek.x + seek.w * 0.34 });
+            ref.remove();
+            const g = S142({ size: 70 })(svg);
+            // Same width and the same vertical middle as the reference.
+            const at = place(g, { top, x: r.x, width: r.w });
+            g.setAttribute("transform", g.getAttribute("transform").replace(/translate\(([-\d.]+) ([-\d.]+)\)/, (_, x, y) => `translate(${x} ${Number(y) + (r.h - at.h) / 2})`));
+        },
         "16.6b"(svg) {
             lockup(svg, P76light, S144({ size: 64 }), { at: 0.34, gap: 2 });
         },
