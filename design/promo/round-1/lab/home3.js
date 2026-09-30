@@ -131,12 +131,12 @@
     const BOX = `box-sizing:border-box;border:${LW}px solid #000;background:#fff`;
 
     /** A question card: the question typed to fill the card, the answer by hand. */
-    function card(s, { x, y, w = 164, rot = 0, q, answer, seed }) {
+    function card(s, { x, y, w = 164, rot = 0, q, answer, seed, square }) {
         const pad = 13;
         const inner = w - pad * 2 - LW * 2;
         const fs = fitSize(q, inner, 19);
         const ansSize = fitWrite(answer, inner, 30, { seed: seed ?? answer, importance: "key" });
-        const h = LW * 2 + pad + q.length * fs * 1.16 + 12 + ansSize * 1.05 + pad + 4;
+        const h = square ? w : LW * 2 + pad + q.length * fs * 1.16 + 12 + ansSize * 1.05 + pad + 4;
         const html = `<div style="${BOX};width:${w}px;height:${h}px;padding:${pad}px;font:700 ${fs}px/1.16 ${FONT};letter-spacing:0;white-space:nowrap">${q.join("<br>")}</div>`;
         const it = s.add(html, { x, y, w, h, rot });
         const [ax, ay] = it.at((LW + pad) / w, (h - pad - 6) / h);
@@ -510,21 +510,25 @@
     // of CLOSER CLOSER CLOSER, and that answer taken off the file (it's on the
     // card now). One red mark on the file: SUBJECT underlined.
     BOARDS[29] = board((s) => {
-        const f = file(s, { x: 30, y: 30, w: 184, rot: -2.5, rows: ROWS.slice(1) });
-        const subj = f.el.querySelector(".subj");
-        const inner = f.el.firstElementChild;
-        const fx0 = (subj.offsetLeft + inner.clientLeft) / f.w;
-        const fx1 = (subj.offsetLeft + inner.clientLeft + subj.offsetWidth) / f.w;
-        const fy = (subj.offsetTop + inner.clientTop + subj.offsetHeight + 3) / f.h;
-        const [ux, uy] = f.at(fx0, fy);
-        const [vx] = f.at(fx1, fy);
-        s.b.draw(Ink.underline(ux - 2, uy, vx - ux + 6, { seed: "b29u", weight: 3.6 }));
+        const rows = [["Within <span class=\"u\">500 m</span>?", "NO"], ...ROWS.slice(2)];
+        const f = file(s, { x: 30, y: 30, w: 184, rot: -2.5, rows });
+        // The one red mark on the file: 500 m underlined by hand.
+        const u = f.el.querySelector(".u");
+        let ox = 0;
+        let oy = 0;
+        for (let e = u; e && e !== f.el; e = e.offsetParent) {
+            ox += e.offsetLeft;
+            oy += e.offsetTop;
+        }
+        const [ux, uy] = f.at(ox / f.w, (oy + u.offsetHeight + 1) / f.h);
+        const [vx] = f.at((ox + u.offsetWidth) / f.w, (oy + u.offsetHeight + 1) / f.h);
+        s.b.draw(Ink.underline(ux - 3, uy, vx - ux + 6, { seed: "b29u", weight: 3.4 }));
         const pr = profile(s, { x: 246, y: 44, w: 96, rot: 5 });
-        const ph = photo(s, { x: 50, y: 262, w: 140, rot: 4, scene: "sit", caption: "PLACE TO SIT" });
-        const c = card(s, { x: 208, y: 286, w: 138, rot: -5, q: Q.ns, answer: "NORTH" });
+        const ph = photo(s, { x: 40, y: 262, w: 140, rot: 4, scene: "sit", caption: "PLACE TO SIT" });
+        const c = card(s, { x: 222, y: 290, w: 124, rot: -5, q: Q.ns, answer: "NORTH", square: true });
         s.link(s.pin(f, 0.93, 0.07), s.pin(pr, 0.12, 0.05), { sag: 3 });
         s.link(s.pin(f, 0.34, 0.96), s.pin(ph, 0.42, 0.04), { sag: 1 });
-        s.link(s.pin(pr, 0.5, 0.97), s.pin(c, 0.6, 0.06), { sag: 2 });
+        s.link(s.pin(pr, 0.5, 0.97), s.pin(c, 0.55, 0.06), { sag: 2 });
     });
     for (const [n, f] of Object.entries(BOARDS)) Board.extra[n] = f;
 
