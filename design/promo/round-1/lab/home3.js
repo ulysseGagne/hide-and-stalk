@@ -209,7 +209,7 @@
         const body = rows.map(([k, v]) => `<div style="display:flex;justify-content:space-between;gap:8px;white-space:nowrap"><span>${k}</span><b>${typeof v === "number" ? bar(v) : v}</b></div>`).join("");
         const html = `<div style="${BOX};width:${w}px;padding:12px 13px 13px;font:12px/1.75 ${FONT}">
             <div style="font-size:10px;font-weight:700;letter-spacing:.14em">FILE Nº 005</div>
-            <div style="font-size:${fitSize(["SUBJECT: HIDER"], w - 32, 22)}px;font-weight:700;letter-spacing:-.01em;line-height:1.2;margin-top:4px">SUBJECT: HIDER</div>
+            <div class="subj" style="display:inline-block;font-size:${fitSize(["SUBJECT: HIDER"], w - 32, 22)}px;font-weight:700;letter-spacing:-.01em;line-height:1.2;margin-top:4px">SUBJECT: HIDER</div>
             <div style="height:${LW}px;background:#000;margin:8px 0 6px"></div>${body}</div>`;
         return s.add(html, { x, y, w, rot });
     }
@@ -506,6 +506,26 @@
             s.link(s.pin(b, 0.1, 0.08), c[3], { sag: 1 });
         }),
     };
+    // B26, final: the bench instead of the door, the north/south card instead
+    // of CLOSER CLOSER CLOSER, and that answer taken off the file (it's on the
+    // card now). One red mark on the file: SUBJECT underlined.
+    BOARDS[29] = board((s) => {
+        const f = file(s, { x: 30, y: 30, w: 184, rot: -2.5, rows: ROWS.slice(1) });
+        const subj = f.el.querySelector(".subj");
+        const inner = f.el.firstElementChild;
+        const fx0 = (subj.offsetLeft + inner.clientLeft) / f.w;
+        const fx1 = (subj.offsetLeft + inner.clientLeft + subj.offsetWidth) / f.w;
+        const fy = (subj.offsetTop + inner.clientTop + subj.offsetHeight + 3) / f.h;
+        const [ux, uy] = f.at(fx0, fy);
+        const [vx] = f.at(fx1, fy);
+        s.b.draw(Ink.underline(ux - 2, uy, vx - ux + 6, { seed: "b29u", weight: 3.6 }));
+        const pr = profile(s, { x: 246, y: 44, w: 96, rot: 5 });
+        const ph = photo(s, { x: 50, y: 262, w: 140, rot: 4, scene: "sit", caption: "PLACE TO SIT" });
+        const c = card(s, { x: 208, y: 286, w: 138, rot: -5, q: Q.ns, answer: "NORTH" });
+        s.link(s.pin(f, 0.93, 0.07), s.pin(pr, 0.12, 0.05), { sag: 3 });
+        s.link(s.pin(f, 0.34, 0.96), s.pin(ph, 0.42, 0.04), { sag: 1 });
+        s.link(s.pin(pr, 0.5, 0.97), s.pin(c, 0.6, 0.06), { sag: 2 });
+    });
     for (const [n, f] of Object.entries(BOARDS)) Board.extra[n] = f;
 
     // -----------------------------------------------------------------
