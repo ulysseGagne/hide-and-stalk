@@ -1,8 +1,10 @@
 /* global qrcode, jsQR */
 
-// How a round ends: the hider's QR code, the stalker's scanner, and the "Hider
-// has been found" button for when the camera won't cooperate. The result itself
-// is shown by the status card at the top of the home screen (app.js).
+// How a round ends: the hider's QR code, the stalker's scanner (opened from
+// the "Found them? Scan their code" button in the page), and, inside the
+// scanner, the "Hider has been found" button for when the camera won't
+// cooperate. The result itself is shown by the status card at the top of the
+// home screen (app.js).
 //
 // The server owns the verdict. This file only draws the code, decodes one, and
 // posts it to /catch — every rule about who may catch whom lives in the worker.
@@ -32,7 +34,7 @@ let ctx2d = null;
 
 const endgameEl = {};
 function cacheEndgameElements() {
-    endgameEl.scanBtn = document.getElementById("scan-btn");
+    endgameEl.scanOpen = document.getElementById("scan-open");
     endgameEl.qr = document.getElementById("hider-qr");
     endgameEl.qrFigure = document.getElementById("hider-qr-figure");
     endgameEl.qrCode = document.getElementById("hider-qr-code");
@@ -121,7 +123,7 @@ function renderHiderQr(me) {
 // ---------------------------------------------------------------------------
 // The stalker's scanner
 // ---------------------------------------------------------------------------
-/** Stalkers get the camera button, but only while the hunt is on. */
+/** Stalkers get the scanner, but only while the hunt is on. */
 function canScan(payload) {
     const me = payload?.me;
     return Boolean(
@@ -304,7 +306,7 @@ window.HNSEndgame = {
         endgameApi = options.api;
         onCaught = options.onCaught ?? (() => {});
         cacheEndgameElements();
-        endgameEl.scanBtn.addEventListener("click", openScanner);
+        endgameEl.scanOpen.addEventListener("click", openScanner);
         endgameEl.close.addEventListener("click", closeScanner);
         endgameEl.modal.addEventListener("click", (e) => {
             if (e.target === endgameEl.modal) closeScanner();
@@ -324,11 +326,9 @@ window.HNSEndgame = {
     /** Called after every /state poll. */
     render(payload) {
         const scannable = canScan(payload);
-        endgameEl.scanBtn.hidden = !scannable;
-        // Same test as the camera button: a stalker with someone left to catch.
+        // A stalker with someone left to catch.
         endgameEl.foundPanel.hidden = !scannable;
         if (!scannable) resetFoundButton();
-        endgameEl.scanBtn.title = "Scan your hider's code";
         // Caught mid-scan, or the clock ran out while the camera was up.
         if (!scannable && !endgameEl.modal.hidden && !submitting) closeScanner();
         renderHiderQr(payload?.me);
@@ -339,7 +339,6 @@ window.HNSEndgame = {
         closeScanner();
         resetFoundButton();
         endgameEl.foundPanel.hidden = true;
-        endgameEl.scanBtn.hidden = true;
         endgameEl.qr.hidden = true;
         endgameEl.qrFigure.innerHTML = "";
     },

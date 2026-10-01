@@ -9,7 +9,7 @@
   {
    "type": "Feature",
    "properties": {
-    "name": "Greenhouses",
+    "name": "Greenhouse",
     "desc": "Campus reference landmark for the “are you closer to __ than me?” question."
    },
    "geometry": {

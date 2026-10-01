@@ -6,6 +6,7 @@
 //
 // Usernames are made up.
 
+import fs from "node:fs";
 import { catalogPayload, LANDMARK_GROUPS, LANDMARKS } from "../../../../worker/src/cards.js";
 
 export const NOW = Date.parse("2026-10-05T13:27:00-04:00");
@@ -327,6 +328,8 @@ export const SCREENS = {
                 cards: { role: "stalker", batch: null, currentPlay: null, pending: [], historyCount: 4, unread: 0, hints: hinted(p) },
             };
         })(),
+        // Round 2: the receipt's lines come from the round's questions.
+        history: () => plays(4).reverse(),
     },
     win: {
         position: HIDER,
@@ -349,10 +352,129 @@ export const SCREENS = {
                 cards: { role: "hider", pending: [], answered: [], answeredCount: 6, unread: 0, hints: hinted(p) },
             };
         })(),
+        // Round 2: the receipt's lines come from the round's questions (Q5, a photo of the nearest door).
+        history: () =>
+            plays(6, {
+                extra: [
+                    { q: 5, cardIds: ["photo_door", "radius_100", "floor"], picked: "photo_door", by: "camille", answer: "photo", photo: true },
+                    { q: 6, cardIds: ["nearest_building", "photo_below", "ns"], picked: "nearest_building", by: "theo" },
+                ],
+            }).reverse(),
     },
 };
 // For the post: the three cards as dealt (S51's layout), one of them circled.
 SCREENS.cardspick = SCREENS.cards;
+// The home screen (W54.1b4): the app as it opens, before any tap.
+SCREENS.home = { token: false, position: POS.jules };
+
+// ---------------------------------------------------------------------------
+// Round 2: the gallery's map screens, shot on the real app (tools/shoot-app.mjs
+// real). Each is the moment the lab drew (lab/maps2.js): the same answers
+// behind the hints, the same question waiting, the same view, YOU on the same
+// spot facing the same way, the stalkers' pins where the lab put them. The
+// views, spots and headings are read off the lab's own drawing by
+// design/promo/round-2/tools/capture-lab-maps.mjs (app/lab-maps.json).
+// ---------------------------------------------------------------------------
+const LAB = JSON.parse(fs.readFileSync(new URL("./lab-maps.json", import.meta.url), "utf8"));
+const ll = ([lng, lat]) => ({ lat, lng });
+
+/** A play waiting for its answer: question n, asked by `by` from `at`. */
+function waiting(q, cardId, by, at) {
+    const askedAt = HUNT_START + (q - 1) * 5 * MIN + 50_000;
+    return { id: 100 + q, cardId, batchId: 200 + q, question: q, askedByName: by, askedAt, askLat: at?.lat ?? null, askLng: at?.lng ?? null, answer: null, hasPhoto: false, answeredAt: null, editedAt: null };
+}
+
+/** The hider's /state for one map screen. */
+function mapState({ me = "maelle", users: list, question, clock, answered, pending = [] }) {
+    const roster = list.map((u, i) => ({ id: 11 + i, username: u.name, role: u.role, isAdmin: false, groupId: 3, cardsSeenAt: 0, online: true, lat: u.at?.lat ?? null, lng: u.at?.lng ?? null, updatedAt: NOW - 3000 }));
+    const meRow = roster.find((u) => u.username === me);
+    return {
+        serverNow: NOW,
+        settings,
+        me: { id: meRow.id, username: me, role: "hider", isAdmin: false, groupId: 3, cardsSeenAt: 0, catchCode: "HNS1:7f3a9c2e41" },
+        team: team("hunting", { question, nextQuestionInMs: clock, huntMs: (question - 1) * 5 * MIN + 5 * MIN - clock, hiderName: me }),
+        users: roster,
+        cards: { role: "hider", pending, answered, answeredCount: answered.length, unread: pending.length, hints: hinted(answered) },
+    };
+}
+
+/** On the MAP tab, at the lab's view, YOU facing the lab's way; then a tap, if the screen has one. */
+const mapSetup = (lab, tap) => async (page) => {
+    await page.click('.view-tab[data-view="map"]');
+    // The map tab shows the whole campus the first time it opens; then the lab's view.
+    await page.waitForTimeout(300);
+    await page.evaluate(({ v, deg }) => {
+        window.HNSMap.map.setView([v.lat, v.lng], v.zoom, { animate: false });
+        // The phone's compass: an absolute orientation event (alpha turns the other way).
+        window.dispatchEvent(new DeviceOrientationEvent("deviceorientationabsolute", { alpha: (360 - deg) % 360, beta: 0, gamma: 0, absolute: true }));
+    }, { v: lab.view, deg: lab.deg });
+    await page.waitForTimeout(1500);
+    if (tap) {
+        const at = await page.evaluate((t) => {
+            const p = window.HNSMap.map.latLngToContainerPoint([t.lat, t.lng]);
+            const box = document.getElementById("map").getBoundingClientRect();
+            return [box.left + p.x, box.top + p.y + (t.dy ?? 0)];
+        }, tap);
+        await page.mouse.click(at[0], at[1]);
+        await page.waitForTimeout(400);
+    }
+};
+
+const GH = LAB.g9a;
+const greenhouseHints = (n) => plays(n);
+const stalkersAt = (pins) => [
+    { name: "jules", role: "stalker" },
+    { name: "noah", role: "stalker", at: pins[0] },
+    { name: "camille", role: "stalker", at: pins[1] },
+    { name: "theo", role: "stalker" },
+];
+const VELO_63 = LANDMARK_GROUPS.velo.places.find((p) => p.id === "velo_63");
+
+// The Pub U game (lab/maps.js GAMES.pubu): olivier hides; three answers in.
+const PUBU = LAB.pubu;
+const OLIVIER = ll(PUBU.hider);
+const pubuPlays = () => {
+    const metres = (a, b) => {
+        const R = 6371000;
+        const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+        const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+        const h = Math.sin(dLat / 2) ** 2 + Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+        return 2 * R * Math.asin(Math.sqrt(h));
+    };
+    const truthful = (q) => {
+        const at = ll(q.at);
+        if (q.ew) return { cardId: "ew", answer: OLIVIER.lng > at.lng ? "East" : "West" };
+        if (q.ns) return { cardId: "ns", answer: OLIVIER.lat > at.lat ? "North" : "South" };
+        return { cardId: `radius_${q.radius}`, answer: metres(OLIVIER, at) <= q.radius ? "Yes" : "No" };
+    };
+    return PUBU.qs.map((q, i) => {
+        const { cardId, answer } = truthful(q);
+        const askedAt = HUNT_START + i * 5 * MIN + 50_000;
+        const at = ll(q.at);
+        return { id: 100 + i + 1, cardId, batchId: 201 + i, question: i + 1, askedByName: q.by, askedAt, askLat: at.lat, askLng: at.lng, answer, hasPhoto: false, answeredAt: askedAt + 70_000, editedAt: null };
+    });
+};
+
+export const MAP_SCREENS = {
+    // S61, the post's image 5: the hints layer between questions (two answers in).
+    g9a: { you: LAB.g9a.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.g9a.you }, ...stalkersAt(GH.pins)], question: 2, clock: 3 * MIN + 12_000, answered: greenhouseHints(2) }), setup: mapSetup(LAB.g9a) },
+    // S62: the same, camille's pin tapped: her name above it.
+    g10a: { you: LAB.g10a.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.g10a.you }, ...stalkersAt(LAB.g10a.pins)], question: 2, clock: 3 * MIN + 12_000, answered: greenhouseHints(2) }), setup: mapSetup(LAB.g10a, LAB.g10a.pins[1]) },
+    // S68: the same moment, how far the closest stalker is scribbled in the box.
+    g11a: { you: LAB.g11a.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.g11a.you }, ...stalkersAt(LAB.g11a.pins)], question: 2, clock: 3 * MIN + 12_000, answered: greenhouseHints(2) }), setup: mapSetup(LAB.g11a) },
+    // S63, the post's image 3: "Which àVélo station are you closest to?" waiting.
+    v2c: { you: LAB.v2c.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.v2c.you }, ...stalkersAt([null, null])], question: 3, clock: 62_000, answered: greenhouseHints(2), pending: [waiting(3, "nearest_velo", "noah", null)] }), setup: mapSetup(LAB.v2c) },
+    // S64: the same, her station's pin tapped: its pop-up.
+    v8c: { you: LAB.v8c.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.v8c.you }, ...stalkersAt([null, null])], question: 3, clock: 62_000, answered: greenhouseHints(2), pending: [waiting(3, "nearest_velo", "noah", null)] }), setup: mapSetup(LAB.v8c, { lat: VELO_63.lat, lng: VELO_63.lng, dy: -24 }) },
+    // S69, the post's image 6: north or south, asked from the line.
+    n11d: { you: LAB.n11d.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.n11d.you }, { name: "jules", role: "stalker" }, { name: "noah", role: "stalker" }, { name: "camille", role: "stalker", at: LAB.n11d.asker }, { name: "theo", role: "stalker" }], question: 5, clock: 2 * MIN + 40_000, answered: greenhouseHints(4), pending: [waiting(5, "ns", "camille", LAB.n11d.asker)] }), setup: mapSetup(LAB.n11d) },
+    // S65: closer to the greenhouse than noah: the place's tag, no circle; the two stalkers' pins.
+    "N10.2": { you: LAB["N10.2"].you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB["N10.2"].you }, ...stalkersAt(LAB["N10.2"].pins)], question: 4, clock: 48_000, answered: greenhouseHints(3), pending: [waiting(4, "closer_greenhouses", "noah", POS.noah)] }), setup: mapSetup(LAB["N10.2"]) },
+    // S66: east or west of camille.
+    N12: { you: LAB.N12.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.N12.you }, { name: "jules", role: "stalker", at: POS.jules }, { name: "noah", role: "stalker", at: POS.noah }, { name: "camille", role: "stalker", at: POS.camille }, { name: "theo", role: "stalker", at: POS.theo }], question: 5, clock: 2 * MIN + 40_000, answered: greenhouseHints(4), pending: [waiting(5, "ew", "camille", POS.camille)] }), setup: mapSetup(LAB.N12) },
+    // S67: within 200 m of lea (the Pub U game).
+    N14: { you: LAB.N14.you, state: mapState({ me: "olivier", users: [{ name: "olivier", role: "hider", at: LAB.N14.you }, ...Object.entries(PUBU.pos).map(([name, at]) => ({ name, role: "stalker", at: ll(at) }))], question: 4, clock: 4 * MIN + 5_000, answered: pubuPlays(), pending: [waiting(4, "radius_200", "lea", ll(PUBU.pos.lea))] }), setup: mapSetup(LAB.N14) },
+};
 
 // For the mock-up only (not a real card): the photo question asks for the nearest sculpture.
 export const catalog = () => {

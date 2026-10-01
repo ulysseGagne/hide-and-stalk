@@ -117,7 +117,7 @@ window.HNSLocations = {
                 },
                 {
                     "id": "greenhouses",
-                    "label": "Greenhouses",
+                    "label": "Greenhouse",
                     "lat": 46.7799898,
                     "lng": -71.2798912,
                     "detail": [

@@ -1,27 +1,19 @@
-/* global HNSHints, HNSMap, L */
+/* global HNSHints, HNSMap, HNSMarks, L */
 
-// Card UI: the stalkers' batch of three (and what happens once one is sent),
-// the hider's questions and answers, the shared history, and the header bell.
+// Card UI: the stalkers' batch of three (pick one, then send it, then watch
+// the answer land), the hider's questions and answers, the QUESTIONS tab, and
+// the header bell.
 //
 // The server owns every rule (what is dealt, who may pick, when the next
 // question comes). This file only draws it and posts the actions back. The
-// clock itself lives in the status card at the top of the home screen (app.js).
+// clock itself lives in the status card at the top of the home screen (app.js),
+// and the red marks over all of it in marks.js.
 
 const CATEGORY_LABELS = {
     direction: "Direction",
     radius: "Distance",
     proximity: "Proximity",
     context: "Surroundings",
-    photo: "Photo",
-};
-
-const ANSWER_LABELS = {
-    radio: "Multiple choice",
-    choice: "Multiple choice",
-    checkbox: "Select all that apply",
-    text: "Written answer",
-    number: "A number",
-    coords: "Your exact position",
     photo: "Photo",
 };
 
@@ -33,13 +25,20 @@ const PHOTO_MAX_CHARS = 400_000;
 let cardsApi = null;
 let onChanged = () => {};
 let onCue = () => {};
+let onRender = () => {};
+let goToView = () => {};
 let catalog = null;
 let catalogPromise = null;
 
 let cardsState = null; // /state -> cards
 let teamState = null; // /state -> team
 let hiderName = null;
-let picking = false;
+let sending = false;
+// The card this stalker has picked from the current batch, not sent yet.
+// Picking is this phone's own business: nothing reaches the server (or the
+// teammates) until Send.
+let pickedCardId = null;
+let pickedBatchId = null;
 
 // ---------------------------------------------------------------------------
 // Elements
@@ -50,21 +49,20 @@ function cacheElements() {
     el.bellCount = document.getElementById("bell-count");
     el.stalkerCards = document.getElementById("stalker-cards");
     el.cardRow = document.getElementById("card-row");
+    el.sendBtn = document.getElementById("send-btn");
     el.sentCard = document.getElementById("sent-card");
+    el.sentState = document.getElementById("sent-state");
     el.sentPrompt = document.getElementById("sent-prompt");
     el.sentAnswer = document.getElementById("sent-answer");
     el.sentPhoto = document.getElementById("sent-photo");
     el.cardNote = document.getElementById("card-note");
     el.cardError = document.getElementById("card-error");
-    el.historyBtn = document.getElementById("history-btn");
-    el.historyCount = document.getElementById("history-count");
     el.hiderQuestions = document.getElementById("hider-questions");
     el.hiderList = document.getElementById("hider-question-list");
     el.hiderAnswers = document.getElementById("hider-answers");
     el.hiderAnswerList = document.getElementById("hider-answer-list");
-    el.modal = document.getElementById("history-modal");
-    el.modalList = document.getElementById("history-list");
-    el.modalClose = document.getElementById("history-close");
+    el.historyList = document.getElementById("history-list");
+    el.questionsView = document.getElementById("view-questions");
     el.hintStatus = document.getElementById("hint-status");
 }
 
@@ -99,6 +97,10 @@ function describeAnswer(card, answer) {
     return String(answer);
 }
 
+/** The answer as it is written in by hand: capitals, without the bracketed code. */
+const handAnswer = (card, answer) =>
+    (describeAnswer(card, answer) ?? "").replace(/\s*\(.*?\)\s*/g, " ").trim().toUpperCase();
+
 const timeAgo = (ts) => {
     const s = Math.max(0, Math.round((Date.now() - ts) / 1000));
     if (s < 60) return `${s}s ago`;
@@ -121,6 +123,16 @@ function loadPhoto(play) {
     return photoCache.get(key);
 }
 
+/**
+ * A photo question, with what it asks for on a line of its own: "Send a photo
+ * of the" / "nearest sculpture." marks.js underlines the second line by hand.
+ */
+function photoPromptHtml(prompt) {
+    const m = /^(Send a photo of (?:(?:the|a|an) )?)(.+?)(\.?)$/.exec(prompt);
+    if (!m) return escapeCardHtml(prompt);
+    return `${escapeCardHtml(m[1].trim())}<br><span class="ul-mark">${escapeCardHtml(m[2])}</span>${escapeCardHtml(m[3])}`;
+}
+
 // ---------------------------------------------------------------------------
 // Catalog
 // ---------------------------------------------------------------------------
@@ -131,7 +143,7 @@ async function ensureCatalog() {
             .then((data) => {
                 catalog = data;
                 HNSHints.setCatalog(data);
-                // Lets the campus overlays name the cards each place answers.
+                // Lets the map name places and draw the question on the table.
                 HNSMap.setCardCatalog(data);
                 return data;
             })
@@ -144,30 +156,40 @@ async function ensureCatalog() {
 }
 
 // ---------------------------------------------------------------------------
-// Stalker: the batch of three, then the sent card
+// Stalker: the batch of three (pick, then send), then the sent card
 // ---------------------------------------------------------------------------
-function makeCardFace(card, { disabled }) {
+function makeCardFace(card, index, count, { disabled }) {
     const node = document.createElement("button");
     node.type = "button";
     node.className = "card";
     node.dataset.category = card.category;
     node.dataset.cardId = card.id;
     node.disabled = disabled;
-    const hintBadge = card.hint
-        ? '<span class="card-badge hint">Narrows the map</span>'
-        : "";
+    node.setAttribute("aria-pressed", "false");
+    // Numbered, so you can tell there are three.
     node.innerHTML = `
-        <span class="card-category">${escapeCardHtml(CATEGORY_LABELS[card.category] ?? card.category)}</span>
-        <span class="card-prompt">${escapeCardHtml(card.prompt)}</span>
-        <span class="card-foot">
-            <span class="card-badge">${escapeCardHtml(ANSWER_LABELS[card.answer.type] ?? "")}</span>
-            ${hintBadge}
-        </span>`;
+        <span class="card-category"><span>${escapeCardHtml(CATEGORY_LABELS[card.category] ?? card.category)}</span><span class="card-count">${index + 1} OF ${count}</span></span>
+        <span class="card-prompt">${escapeCardHtml(card.prompt)}</span>`;
     return node;
 }
 
 let renderedBatchKey = null;
 let renderedSentKey = null;
+
+/** Show the pick on the cards (marks.js draws its box) and the Send button. */
+function renderPick() {
+    for (const node of el.cardRow.querySelectorAll(".card")) {
+        const picked = node.dataset.cardId === pickedCardId;
+        node.classList.toggle("picked", picked);
+        node.setAttribute("aria-pressed", String(picked));
+    }
+    const rowShown = !el.cardRow.hidden;
+    el.sendBtn.hidden = !(rowShown && pickedCardId);
+    el.sendBtn.disabled = sending || Boolean(teamState?.paused);
+    // Room above the first card for PICK JUST ONE.
+    el.cardRow.classList.toggle("with-note", rowShown);
+    onRender();
+}
 
 function renderStalker(cards) {
     const batch = cards.batch;
@@ -180,7 +202,9 @@ function renderStalker(cards) {
         el.sentCard.hidden = true;
         renderedBatchKey = null;
         renderedSentKey = null;
+        pickedCardId = null;
         el.cardNote.textContent = "";
+        renderPick();
         return;
     }
 
@@ -191,60 +215,87 @@ function renderStalker(cards) {
         el.sentCard.hidden = true;
         renderedSentKey = null;
         el.cardRow.hidden = false;
+        if (pickedBatchId !== batch.id) {
+            pickedCardId = null;
+            pickedBatchId = batch.id;
+        }
         const key = `${batch.id}:${paused}`;
         if (key !== renderedBatchKey) {
             renderedBatchKey = key;
             el.cardRow.innerHTML = "";
-            for (const cardId of batch.cardIds) {
-                const card = cardById(cardId);
-                if (!card) continue;
-                el.cardRow.appendChild(makeCardFace(card, { disabled: picking || paused }));
-            }
+            const faces = batch.cardIds.map(cardById).filter(Boolean);
+            faces.forEach((card, i) => el.cardRow.appendChild(makeCardFace(card, i, faces.length, { disabled: sending || paused })));
         }
-        el.cardNote.textContent = paused
-            ? "The admin has paused your team."
-            : "Tap one to send it. The other two disappear.";
+        el.cardNote.textContent = paused ? "The admin has paused your team." : "";
+        renderPick();
         return;
     }
 
-    // Sent: the other two are gone, and the one that went out is stamped so
-    // nobody wonders whether they still have to do something.
+    // Sent: the other two are gone, and the one that went out is stamped
+    // SENT · LOCKED IN until the hider answers; then the answer is written in.
     renderedBatchKey = null;
+    pickedCardId = null;
     el.cardRow.hidden = true;
     el.cardRow.innerHTML = "";
     el.sentCard.hidden = false;
+    renderPick();
     const play = cards.currentPlay;
     const card = cardById(batch.playedCardId);
-    el.sentPrompt.textContent = card?.prompt ?? "";
-    const key = `${batch.id}:${play?.answeredAt ?? ""}`;
+    const key = `${batch.id}:${play?.answeredAt ?? ""}:${play?.editedAt ?? ""}`;
     if (key === renderedSentKey) return;
+    const firstShown = !renderedSentKey?.startsWith(`${batch.id}:`);
     renderedSentKey = key;
-    const sender = play?.askedByName ? `${play.askedByName} sent it. ` : "";
+    // Just sent (the page had been scrolled down to Send): bring the card,
+    // and the stamp over its top edge, back into view.
+    if (firstShown) {
+        requestAnimationFrame(() => {
+            const view = document.getElementById("view-menu");
+            const top = el.sentCard.getBoundingClientRect().top - 44 - view.getBoundingClientRect().top;
+            if (top < 0) view.scrollTop += top;
+        });
+    }
+    const isPhoto = card?.answer.type === "photo";
+    if (isPhoto) el.sentPrompt.innerHTML = photoPromptHtml(card.prompt);
+    else el.sentPrompt.textContent = card?.prompt ?? "";
+    el.sentCard.classList.remove("has-photo");
+    el.sentPhoto.hidden = true;
+    delete el.sentCard.dataset.answer;
     if (!play || play.answer === null) {
         el.sentCard.dataset.state = "waiting";
+        el.sentState.textContent = "Sent, locked in.";
         el.sentAnswer.textContent = `Waiting for ${hider} to answer…`;
-        el.sentPhoto.hidden = true;
-        el.cardNote.textContent = `${sender}Nothing else to do until the next question.`;
+        el.cardNote.textContent = paused ? "The admin has paused your team." : "";
+        onRender();
         return;
     }
     el.sentCard.dataset.state = "answered";
+    el.sentState.textContent = "";
     const answerText = describeAnswer(card, play.answer);
-    el.sentAnswer.textContent = `${hider}: ${answerText}${play.editedAt ? " (changed)" : ""}`;
-    el.cardNote.textContent = card?.hint
-        ? "The map has been updated with this answer."
-        : "Nothing else to do until the next question.";
-    el.sentPhoto.hidden = true;
+    // Written in by hand (marks.js); the words stay for screen readers.
+    el.sentCard.dataset.answer = handAnswer(card, play.answer) + (play.editedAt ? " (CHANGED)" : "");
+    el.sentCard.dataset.who = hider.toUpperCase();
+    el.sentAnswer.innerHTML = `<span class="sr-only">${escapeCardHtml(`${hider}: ${answerText}${play.editedAt ? " (changed)" : ""}`)}</span>`;
+    el.cardNote.textContent = paused
+        ? "The admin has paused your team."
+        : isPhoto
+          ? ""
+          : card?.hint
+            ? "The map has been updated with this answer."
+            : "Nothing else to do until the next question.";
     if (play.hasPhoto) {
+        el.sentCard.classList.add("has-photo");
         loadPhoto(play)
             .then((photo) => {
                 if (renderedSentKey !== key) return;
                 el.sentPhoto.src = photo;
                 el.sentPhoto.hidden = false;
+                onRender();
             })
             .catch(() => {
-                /* the history view says so if it still fails there */
+                /* the QUESTIONS tab says so if it still fails there */
             });
     }
+    onRender();
 }
 
 // ---------------------------------------------------------------------------
@@ -276,7 +327,7 @@ function choiceOptions(spec) {
     return { first, more: options.filter((o) => !possible.has(o.value)) };
 }
 
-function optionLabel(type, name, opt) {
+function optionLabel(type, name, opt, { codeFirst = false } = {}) {
     const label = document.createElement("label");
     label.className = "answer-option";
     const input = document.createElement("input");
@@ -284,7 +335,10 @@ function optionLabel(type, name, opt) {
     input.name = name;
     input.value = opt.value;
     const span = document.createElement("span");
-    span.textContent = opt.label;
+    // Buildings: the code first, heavy, then the whole name.
+    const m = codeFirst ? /^(.*?)\s*\(([A-Z]{2,6})\)$/.exec(opt.label) : null;
+    if (m) span.innerHTML = `<b class="opt-code">${escapeCardHtml(m[2])}</b>${escapeCardHtml(m[1])}`;
+    else span.textContent = opt.label;
     label.append(input, span);
     if (opt.distance !== null && opt.distance !== undefined) {
         const dist = document.createElement("span");
@@ -307,16 +361,18 @@ function answerWidget(card, form) {
 
     switch (spec.type) {
         case "choice": {
+            const codeFirst = spec.group === "building";
             const { first, more } = choiceOptions(spec);
-            for (const opt of first) wrap.appendChild(optionLabel("radio", name, opt));
+            for (const opt of first) wrap.appendChild(optionLabel("radio", name, opt, { codeFirst }));
             if (more.length) {
                 const showMore = document.createElement("button");
                 showMore.type = "button";
                 showMore.className = "answer-more";
                 showMore.textContent = `Not in the list? Show ${more.length} more`;
                 showMore.addEventListener("click", () => {
-                    for (const opt of more) wrap.insertBefore(optionLabel("radio", name, opt), showMore);
+                    for (const opt of more) wrap.insertBefore(optionLabel("radio", name, opt, { codeFirst }), showMore);
                     showMore.remove();
+                    onRender();
                 });
                 wrap.appendChild(showMore);
             }
@@ -406,6 +462,7 @@ function answerWidget(card, form) {
                     form.dataset.photo = dataUrl;
                     preview.src = dataUrl;
                     preview.hidden = false;
+                    onRender();
                 } catch (err) {
                     console.error(err);
                     setFormError(form, "Could not read that image");
@@ -631,6 +688,7 @@ function renderHiderAnswers(cards) {
         if (!card) continue;
         const row = document.createElement("div");
         row.className = "answer-row";
+        row.dataset.playId = String(play.id);
         const text = document.createElement("div");
         text.className = "answer-row-text";
         text.innerHTML = `<span class="question-meta">${escapeCardHtml(questionLabel(play))}</span>
@@ -650,10 +708,12 @@ function renderHiderAnswers(cards) {
                     editingPlayId = null;
                     renderedAnswersKey = null;
                     renderHiderAnswers(cardsState);
+                    onRender();
                 },
             });
             form.classList.add("editing");
             row.replaceWith(form);
+            onRender();
         });
         row.append(text, change);
         el.hiderAnswerList.appendChild(row);
@@ -690,50 +750,69 @@ async function submitAnswer(event, card, form, submit) {
 }
 
 // ---------------------------------------------------------------------------
-// History
+// QUESTIONS: every question so far, a tab (for the stalkers and the hider)
 // ---------------------------------------------------------------------------
-async function openHistory() {
-    el.modal.hidden = false;
-    el.modalList.innerHTML = '<p class="muted">Loading...</p>';
+let historyKey = null;
+let historyPlays = [];
+
+/** What the questions list depends on: re-fetch it only when this changes. */
+function historyStateKey(cards) {
+    if (!cards) return null;
+    const list = cards.role === "hider" ? [...cards.pending, ...(cards.answered ?? [])] : [...cards.hints, ...cards.pending];
+    return `${cards.role}:${cards.historyCount ?? cards.answeredCount}:${list.map((p) => `${p.id}:${p.answeredAt}:${p.editedAt}`).join(",")}:${cards.currentPlay?.answeredAt ?? ""}`;
+}
+
+async function loadHistory() {
     try {
         const { plays } = await cardsApi("/cards/history");
+        historyPlays = plays;
         renderHistory(plays);
     } catch (err) {
-        el.modalList.innerHTML = `<p class="auth-error">${escapeCardHtml(
-            err.status === undefined ? "Could not reach the server" : err.message,
-        )}</p>`;
+        if (!historyPlays.length) {
+            el.historyList.innerHTML = `<p class="auth-error history-empty">${escapeCardHtml(
+                err.status === undefined ? "Could not reach the server" : err.message,
+            )}</p>`;
+        }
     }
+    onRender();
 }
 
 function renderHistory(plays) {
-    el.modalList.innerHTML = "";
+    el.historyList.innerHTML = "";
     if (!plays.length) {
-        el.modalList.innerHTML =
-            '<p class="muted">No questions asked yet.</p>';
+        el.historyList.innerHTML = '<p class="muted history-empty">No questions asked yet.</p>';
         return;
     }
-    for (const play of plays) {
+    // Newest first.
+    for (const play of [...plays].sort((a, b) => (b.question ?? 0) - (a.question ?? 0) || b.askedAt - a.askedAt)) {
         const card = cardById(play.cardId);
         const row = document.createElement("article");
         row.className = "history-row";
         row.dataset.category = card?.category ?? "";
-
         const answered = play.answeredAt !== null;
-        const answerText = describeAnswer(card, play.answer);
         row.innerHTML = `
             <header class="history-head">
-                <span class="card-category">${escapeCardHtml(
-                    CATEGORY_LABELS[card?.category] ?? "Card",
-                )}</span>
+                <span class="card-category history-cat">${escapeCardHtml(CATEGORY_LABELS[card?.category] ?? "Card")}</span>
                 <span class="question-meta">${escapeCardHtml(questionLabel(play))} · ${escapeCardHtml(
                     play.askedByName ?? "?",
                 )} · ${escapeCardHtml(timeAgo(play.askedAt))}</span>
             </header>
-            <p class="history-prompt">${escapeCardHtml(card?.prompt ?? play.cardId)}</p>
-            <p class="history-answer ${answered ? "" : "pending"}">${
-                answered ? escapeCardHtml(answerText) : "Waiting for the hider..."
-            }${answered && play.editedAt ? ' <span class="changed-mark">changed</span>' : ""}</p>`;
-
+            <p class="history-prompt">${escapeCardHtml(card?.prompt ?? play.cardId)}</p>`;
+        const answer = document.createElement("p");
+        answer.className = `history-answer${answered ? "" : " pending"}`;
+        if (!answered) {
+            answer.textContent = "Waiting for the hider...";
+        } else if (play.hasPhoto) {
+            answer.hidden = true;
+        } else {
+            // The answer, written in by hand.
+            const text = handAnswer(card, play.answer);
+            answer.innerHTML = `${HNSMarks.handwriting(text, { seed: `h${text}` })}<span class="sr-only">${escapeCardHtml(describeAnswer(card, play.answer))}</span>${
+                play.editedAt ? '<span class="changed-mark">changed</span>' : ""
+            }`;
+        }
+        row.appendChild(answer);
+        row.classList.toggle("has-photo", answered && play.hasPhoto);
         if (answered && play.hasPhoto) {
             const img = document.createElement("img");
             img.className = "history-photo";
@@ -753,13 +832,26 @@ function renderHistory(plays) {
                 });
             row.appendChild(img);
         }
-        if (answered && card?.hint) {
-            const badge = document.createElement("span");
-            badge.className = "card-badge hint";
-            badge.textContent = "On the map";
-            row.appendChild(badge);
-        }
-        el.modalList.appendChild(row);
+        el.historyList.appendChild(row);
+    }
+}
+
+/** The QUESTIONS tab was opened: bring it up to date, and the answers are read. */
+async function showQuestions() {
+    if (!historyPlays.length) el.historyList.innerHTML = '<p class="muted history-empty">Loading...</p>';
+    historyKey = historyStateKey(cardsState);
+    loadHistory();
+    await markSeen();
+}
+
+async function markSeen() {
+    // The stalkers' bell counts answers they haven't read; reading them here clears it.
+    if (cardsState?.role !== "stalker" || !cardsState.unread) return;
+    try {
+        await cardsApi("/cards/seen", { method: "POST" });
+        onChanged();
+    } catch {
+        /* the badge will clear on the next successful poll */
     }
 }
 
@@ -768,8 +860,8 @@ function renderHistory(plays) {
 // ---------------------------------------------------------------------------
 function renderBell(cards) {
     const unread = cards?.unread ?? 0;
-    el.bell.hidden = !cards;
-    el.bell.classList.toggle("ringing", unread > 0);
+    // Nothing can ring before the round starts (S32: no bell).
+    el.bell.hidden = !cards || !teamState || teamState.phase === "ready";
     el.bellCount.hidden = unread === 0;
     el.bellCount.textContent = unread > 99 ? "99+" : String(unread);
     el.bell.title = !cards
@@ -783,41 +875,29 @@ function renderBell(cards) {
             : "No new answers";
 }
 
-async function bellClicked() {
+function bellClicked() {
     const role = cardsState?.role;
     if (role === "stalker") {
-        await openHistory();
-        try {
-            await cardsApi("/cards/seen", { method: "POST" });
-            onChanged();
-        } catch {
-            /* the badge will clear on the next successful poll */
-        }
+        // The answers are in the QUESTIONS tab (from the hunt on); before
+        // that, there is nothing to read.
+        const tab = document.querySelector('.view-tab[data-view="questions"]');
+        if (tab && !tab.hidden) goToView("questions");
+        else markSeen();
     } else if (role === "hider") {
-        document.querySelector('.view-tab[data-view="menu"]')?.click();
+        goToView("menu");
         el.hiderQuestions?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 }
 
 // ---------------------------------------------------------------------------
-// Hints status line
+// Hints: only a contradiction is worth a line
 // ---------------------------------------------------------------------------
 function renderHintStatus(status) {
     if (!el.hintStatus) return;
-    if (!status?.ready) {
-        el.hintStatus.textContent = "";
-        return;
-    }
-    if (status.contradiction) {
-        el.hintStatus.textContent =
-            "The answers so far cannot all be true — check the questions so far for a mistake.";
-        el.hintStatus.dataset.tone = "warn";
-        return;
-    }
-    el.hintStatus.textContent = status.applied
-        ? `${status.applied} answer${status.applied === 1 ? " is" : "s are"} narrowing the map.`
-        : "";
-    el.hintStatus.dataset.tone = "muted";
+    el.hintStatus.textContent =
+        status?.ready && status.contradiction
+            ? "The answers so far cannot all be true — check the questions so far for a mistake."
+            : "";
 }
 
 // ---------------------------------------------------------------------------
@@ -855,22 +935,19 @@ window.HNSCards = {
         cardsApi = options.api;
         onChanged = options.onChanged ?? (() => {});
         onCue = options.onCue ?? (() => {});
+        onRender = options.onRender ?? (() => {});
+        goToView = options.showView ?? (() => {});
         cacheElements();
         el.bell.addEventListener("click", bellClicked);
-        el.historyBtn.addEventListener("click", openHistory);
-        el.modalClose.addEventListener("click", () => {
-            el.modal.hidden = true;
-        });
-        el.modal.addEventListener("click", (e) => {
-            if (e.target === el.modal) el.modal.hidden = true;
-        });
-        document.addEventListener("keydown", (e) => {
-            if (e.key === "Escape") el.modal.hidden = true;
-        });
+        // A tap picks (or, on the picked card, un-picks); nothing is sent yet.
         el.cardRow.addEventListener("click", (e) => {
             const node = e.target.closest?.(".card[data-card-id]");
-            if (node && !node.disabled) pickCard(node.dataset.cardId);
+            if (!node || node.disabled) return;
+            pickedCardId = pickedCardId === node.dataset.cardId ? null : node.dataset.cardId;
+            el.cardError.textContent = "";
+            renderPick();
         });
+        el.sendBtn.addEventListener("click", sendPicked);
         HNSHints.onStatus(renderHintStatus);
     },
 
@@ -880,20 +957,18 @@ window.HNSCards = {
         cardsState = cards;
         teamState = state?.team ?? null;
         hiderName = state?.users?.find((u) => u.role === "hider")?.username ?? null;
-        // Nothing to show a stalker until the hunt starts; afterwards the
-        // panel stays for its "Questions so far" recap.
-        el.stalkerCards.hidden = !(
-            cards?.role === "stalker" &&
-            (teamState?.phase === "hunting" || teamState?.phase === "ended")
-        );
+        // Nothing to show a stalker until the hunt starts.
+        el.stalkerCards.hidden = !(cards?.role === "stalker" && teamState?.phase === "hunting");
         el.hiderQuestions.hidden = !(cards?.role === "hider" && teamState?.phase === "hunting");
         renderBell(cards);
 
         if (!cards) {
             HNSHints.setPlays([]);
-            HNSMap.setAskOverlays([]);
             el.hiderAnswers.hidden = true;
             cueKey = null;
+            historyPlays = [];
+            historyKey = null;
+            onRender();
             return;
         }
         try {
@@ -903,28 +978,37 @@ window.HNSCards = {
             return;
         }
 
-        // Both sides of the hunt see the same closing net and the same drawing
-        // of whatever question is currently on the table.
+        // Both sides of the hunt see the same closing net.
         HNSHints.setPlays(cards.hints ?? []);
-        HNSMap.setAskOverlays(
-            cards.pending.map((p) => ({
-                cardId: p.cardId,
-                lat: p.askLat,
-                lng: p.askLng,
-            })),
-        );
 
         if (cards.role === "stalker") {
             renderStalker(cards);
-            el.historyCount.textContent = cards.historyCount
-                ? ` (${cards.historyCount})`
-                : "";
         } else {
             renderHiderQuestions(cards);
             renderHiderAnswers(cards);
         }
+        // The QUESTIONS tab, kept up to date while it is open.
+        const key = historyStateKey(cards);
+        const questionsOpen = !el.questionsView.hidden;
+        if (questionsOpen && key !== historyKey) {
+            historyKey = key;
+            loadHistory();
+        }
+        if (questionsOpen) markSeen();
         checkCue(cards);
+        onRender();
     },
+
+    showQuestions,
+    /** The round's questions and answers (receipt.js), fetched fresh. */
+    async history() {
+        await ensureCatalog();
+        const { plays } = await cardsApi("/cards/history");
+        return plays;
+    },
+    cardById,
+    describeAnswer,
+    catalog: () => catalog,
 
     reset() {
         cardsState = null;
@@ -933,30 +1017,33 @@ window.HNSCards = {
         renderedSentKey = null;
         renderedAnswersKey = null;
         editingPlayId = null;
+        pickedCardId = null;
+        pickedBatchId = null;
         cueKey = null;
-        openForms.clear();
+        historyKey = null;
+        historyPlays = [];
+            openForms.clear();
         photoCache.clear();
         el.hiderList.innerHTML = "";
         el.hiderAnswerList.innerHTML = "";
         el.hiderAnswers.hidden = true;
         el.cardRow.innerHTML = "";
         el.sentCard.hidden = true;
-        HNSMap.setAskOverlays([]);
-        el.modal.hidden = true;
+        el.sendBtn.hidden = true;
+        el.historyList.innerHTML = "";
         renderBell(null);
         HNSHints.setPlays([]);
     },
 };
 
-async function pickCard(cardId) {
-    if (picking) return;
-    picking = true;
+/** Send the picked card: the one action that reaches the server. */
+async function sendPicked() {
+    const cardId = pickedCardId;
+    if (sending || !cardId) return;
+    sending = true;
     el.cardError.textContent = "";
+    el.sendBtn.disabled = true;
     for (const node of el.cardRow.querySelectorAll(".card")) node.disabled = true;
-    // Show it as sent straight away; the next poll confirms (or the error
-    // below puts the three cards back).
-    const chosen = el.cardRow.querySelector(`.card[data-card-id="${CSS.escape(cardId)}"]`);
-    chosen?.classList.add("sending");
     try {
         await cardsApi("/cards/pick", { method: "POST", body: { cardId } });
     } catch (err) {
@@ -964,7 +1051,7 @@ async function pickCard(cardId) {
             err.status === undefined ? "Could not reach the server" : err.message;
         renderedBatchKey = null; // redraw the row enabled again
     } finally {
-        picking = false;
+        sending = false;
         onChanged();
     }
 }

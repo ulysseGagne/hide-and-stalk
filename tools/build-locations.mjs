@@ -56,7 +56,7 @@ const LANDMARK_FILES = [
     ["church", "church", "the church"],
     ["twin_towers", "twin-towers", "the twin towers"],
     ["ulaval_sign", "ulaval-sign", "the ULaval sign"],
-    ["greenhouses", "greenhouses", "the greenhouses"],
+    ["greenhouses", "greenhouses", "the greenhouse"],
     ["football_stadium", "football-stadium", "the football stadium"],
     ["pub_u", "pub-u", "Pub U"],
 ];

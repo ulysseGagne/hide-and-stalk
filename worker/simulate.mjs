@@ -32,6 +32,8 @@ import * as turf from "@turf/turf";
 const BASE = process.env.HNS_API ?? "http://127.0.0.1:8787";
 const ORIGIN = "http://localhost:8080";
 const ADMIN_PASSWORD = process.env.HNS_ADMIN_PASSWORD;
+// The admin to log in as: "admin" unless HNS_ADMIN_USERNAME names a local one.
+const ADMIN_USERNAME = process.env.HNS_ADMIN_USERNAME || "admin";
 const arg = (name, fallback) => {
     const i = process.argv.indexOf(`--${name}`);
     return i === -1 ? fallback : Number(process.argv[i + 1]);
@@ -255,7 +257,7 @@ const PLANS = [
 // Setup
 // ---------------------------------------------------------------------------
 console.log(`Simulating ${TEAMS} teams of ${SIZE} against ${BASE}\n`);
-const admin = await call("/login", { method: "POST", body: { username: "admin", password: ADMIN_PASSWORD } });
+const admin = await call("/login", { method: "POST", body: { username: ADMIN_USERNAME, password: ADMIN_PASSWORD } });
 if (admin.status !== 200) {
     console.error("admin login failed:", admin.status, JSON.stringify(admin.json));
     process.exit(1);

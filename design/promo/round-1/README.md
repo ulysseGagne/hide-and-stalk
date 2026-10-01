@@ -1,7 +1,13 @@
 # Round 1: design exploration
 
-Everything here is code. Nothing in `src/` is changed yet; the chosen
-direction gets built into the app in round 2.
+Everything here is code. Round 1 changed nothing in `src/`; the chosen
+direction is built into the app in round 2 (`../round-2/`: each gallery
+screen next to the real app, and how they are made).
+
+The mock-ups below were layered over the app as it was before round 2. To
+re-render them as they were, check out the commit that brought this folder
+over (`a88af23` on `round-2-handoff`); on later commits `src/` is the
+redesign itself, and `node tools/shoot-app.mjs real` shoots it instead.
 
 **House rule:** nothing red is ever perfectly straight or round. Every
 stroke goes through `humanize()` in `lab/ink.js` (slow seeded wobble, more on

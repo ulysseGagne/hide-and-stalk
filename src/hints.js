@@ -1,18 +1,17 @@
-/* global L, turf */
+/* global turf */
 
 // The "Hints" map filter.
 //
 // Same idea as the elimination overlay in dependencies/JetLagHideAndSeek: start
 // from the whole play area, turn every answered card into a piece of geometry,
 // and intersect (or subtract) it. What survives is where the hider can still
-// be. We draw a border around that region and shade everything outside it, so
-// the play area visibly closes in as answers come back.
+// be. The map (map.js) inverts everything outside that region and draws its
+// edge by hand in red, so the play area visibly closes in as answers come
+// back; the receipt (receipt.js) prints the final one.
 //
 // Cards whose landmarks have no coordinates yet (see worker/src/cards.js) are
 // skipped rather than guessed at, and reported through onStatus() so the UI can
 // say so out loud.
-
-const HINTS_LAYER = L.layerGroup();
 
 // Padding around the play area, in degrees, for the half-plane rectangles and
 // the shaded mask. Big enough to cover anywhere a player might pan to.
@@ -27,7 +26,10 @@ const MIN_WALK_RADIUS_M = 25;
 let hintsCatalog = null;
 let plays = [];
 let enabled = false;
-let statusListener = null;
+const statusListeners = new Set();
+const notify = (status) => {
+    for (const fn of statusListeners) fn(status);
+};
 
 const hintsCardById = (id) => hintsCatalog?.cards.find((c) => c.id === id) ?? null;
 
@@ -262,9 +264,8 @@ function solve() {
 }
 
 function render() {
-    HINTS_LAYER.clearLayers();
     if (!enabled || !hintsCatalog) {
-        statusListener?.({ applied: 0, skipped: [], contradiction: false, ready: false });
+        notify({ applied: 0, skipped: [], contradiction: false, ready: false, region: null, mask: null });
         return;
     }
     let result;
@@ -272,40 +273,24 @@ function render() {
         result = solveCached();
     } catch (err) {
         console.error("hints: could not solve constraints", err);
-        statusListener?.({ applied: 0, skipped: [], contradiction: false, error: true });
+        notify({ applied: 0, skipped: [], contradiction: false, error: true, region: null, mask: null });
         return;
     }
     const { region, applied, skipped, contradiction } = result;
+    // What the hider can't be: the padded world with the surviving region
+    // punched out of it.
+    const mask = region ? maskFor(region) : null;
+    notify({ applied, skipped, contradiction, ready: true, region, mask });
+}
 
-    if (region) {
-        // Shade everything the hider can't be: the padded world with the
-        // surviving region punched out of it.
-        const mask = turf.difference(
-            turf.featureCollection([paddedBox(MASK_PAD), region]),
-        );
-        if (mask) {
-            L.geoJSON(mask, {
-                interactive: false,
-                style: {
-                    stroke: false,
-                    fillColor: "#0f172a",
-                    fillOpacity: 0.55,
-                },
-            }).addTo(HINTS_LAYER);
-        }
-        // ...and draw the border around what's left.
-        L.geoJSON(region, {
-            interactive: false,
-            style: {
-                color: "#38bdf8",
-                weight: 3,
-                opacity: 0.95,
-                fill: false,
-                dashArray: applied ? null : "6 6",
-            },
-        }).addTo(HINTS_LAYER);
+let maskKey = null;
+let maskShape = null;
+function maskFor(region) {
+    if (region !== maskKey) {
+        maskKey = region;
+        maskShape = turf.difference(turf.featureCollection([paddedBox(MASK_PAD), region]));
     }
-    statusListener?.({ applied, skipped, contradiction, ready: true, region });
+    return maskShape;
 }
 
 /**
@@ -339,7 +324,6 @@ function possiblePlaceIds(groupKey) {
 }
 
 window.HNSHints = {
-    layer: HINTS_LAYER,
     setCatalog(next) {
         hintsCatalog = next;
         voronoiCache.clear();
@@ -356,13 +340,28 @@ window.HNSHints = {
         render();
     },
     setEnabled(next) {
+        if (enabled === next) return;
         enabled = next;
         render();
     },
+    /** fn(status) after every change: { ready, applied, skipped, contradiction, region, mask }. */
     onStatus(fn) {
-        statusListener = fn;
-        return () => {
-            statusListener = null;
-        };
+        statusListeners.add(fn);
+        return () => statusListeners.delete(fn);
     },
+    /**
+     * Where the hider can still be, from the answers set so far, whether or
+     * not the map is showing it (the receipt prints the final one). null
+     * before the catalog, or when the answers contradict each other.
+     */
+    region() {
+        if (!hintsCatalog) return null;
+        try {
+            return solveCached().region;
+        } catch {
+            return null;
+        }
+    },
+    /** The world outside a region, for printing it inverted. */
+    maskFor,
 };
