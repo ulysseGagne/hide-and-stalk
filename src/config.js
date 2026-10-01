@@ -11,7 +11,7 @@ const isLocalHost = /^(localhost|127\.0\.0\.1|\[::1\]|10\.|192\.168\.|172\.(1[6-
 window.HNS_CONFIG = {
     apiBase: isLocalHost
         ? `http://${location.hostname}:8787`
-        : "https://hidenstalk-api.hidenstalk-api.workers.dev",
+        : "https://hidenstalk-api.ulyssegagne.workers.dev",
     // How often (ms) a player syncs with the server: one request that sends
     // their position and brings back the game (questions, the map, everyone
     // else's pins). It is also the heartbeat the admin board's signal icon is
