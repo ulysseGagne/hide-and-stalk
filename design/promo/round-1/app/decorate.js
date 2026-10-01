@@ -266,16 +266,18 @@
         return `<svg class="rc-tear" viewBox="0 0 100 12" preserveAspectRatio="none" width="100%" height="12"><path d="${d} Z" fill="#fff" stroke="none"/><path d="${d}" fill="none" stroke="#000" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linejoin="miter"/></svg>`;
     }
     /**
-     * The receipt, as typeset. Treatments being tried (rcv): r1 the slip on a
-     * black table (CSS only), r2 the hunt time as big as the hiding countdown,
-     * r3 the red word stamped on the slip (drawn after), r4 the final hints
-     * map printed where the bar was (drawn after).
+     * The receipt, as typeset: the hunt time as big as the hiding countdown
+     * (R2), and where the bar was, the round's final hints map printed on the
+     * slip (R4). The map itself is drawn by the lab (Maps2.drawReceipt) and set
+     * by tools/shoot-app.mjs once the slip is laid out: see receiptMapNeed.
      */
-    function receiptEl(rc, rcv = "") {
-        const row = ([a, b]) => `<div class="rc-row"><span>${a}</span><b>${b === "REDACTED" ? '<i class="rc-redact"></i>' : b}</b></div>`;
+    function receiptEl(rc) {
+        // "Q1 North or south?": the number in a black box, like the app's labels.
+        const label = (a) => a.replace(/^(Q\d+) /, '<em class="rc-q">$1</em>');
+        const row = ([a, b]) => `<div class="rc-row"><span>${label(a)}</span><b>${b === "REDACTED" ? '<i class="rc-redact"></i>' : b}</b></div>`;
         const hunt = rc.totals.find(([a]) => a === "Hunt");
-        const hero = rcv === "r2" && hunt ? `<div class="rc-hero"><span>${hunt[0]}</span><b>${hunt[1]}</b></div><div class="rc-rule"></div>` : "";
-        const totals = hero ? rc.totals.filter((t) => t !== hunt) : rc.totals;
+        const hero = hunt ? `<div class="rc-hero"><span>${hunt[0]}</span><b>${hunt[1]}</b></div><div class="rc-rule"></div>` : "";
+        const totals = rc.totals.filter((t) => t !== hunt);
         const html = `<div class="receipt"><div class="rc-paper">
             <div class="rc-title">HIDE AND STALK</div>
             <div class="rc-head">${rc.head}</div>
@@ -283,7 +285,8 @@
             <div class="rc-rule"></div>${totals.map(row).join("")}
             <div class="rc-rule"></div>
             <div class="rc-row"><span>Questions asked</span><b>${rc.asked} of ${rc.of}</b></div>
-            ${rcv === "r4" ? '<div class="rc-map"></div>' : '<div class="rc-bar"></div>'}
+            <div class="rc-map"><img alt=""></div>
+            <div class="rc-osm">© OpenStreetMap</div>
             <div class="rc-code">${barcode(rc.head)}</div>
         </div>${tear()}</div>`;
         const btn = $("#team-again-btn");
@@ -291,42 +294,25 @@
     }
 
     /**
-     * r4: where she could still be when the round ended, printed small like a
-     * till's logo: the campus black, the hints layer's white left in it (the
-     * app's own answer-by-answer solve, src/hints.js), north up. Returns a
-     * function from [lng, lat] to the map's pixels, for the X.
+     * What the receipt's map needs drawn: its size inside the frame, and where
+     * she could still be when the round ended (the app's own answer-by-answer
+     * solve, src/hints.js). Null when there's no slip.
      */
-    function receiptMap(el) {
+    function receiptMapNeed() {
+        const el = $(".rc-map");
+        if (!el) return null;
         let region = null;
         HNSHints.onStatus((s) => {
             if (s.region) region = s.region;
         });
         HNSHints.setEnabled(true);
-        const ring = window.HNSLocations.layers.find((l) => l.kind === "polygon").ring;
-        const lat0 = ring.reduce((s, p) => s + p[1], 0) / ring.length;
-        const kx = Math.cos((lat0 * Math.PI) / 180);
-        const xs = ring.map((p) => p[0] * kx);
-        const ys = ring.map((p) => -p[1]);
-        const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-        const pad = 8;
-        const w = el.clientWidth;
-        const k = (w - pad * 2) / (x1 - x0);
-        const h = Math.round((y1 - y0) * k + pad * 2);
-        const P = ([lng, lat]) => [pad + (lng * kx - x0) * k, pad + (-lat - y0) * k];
-        const d = (rings) => rings.map((r) => `M${r.map((p) => P(p).map((v) => v.toFixed(1)).join(" ")).join("L")}Z`).join("");
-        const g = region?.geometry;
-        const polys = !g ? [] : g.type === "Polygon" ? [g.coordinates] : g.coordinates;
-        el.innerHTML = `<svg width="${w}" height="${h}" style="display:block"><path d="${d([ring])}" fill="#000"/><path d="${d(polys.flat())}" fill="#fff" fill-rule="evenodd"/></svg>`;
-        return P;
+        return region && { w: el.clientWidth, h: el.clientHeight, region };
     }
 
     function decorate(styleKey, screen, extra = null) {
         const perm = extra?.perm ?? null;
-        // The receipt's treatment being tried, if any (see receiptEl).
-        const rcv = extra?.rc ?? "";
         const S = STYLES[styleKey];
         document.body.dataset.style = styleKey;
-        document.body.dataset.rc = rcv;
         if (S.prune) prune(screen);
         const ink = S.dark ? "#fff" : "#000";
 
@@ -365,53 +351,7 @@
                 P.add(Ink.write(who, { x: b.x + 6, y: b.y + b.h - 6, size: 22, seed: `ini${sign.dataset.i}`, color: ink, importance: "info", tilt: -6 }).svg);
             }
         }
-        if (extra?.receipt && S.prune && visible($("#team-again-btn"))) {
-            receiptEl(extra.receipt, rcv);
-            const bar = $(".rc-bar");
-            if (bar) {
-                const b = L.box(bar);
-                const w = (b.w - 16) * (extra.receipt.asked / extra.receipt.of);
-                // Ruled out, coloured in by hand; stays inside the bar.
-                L.add(Ink.colorIn([[[b.x + 8, b.y + 8], [b.x + 3 + w, b.y + 8], [b.x + 3 + w, b.y + b.h - 8], [b.x + 8, b.y + b.h - 8]]], { seed: `bar${screen}`, weight: 7, overshoot: 0 }));
-            }
-            const map = $(".rc-map");
-            if (map) {
-                const P = receiptMap(map);
-                // Where they got her: the X (her own receipt keeps it redacted, like Where).
-                if (screen === "found" && extra.receipt.hider) {
-                    const m = L.box(map);
-                    const [x, y] = P(extra.receipt.hider);
-                    L.add(Ink.cross(m.x + x, m.y + y, 9, { seed: "rcx", weight: 5 }));
-                }
-            }
-            // r3: the red word stamped across the slip, over the answers, instead of over the title.
-            if (rcv === "r3") {
-                const rows = $$(".rc-paper .rc-row");
-                const top = L.box(rows[0]);
-                const last = L.box(rows[extra.receipt.lines.length - 1]);
-                const paper = L.box($(".rc-paper"));
-                const cx = paper.x + paper.w / 2;
-                const cy = (top.y + last.y + last.h) / 2;
-                let words;
-                let ww;
-                let wh;
-                if (screen === "found") {
-                    const g = Ink.tuck("GOTCHA", { size: 50, seed: "gotcha", mess: 1.2, tilt: 0, sizes: [1.5, 1, 0.98, 1.02, 0.96, 1.04], rises: [0.12, 0, 0.02, -0.02, 0.03, 0], spin: 4 });
-                    words = `<g transform="translate(${cx - g.box.x - g.box.w / 2} ${cy - g.box.y - g.box.h / 2})">${g.svg}</g>`;
-                    [ww, wh] = [g.box.w, g.box.h];
-                } else {
-                    // Two lines, a baseline 46 px under the other (write's y is the baseline).
-                    const o = { size: 34, tilt: 0, importance: "key", weight: 34 * 0.2 };
-                    const a = Ink.write("HOW ABOUT", { ...o, seed: "hat1" });
-                    const b = Ink.write("THAT.", { ...o, seed: "hat2" });
-                    ww = Math.max(a.width, b.width);
-                    wh = 34 + 46;
-                    words = Ink.write("HOW ABOUT", { ...o, seed: "hat1", x: cx - a.width / 2, y: cy - 6 }).svg + Ink.write("THAT.", { ...o, seed: "hat2", x: cx - b.width / 2, y: cy + 40 }).svg;
-                }
-                const frame = Ink.box(cx - ww / 2 - 16, cy - wh / 2 - 14, ww + 32, wh + 28, { seed: `stamp${screen}`, weight: 5, jitter: 5 });
-                L.add(`<g transform="rotate(-11 ${cx} ${cy})">${frame}${words}</g>`);
-            }
-        }
+        if (extra?.receipt && S.prune && visible($("#team-again-btn"))) receiptEl(extra.receipt);
         if (perm) {
             permSheet(perm);
             // The one thing to do next gets the arrow; what's done needs nothing.
@@ -629,7 +569,7 @@
             const pb = p && visible(p) ? L.box(p) : { x: tb.x, y: tb.y + 200, w: 300, h: 0 };
             noteAt(L, "WALK. DON'T RUN.", pb.x + 8, pb.y + pb.h + 86, { size: 30, maxWidth: 330, tilt: -4, importance: "key", weight: 6.2 });
         }
-        if ((screen === "found" || screen === "win") && tb && rcv !== "r3") {
+        if ((screen === "found" || screen === "win") && tb) {
             if (S.prune) {
                 // Above the title, just catching its top edge.
                 if (screen === "found") {
@@ -681,5 +621,5 @@
         }
     }
 
-    window.InkApp = { decorate };
+    window.InkApp = { decorate, receiptMapNeed };
 })();

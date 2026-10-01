@@ -34,8 +34,28 @@ const catalogJson = JSON.stringify(catalog());
 
 // Screens shown in several versions (E-18a-photo, …): only the one kept now.
 const ARROWS = { photo: ["a"] };
-// RC=r1 … r4: the end screens' receipt in a treatment being tried (E-23r1-found.png, …).
-const RC = process.env.RC ?? "";
+
+/**
+ * The receipt's map: drawn by the lab (lab/view.html?set=receipt, the map as
+ * the app shows it) at the size the slip leaves it, then set on the slip.
+ */
+async function receiptMap(page) {
+    const need = await page.evaluate(() => window.InkApp.receiptMapNeed());
+    if (!need) return;
+    const ctx = await context(b, { viewport: { width: need.w, height: need.h } });
+    const lab = await ctx.newPage();
+    lab.on("pageerror", (e) => console.error("[receipt map] pageerror:", e.message));
+    await lab.addInitScript((spec) => (window.__receipt = spec), { region: need.region });
+    await lab.goto(`${base}/design/promo/round-1/lab/view.html?set=receipt&v=1&w=${need.w}&h=${need.h}`);
+    await lab.waitForSelector("body[data-ready='1']", { timeout: 60000 });
+    const png = await lab.locator("#root").screenshot();
+    await ctx.close();
+    await page.evaluate(async (src) => {
+        const img = document.querySelector(".rc-map img");
+        img.src = src;
+        await img.decode();
+    }, `data:image/png;base64,${png.toString("base64")}`);
+}
 
 for (const style of styles) {
     for (const name of ORDER.filter((n) => only.includes(n))) for (const arrow of ARROWS[name] ?? [null]) {
@@ -92,10 +112,11 @@ for (const style of styles) {
                 menu.scrollTop = el.getBoundingClientRect().top - menu.getBoundingClientRect().top + menu.scrollTop - 120;
             }, screen.scrollTo);
         }
-        await page.evaluate(([s, n, extra]) => window.InkApp.decorate(s, n, extra), [style, name, { perm: screen.perm ?? null, receipt: screen.receipt ?? null, rules: screen.rules ?? null, arrow, rc: RC || null }]);
+        await page.evaluate(([s, n, extra]) => window.InkApp.decorate(s, n, extra), [style, name, { perm: screen.perm ?? null, receipt: screen.receipt ?? null, rules: screen.rules ?? null, arrow }]);
+        if (screen.receipt) await receiptMap(page);
         await page.waitForTimeout(150);
         // OUT=<dir> writes somewhere else (the post's export), leaving shots/ alone.
-        const out = path.join(process.env.OUT ? path.resolve(process.env.OUT) : path.join(ROUND, "shots"), `${style.toUpperCase()}-${String(ORDER.indexOf(name) + 1).padStart(2, "0")}${arrow ?? ""}${RC}-${name}.png`);
+        const out = path.join(process.env.OUT ? path.resolve(process.env.OUT) : path.join(ROUND, "shots"), `${style.toUpperCase()}-${String(ORDER.indexOf(name) + 1).padStart(2, "0")}${arrow ?? ""}-${name}.png`);
         await page.screenshot({ path: out });
         console.log("wrote", path.basename(out));
         // The receipt runs past the fold: a second shot, scrolled to its end.

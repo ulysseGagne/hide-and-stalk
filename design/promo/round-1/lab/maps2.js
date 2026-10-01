@@ -1060,5 +1060,41 @@
     }
     const POST = Object.fromEntries(Object.entries(POST_PLACES).map(([k, list]) => [k, list.map((p) => p.name)]));
 
-    window.Maps2 = { tagsOnly, youOnly, pinOnly, list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, drawHint, drawPost, POST, SKIN_LIST };
+    /**
+     * The receipt's map (app/decorate.js): the round's final hints layer, printed
+     * as the map shows it (MAP_SKIN, north up, framed on the white zone), only black and
+     * white: what's ruled out inverted, the white she could still be in as the
+     * map. No red, no line, no X. spec: { region } (GeoJSON, from the app's own
+     * solve, src/hints.js); root is already w x h.
+     */
+    async function drawReceipt(root, spec, w, h) {
+        root.style.background = "#fff";
+        const layer = (inv) => {
+            const el = document.createElement("div");
+            el.style.cssText = `position:absolute;left:0;top:0;width:${w}px;height:${h}px;background:#fff${inv ? ";filter:invert(1)" : ""}`;
+            root.appendChild(el);
+            return el;
+        };
+        // The same map twice, each on its own Leaflet map framed the same way:
+        // on the white she could still be in, with the streets around it.
+        const zone = L.geoJSON(spec.region).getBounds();
+        await OSMDraw.ready;
+        const print = (el) => {
+            const m = L.map(el, { zoomControl: false, attributionControl: false, zoomSnap: 0, fadeAnimation: false, zoomAnimation: false });
+            m.fitBounds(zone, { padding: [w * 0.22, h * 0.22], animate: false });
+            el.appendChild(OSMDraw.render(m, DATA_SKINS[MAP_SKIN], w, h));
+            return m;
+        };
+        print(layer(true));
+        const open = layer(false);
+        const map = print(open);
+        const P = ([lng, lat]) => {
+            const p = map.latLngToContainerPoint([lat, lng]);
+            return [p.x, p.y];
+        };
+        const d = ringsOf(spec.region.geometry).map((poly) => poly.map((r) => ringD(r.map(P))).join("")).join("");
+        open.style.clipPath = `path(evenodd, '${d}')`;
+    }
+
+    window.Maps2 = { tagsOnly, youOnly, pinOnly, list: LIST.map((o, i) => ({ n: i + 1, name: o.name })), draw, drawSkin, drawHint, drawPost, drawReceipt, POST, SKIN_LIST };
 })();

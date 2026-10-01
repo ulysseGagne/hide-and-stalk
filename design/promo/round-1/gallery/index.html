@@ -98,7 +98,7 @@ body.only-kept .tile:not(.kept):not(.settled-tile) { display: none; }
     </header>
 
     <nav class="bar" aria-label="Sections">
-        <a href="#post">The post</a><a href="#screens">Screens</a><a href="#opening">Opening</a><a href="#login">Log in</a><a href="#lobby">Lobby</a><a href="#hider">Hider</a><a href="#stalkers">Stalkers</a><a href="#map">Map</a><a href="#end">End</a><a href="#receipt">Receipt</a><a href="#pieces">Pieces</a>
+        <a href="#post">The post</a><a href="#screens">Screens</a><a href="#opening">Opening</a><a href="#login">Log in</a><a href="#lobby">Lobby</a><a href="#hider">Hider</a><a href="#stalkers">Stalkers</a><a href="#map">Map</a><a href="#end">End</a><a href="#pieces">Pieces</a>
         <span class="spacer"></span>
     </nav>
 
@@ -109,7 +109,7 @@ body.only-kept .tile:not(.kept):not(.settled-tile) { display: none; }
 
 <script>
 // The review: the post (the source of truth), then every app screen as it
-// stands (with the receipt options), then the one piece no screen shows.
+// stands, then the one piece no screen shows.
 // Times are Montréal time: Tue = Sep 29, Wed = Sep 30, Thu = Oct 1.
 // Who: c1 / c2 = the two cloud sessions (their commits; their chats aren't on
 // this Mac), m = you, in the map session on this Mac (Wed 01:43-03:38),
@@ -382,21 +382,25 @@ const CHAPTERS = [
             ["Tue 17:26", "c1:9f9f429", "First drawn"],
             ["Tue 20:19", "c1:3096ae5", "The round as a receipt"],
             ["Tue 23:56", "c1:e1d93d8", "The receipt's barcode"],
-        ], "Thu 12:25", "E23"],
+            ["Thu 14:42", "y", "The receipt: R2 and R4 together (the hunt time big, the final hints map on the slip); the map the app's own, black and white, no red line, no X; heavier: as wide as PLAY AGAIN, 3 px rules, bigger text, the question numbers in black boxes"],
+        ], "Thu 14:47", "E23"],
         ["S72", "Their receipt, scrolled to its end", app("23b", "found"), [
             ["Tue 20:19", "c1:3096ae5", "First drawn"],
             ["Tue 23:56", "c1:e1d93d8", "The barcode"],
             ["Wed 07:02", "s", "“greenhouse”, singular"],
-        ], "Thu 12:25", "E23b"],
+            ["Thu 14:42", "y", "The receipt: R2 and R4 together (the hunt time big, the final hints map on the slip); the map the app's own, black and white, no red line, no X; heavier: as wide as PLAY AGAIN, 3 px rules, bigger text, the question numbers in black boxes"],
+        ], "Thu 14:47", "E23b"],
         ["S73", "The hider wins: HOW ABOUT THAT.", app("24", "win"), [
             ["Tue 17:26", "c1:9f9f429", "First drawn"],
             ["Tue 20:19", "c1:3096ae5", "The receipt, where she hid redacted"],
             ["Thu 12:25", "t", "The QUESTIONS tab, as on the post's maps"],
-        ], "Thu 14:02", "E24"],
+            ["Thu 14:42", "y", "The receipt: R2 and R4 together (the hunt time big, the final hints map on the slip); the map the app's own, black and white, no red line, no X; heavier: as wide as PLAY AGAIN, 3 px rules, bigger text, the question numbers in black boxes"],
+        ], "Thu 14:47", "E24"],
         ["S74", "Her receipt, where she was redacted", app("24b", "win"), [
             ["Tue 20:19", "c1:3096ae5", "First drawn"],
             ["Wed 07:02", "s", "“greenhouse”, singular"],
-        ], "Thu 14:02", "E24b"],
+            ["Thu 14:42", "y", "The receipt: R2 and R4 together (the hunt time big, the final hints map on the slip); the map the app's own, black and white, no red line, no X; heavier: as wide as PLAY AGAIN, 3 px rules, bigger text, the question numbers in black boxes"],
+        ], "Thu 14:47", "E24b"],
     ]],
 ];
 
@@ -407,16 +411,6 @@ const PIECES = [
         ["Wed 00:51", "c1:b02ac5f", "Settled, as one card"],
     ], "Wed 01:55", "C19"],
 ];
-
-// The receipt, more drama (asked Thu 13:54): four treatments, each on the four
-// end screens, rendered with RC=r1..r4 (tools/shoot-app.mjs). [code, name, what, key, rendered].
-const RC_OPTIONS = [
-    ["R1", "On a black table", "The slip on black, edge to edge, from under PLAY AGAIN down: the one white thing left on the screen.", "r1", "Thu 14:08"],
-    ["R2", "Big numbers", "The hunt time as big as the hiding countdown (S41); the rest of the slip as it was.", "r2", "Thu 14:05"],
-    ["R3", "Stamped", "GOTCHA (or HOW ABOUT THAT.) stamped across the answers instead of written over the title; the print shows through the red, like ink.", "r3", "Thu 14:09"],
-    ["R4", "The map on the slip", "Where the bar was, the round's final hints layer printed small: the campus black, the white she could still be in, the X where they got her. Her own receipt has no X: Where stays redacted.", "r4", "Thu 14:09"],
-];
-const RC_VIEWS = [["a", "23", "-found", "Stalkers win (S71)"], ["b", "23", "b-found", "Their receipt, to its end (S72)"], ["c", "24", "-win", "The hider wins (S73)"], ["d", "24", "b-win", "Her receipt, to its end (S74)"]];
 
 const tl = (events, rendered) => {
     const [made, ...rest] = events;
@@ -447,14 +441,6 @@ for (const [id, head, intro, items] of CHAPTERS) {
     html += `<h3 id="${id}">${head}</h3>${intro ? `<p class="note">${intro}</p>` : ""}<div class="grid">`;
     for (const it of items) html += tile(...it);
     html += `</div>`;
-    if (id === "end") {
-        html += `<h3 id="receipt">The receipt, with more drama</h3><p class="note">Four ways to try, each on the four end screens above. Pick one, or mix them (R2's numbers on R1's table, say).</p>`;
-        for (const [code, name, what, key, rendered] of RC_OPTIONS) {
-            html += `<div class="opt"><h3>${code} · ${name}</h3><p class="note">${what}</p><div class="grid">`;
-            for (const [v, n, slug, cap] of RC_VIEWS) html += tile(code + v, cap, `img/E-${n}${key}${slug}.png`, [["Thu 13:54", "y", "More drama or contrast on the receipt: " + name.toLowerCase()]], rendered);
-            html += `</div></div>`;
-        }
-    }
 }
 html += `</section>`;
 
