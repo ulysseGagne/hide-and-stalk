@@ -24,16 +24,20 @@ other login) and https://claude.ai/artifact/LdRszjr2qKJ9ckB1ZLNKgJ (this
 login's first, shared by link, left as it was). Each login can only publish to
 its own; notes left on the other login's gallery can't be read from this one.
 
-**Oct 1: the final review** is https://claude.ai/artifact/6LoZgEJAQMzaR6Z6AintGP
-(version 45, published from the Mac's login). It lives in this repo, whole:
-`gallery/index.html` with every image it shows in `gallery/img/` (committed,
-unlike `shots/`), so it opens straight from a checkout on either login. The
-Discord post's six images come first and are the source of truth; then every
-screen in game order with its history (and four ways to give the receipt more
-drama, R1-R4, to pick from), then the one piece no screen shows. The post's
-images at 3x are in `discord-post/`. After re-rendering a screen, copy it from
-`shots/` into `gallery/img/` under the same name, then publish
-`gallery/index.html` with the changed `img/` files.
+**Oct 1: the final review** is https://claude.ai/artifact/NHaztkvNPSwNp5CmqVXnAH
+(the ugagne08.2 login; earlier copies: 6LoZgEJAQMzaR6Z6AintGP, version 45,
+on another login). It lives in this repo, whole: `gallery/index.html` with
+every image it shows in `gallery/img/` (committed, unlike `shots/`), so it
+opens straight from a checkout (`npx serve design/promo/round-1/gallery`).
+**It is the target for round 2:** the Discord post's six images come first
+and are the source of truth; then every screen in game order (S12a-S74) with
+its history; then the unused assets (the ransom notes, settled, on no screen).
+The receipt is decided: R2 + R4 together (the hunt time big, the round's final
+hints map printed on the slip, black and white only: no red line, no X), and
+heavier (as wide as PLAY AGAIN, 3 px rules, bigger text, the question numbers
+in black boxes). The post's images at 3x are in `discord-post/`. After
+re-rendering a screen, copy it from `shots/` into `gallery/img/` under the same
+name, then publish `gallery/index.html` with the changed `img/` files.
 
 ## Where things stand (handoff, Sept 30, end of the second session)
 
@@ -207,8 +211,10 @@ to build. Round 2 also needs:
   in-page "Found them? Scan their code" button.
 - Everything prune() hides gets removed from src/ for that phase.
 - The header's red goes black while anything else on screen is red.
-- End screens: the round as a receipt (questions, answers, hide and hunt
-  time, found by / where redacted, campus left as a hand-coloured bar).
+- End screens: the round as a receipt (questions, answers, hide time, the
+  hunt time big, found by / where redacted, then the round's final hints map
+  printed on the slip in black and white: `receiptEl`, `receiptMapNeed` in
+  `app/decorate.js`, `Maps2.drawReceipt` in `lab/maps2.js`).
 - The app opens straight onto the home screen (W54.1b4): no title screen
   first.
 - On the map, a place's pin tapped shows its pop-up: a box with the name,
