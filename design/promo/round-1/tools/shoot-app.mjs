@@ -13,11 +13,12 @@ import { SCREENS, NOW, catalog } from "../app/fake-api.mjs";
 
 const styles = (process.argv[2] ?? "a,b,c,d").split(",");
 const only = process.argv[3] && process.argv[3] !== "all" ? process.argv[3].split(",") : Object.keys(SCREENS);
-const ORDER = ["login", "loginfilled", "permask", "permasking", "permhalf", "permdone", "permblocked", "lobby", "rules1", "rules5", "rulesdone", "ready", "hiding", "cards", "selected", "waiting", "sent", "photo", "question", "choice", "tagcode", "history", "found", "win"];
+const ORDER = ["login", "loginfilled", "permask", "permasking", "permhalf", "permdone", "permblocked", "lobby", "rules1", "rules5", "rulesdone", "ready", "hiding", "cards", "selected", "waiting", "sent", "photo", "question", "choice", "tagcode", "history", "found", "win", "cardspick"];
 
-// A stand-in for the hider's photo of "the nearest place to sit": the bench
-// from B29's Polaroid (app/bench.svg, from tools/export-bench.mjs).
-const BENCH_URL = `data:image/svg+xml;base64,${fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "../app/bench.svg")).toString("base64")}`;
+// A stand-in for the hider's photo, for the mock-up only: a sculpture on
+// campus, xeroxed to pure black and white by tools/xerox-photo.mjs.
+// Shown whole from its top; the screen's bottom edge crops the rest.
+const PHOTO_URL = `data:image/png;base64,${fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "../app/sculpture.png")).toString("base64")}`;
 
 function css(style) {
     // E stands alone; B-D are layered over A.
@@ -31,8 +32,13 @@ const { server, base } = await serve(5200 + Math.floor(Math.random() * 400));
 const b = await browser();
 const catalogJson = JSON.stringify(catalog());
 
+// Screens shown in several versions (E-18a-photo, …): only the one kept now.
+const ARROWS = { photo: ["a"] };
+// RC=r1 … r4: the end screens' receipt in a treatment being tried (E-23r1-found.png, …).
+const RC = process.env.RC ?? "";
+
 for (const style of styles) {
-    for (const name of ORDER.filter((n) => only.includes(n))) {
+    for (const name of ORDER.filter((n) => only.includes(n))) for (const arrow of ARROWS[name] ?? [null]) {
         const screen = SCREENS[name];
         const ctx = await context(b, { extra: { geolocation: { latitude: screen.position.lat, longitude: screen.position.lng, accuracy: 6 }, permissions: ["geolocation"] } });
         const page = await ctx.newPage();
@@ -61,7 +67,7 @@ for (const style of styles) {
             if (p === "/state") return json(screen.state);
             if (p === "/cards/catalog") return json(catalogJson);
             if (p === "/cards/history") return json({ plays: screen.history ? screen.history() : [] });
-            if (p === "/cards/photo") return json({ photo: BENCH_URL });
+            if (p === "/cards/photo") return json({ photo: PHOTO_URL });
             return json({ ok: true });
         });
         await page.goto(`${base}/src/index.html`);
@@ -86,9 +92,10 @@ for (const style of styles) {
                 menu.scrollTop = el.getBoundingClientRect().top - menu.getBoundingClientRect().top + menu.scrollTop - 120;
             }, screen.scrollTo);
         }
-        await page.evaluate(([s, n, extra]) => window.InkApp.decorate(s, n, extra), [style, name, { perm: screen.perm ?? null, receipt: screen.receipt ?? null, rules: screen.rules ?? null }]);
+        await page.evaluate(([s, n, extra]) => window.InkApp.decorate(s, n, extra), [style, name, { perm: screen.perm ?? null, receipt: screen.receipt ?? null, rules: screen.rules ?? null, arrow, rc: RC || null }]);
         await page.waitForTimeout(150);
-        const out = path.join(ROUND, "shots", `${style.toUpperCase()}-${String(ORDER.indexOf(name) + 1).padStart(2, "0")}-${name}.png`);
+        // OUT=<dir> writes somewhere else (the post's export), leaving shots/ alone.
+        const out = path.join(process.env.OUT ? path.resolve(process.env.OUT) : path.join(ROUND, "shots"), `${style.toUpperCase()}-${String(ORDER.indexOf(name) + 1).padStart(2, "0")}${arrow ?? ""}${RC}-${name}.png`);
         await page.screenshot({ path: out });
         console.log("wrote", path.basename(out));
         // The receipt runs past the fold: a second shot, scrolled to its end.

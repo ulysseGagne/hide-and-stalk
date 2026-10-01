@@ -70,6 +70,8 @@
                 await Maps2.drawHint(root, v);
             } else if (set === "skin") {
                 await Maps2.drawSkin(root, v);
+            } else if (set === "post") {
+                await Maps2.drawPost(root, String(q.get("v")));
             } else if (set === "map2") {
                 await Maps2.draw(root, v);
             } else if (set === "map") {

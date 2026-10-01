@@ -236,7 +236,8 @@ export const SCREENS = {
                 me: me("camille"),
                 team: team("hunting", { question: 5, nextQuestionInMs: 1 * MIN + 36_000, huntMs: 23 * MIN + 24_000 }),
                 users: users("camille"),
-                cards: { role: "stalker", batch: { id: 205, question: 5, cardIds: extra[0].cardIds, dealtAt: NOW - 3 * MIN, playedCardId: "photo_seat", playedBy: 14, playedAt: NOW - 150_000 }, currentPlay: p[4], pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
+                // For the post: a notification on the bell too.
+                cards: { role: "stalker", batch: { id: 205, question: 5, cardIds: extra[0].cardIds, dealtAt: NOW - 3 * MIN, playedCardId: "photo_seat", playedBy: 14, playedAt: NOW - 150_000 }, currentPlay: p[4], pending: [], historyCount: p.length, unread: 1, hints: hinted(p) },
             };
         })(),
     },
@@ -308,8 +309,10 @@ export const SCREENS = {
         position: POS.jules,
         receipt: {
             head: "TEAM 3 · MON 5 OCT · 13:32",
-            lines: [["Q1 North or south?", "NORTH"], ["Q2 Within 500 m?", "NO"], ["Q3 Closest café?", "P'TIT CAAF"], ["Q4 Closer to the greenhouses?", "YES"]],
+            lines: [["Q1 North or south?", "NORTH"], ["Q2 Within 500 m?", "NO"], ["Q3 Closest café?", "P'TIT CAAF"], ["Q4 Closer to the greenhouse?", "YES"]],
             totals: [["Hide", "10:00"], ["Hunt", "23:14"], ["Found by", "jules"]],
+            // Where they got her, for the X on the receipt map (being tried).
+            hider: [HIDER.lng, HIDER.lat],
             asked: 4,
             of: 6,
         },
@@ -329,13 +332,14 @@ export const SCREENS = {
         position: HIDER,
         receipt: {
             head: "TEAM 3 · MON 5 OCT · 13:39",
-            lines: [["Q1 North or south?", "NORTH"], ["Q2 Within 500 m?", "NO"], ["Q3 Closest café?", "P'TIT CAAF"], ["Q4 Closer to the greenhouses?", "YES"], ["Q5 Nearest door", "PHOTO"], ["Q6 Nearest building?", "ABP"]],
+            lines: [["Q1 North or south?", "NORTH"], ["Q2 Within 500 m?", "NO"], ["Q3 Closest café?", "P'TIT CAAF"], ["Q4 Closer to the greenhouse?", "YES"], ["Q5 Nearest door", "PHOTO"], ["Q6 Nearest building?", "ABP"]],
             totals: [["Hide", "10:00"], ["Hunt", "30:00"], ["Where", "REDACTED"]],
             asked: 6,
             of: 6,
         },
         state: (() => {
-            const p = plays(4);
+            // Its receipt lists six answers: Q6 (nearest building, truthfully ABP) narrows the map too; Q5 is a photo.
+            const p = plays(6, { extra: [{ q: 6, cardIds: ["nearest_building", "photo_below", "ns"], picked: "nearest_building", by: "theo" }] });
             return {
                 serverNow: NOW,
                 settings,
@@ -347,5 +351,19 @@ export const SCREENS = {
         })(),
     },
 };
+// For the post: the three cards as dealt (S51's layout), one of them circled.
+SCREENS.cardspick = SCREENS.cards;
 
-export const catalog = catalogPayload;
+// For the mock-up only (not a real card): the photo question asks for the nearest sculpture.
+export const catalog = () => {
+    const c = catalogPayload();
+    const swap = {
+        photo_seat: { prompt: "Send a photo of the nearest sculpture.", short: "Photo: the nearest sculpture" },
+        closer_greenhouses: { prompt: "Are you closer to the greenhouse than I am?" },
+        // As the map's question box has it (image 3 of the post): no "on campus".
+        nearest_velo: { prompt: "Which àVélo station are you closest to?" },
+    };
+    // Every "nearest" question as the post words it (image 3): no "on campus".
+    const plain = (k) => (k.id.startsWith("nearest_") ? { ...k, prompt: k.prompt.replace(" on campus", "") } : k);
+    return { ...c, cards: c.cards.map((k) => plain(swap[k.id] ? { ...k, ...swap[k.id] } : k)) };
+};

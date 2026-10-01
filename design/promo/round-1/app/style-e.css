@@ -48,9 +48,10 @@ button, input { font-family: inherit; }
 }
 .bell svg { width: 20px; height: 20px; stroke-width: 2.5; }
 .bell.ringing { color: var(--ink); animation: none; }
+/* The badge is the one typeset red (as on R10.3): a new notification outranks the rule. */
 .bell-count {
     position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px;
-    box-sizing: border-box; border-radius: 0; background: var(--ink); color: var(--paper);
+    box-sizing: border-box; border-radius: 0; background: var(--red); color: var(--paper);
     font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;
 }
 /* The camera lives in the page, next to what it is for (see .found-panel). */
@@ -303,6 +304,17 @@ button, input { font-family: inherit; }
 .rc-row b { text-align: right; white-space: nowrap; }
 .rc-redact { display: inline-block; width: 110px; height: 15px; background: var(--ink); vertical-align: -2px; }
 .rc-bar { margin-top: 8px; height: 30px; box-sizing: border-box; border: var(--rule) solid var(--ink); }
+/* Treatments being tried (body[data-rc], see receiptEl in app/decorate.js). */
+/* r1: the slip on a black table, edge to edge, from under PLAY AGAIN down. */
+body[data-rc="r1"] .receipt { margin-top: 28px; padding-top: 30px; background: var(--ink); filter: none; box-shadow: 0 0 0 100vmax var(--ink); clip-path: inset(0 -100vmax -100vmax -100vmax); }
+/* r3: the stamp's red sits in the print, like ink: the type shows through it. */
+body[data-rc="r3"] #view-menu > .ink-layer { mix-blend-mode: multiply; }
+/* r2: the hunt time as big as the hiding countdown's. */
+.rc-hero { text-align: center; }
+.rc-hero span { display: block; font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.rc-hero b { display: block; font-size: 88px; font-weight: 700; line-height: .95; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+/* r4: the final hints map, printed where the bar was. */
+.rc-map { margin-top: 10px; border: var(--rule) solid var(--ink); }
 
 /* Third pass ------------------------------------------------------------- */
 /* Later: there, but small, so nobody presses it by mistake. */

@@ -16,7 +16,7 @@
     function stalk() {
         const st = Logo.stalk({ color: "#000" });
         const k = 27 / st.box.h;
-        return `<svg width="120" height="44" style="position:absolute;left:0;top:0;overflow:visible"><g transform="translate(${83 - st.box.x * k} ${43 - (st.box.y + st.box.h) * k}) scale(${k})">${st.svg}</g></svg>`;
+        return `<svg width="120" height="44" style="position:absolute;left:0;top:0;overflow:visible"><g transform="translate(${81.5 - st.box.x * k} ${43.5 - (st.box.y + st.box.h) * k}) scale(${k})">${st.svg}</g></svg>`;
     }
 
     function header(badge = "#000") {
