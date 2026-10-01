@@ -24,14 +24,24 @@ other login) and https://claude.ai/artifact/LdRszjr2qKJ9ckB1ZLNKgJ (this
 login's first, shared by link, left as it was). Each login can only publish to
 its own; notes left on the other login's gallery can't be read from this one.
 
+**Oct 1: the final review** is https://claude.ai/artifact/6LoZgEJAQMzaR6Z6AintGP
+(version 45, published from the Mac's login). It lives in this repo, whole:
+`gallery/index.html` with every image it shows in `gallery/img/` (committed,
+unlike `shots/`), so it opens straight from a checkout on either login. The
+Discord post's six images come first and are the source of truth; then every
+screen in game order with its history (and four ways to give the receipt more
+drama, R1-R4, to pick from), then the one piece no screen shows. The post's
+images at 3x are in `discord-post/`. After re-rendering a screen, copy it from
+`shots/` into `gallery/img/` under the same name, then publish
+`gallery/index.html` with the changed `img/` files.
+
 ## Where things stand (handoff, Sept 30, end of the second session)
 
-The page `gallery.html` in this folder is the source of the gallery above.
-Whichever login picks this up: read the up-to-date gallery with the Artifact
-tool (`read`, and `paths` to pull its images, since `shots/` is gitignored), or
-re-render every image with the commands below, then publish `gallery.html`
-with its `shots/` to that login's own artifact. The user reviews live:
-republish after every change they might want to see.
+Superseded by the Oct 1 review above where they differ. At the time:
+whichever login picks this up reads the up-to-date gallery with the Artifact
+tool, or re-renders every image with the commands below, then publishes the
+gallery to that login's own artifact. The user reviews live: republish after
+every change they might want to see.
 
 - **Decided** (the gallery's top row): logo L16.6b, handwriting H06, board
   B29, ransom notes C19, notification arrow R10.3, the map S20 (a, b, c), the
@@ -197,14 +207,21 @@ to build. Round 2 also needs:
   in-page "Found them? Scan their code" button.
 - Everything prune() hides gets removed from src/ for that phase.
 - The header's red goes black while anything else on screen is red.
-- Before the game: the rules one at a time, OK on each, the player's
-  initials drawn on its line; Done after the last (X45).
 - End screens: the round as a receipt (questions, answers, hide and hunt
   time, found by / where redacted, campus left as a hand-coloured bar).
+- The app opens straight onto the home screen (W54.1b4): no title screen
+  first.
+- On the map, a place's pin tapped shows its pop-up: a box with the name,
+  then where (a café's pavilion and room, a station's number), its tail
+  white with a black edge, slid sideways off any other pin
+  (`popup` in `lab/maps2.js`; the gallery's S64).
+
+Decided Oct 1, not to build: the rules one at a time with the player's
+initials (E09-E11, X45), and a title screen before the home screen (W55.1).
 
 The map (lab/maps2.js): everything needed is computer-drawn (the map itself
 from OpenStreetMap's data in lab/osmdraw.js, no tiles; hints layer, name tags,
 the question in a box at the top).
 One red thing at a time: the hints layer while nothing is waiting, else only
-the waiting question's drawing. No auto-zoom. At most one string (hider to
-closest stalker).
+the waiting question's drawing. No auto-zoom. No strings: how far the
+closest stalker is gets scribbled in the box at the top.

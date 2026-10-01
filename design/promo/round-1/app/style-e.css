@@ -48,9 +48,10 @@ button, input { font-family: inherit; }
 }
 .bell svg { width: 20px; height: 20px; stroke-width: 2.5; }
 .bell.ringing { color: var(--ink); animation: none; }
+/* The badge is the one typeset red (as on R10.3): a new notification outranks the rule. */
 .bell-count {
     position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 4px;
-    box-sizing: border-box; border-radius: 0; background: var(--ink); color: var(--paper);
+    box-sizing: border-box; border-radius: 0; background: var(--red); color: var(--paper);
     font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;
 }
 /* The camera lives in the page, next to what it is for (see .found-panel). */
@@ -287,22 +288,33 @@ button, input { font-family: inherit; }
 .rule-ok { margin-top: 18px; }
 
 /* The end: the round as a receipt ---------------------------------------- */
-.receipt { margin: 24px auto 0; width: 86%; filter: drop-shadow(0 0 0 #000); }
+/* As heavy as the rest of the app: as wide as PLAY AGAIN, the 3 px rules,
+   the text at the app's sizes, bold where it counts. */
+.receipt { margin: 28px 0 0; width: 100%; }
 .rc-paper {
-    position: relative; padding: 18px 18px 30px; background: var(--paper); border: var(--rule) solid var(--ink); border-bottom: none;
+    position: relative; padding: 22px 18px 30px; background: var(--paper); border: var(--rule) solid var(--ink); border-bottom: none;
     /* the torn bottom edge */
 }
-.rc-title { font-size: 22px; font-weight: 700; letter-spacing: -.01em; text-align: center; }
-.rc-head { margin-top: 4px; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-align: center; }
-.rc-rule { margin: 12px 0; border-top: 1.5px solid var(--ink); }
+.rc-title { font-size: 30px; font-weight: 700; line-height: 1; letter-spacing: -.02em; text-align: center; }
+.rc-head { margin-top: 8px; font-size: 14px; font-weight: 700; letter-spacing: .1em; text-align: center; }
+.rc-rule { margin: 14px 0; border-top: var(--rule) solid var(--ink); }
 .rc-code { margin-top: 18px; }
-.rc-num { margin-top: 4px; font-size: 11px; font-weight: 700; letter-spacing: .32em; text-align: center; }
+.rc-code svg { height: 60px; }
+.rc-num { margin-top: 6px; font-size: 13px; font-weight: 700; letter-spacing: .32em; text-align: center; }
 /* The torn bottom: its line is the sides' line, zigzagging across. */
 .rc-tear { display: block; margin-top: -1px; overflow: visible; }
-.rc-row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; font-size: 15px; }
-.rc-row b { text-align: right; white-space: nowrap; }
-.rc-redact { display: inline-block; width: 110px; height: 15px; background: var(--ink); vertical-align: -2px; }
-.rc-bar { margin-top: 8px; height: 30px; box-sizing: border-box; border: var(--rule) solid var(--ink); }
+.rc-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 4px 0; font-size: 17px; line-height: 1.25; }
+.rc-row b { font-size: 18px; text-align: right; white-space: nowrap; }
+.rc-q { display: inline-block; margin-right: 7px; padding: 1px 5px; background: var(--ink); color: var(--paper); font-size: 14px; font-style: normal; font-weight: 700; letter-spacing: .04em; vertical-align: 1px; }
+.rc-redact { display: inline-block; width: 120px; height: 19px; background: var(--ink); vertical-align: -3px; }
+/* The hunt time as big as the hiding countdown's. */
+.rc-hero { text-align: center; }
+.rc-hero span { display: block; font-size: 14px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.rc-hero b { display: block; font-size: 100px; font-weight: 700; line-height: .95; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+/* The final hints map, printed where the bar was (drawn by the lab, see receiptMapNeed). */
+.rc-map { margin-top: 12px; aspect-ratio: 1 / .9; box-sizing: border-box; border: var(--rule) solid var(--ink); background: var(--ink); }
+.rc-map img { display: block; width: 100%; height: 100%; }
+.rc-osm { margin-top: 4px; font-size: 11px; text-align: right; }
 
 /* Third pass ------------------------------------------------------------- */
 /* Later: there, but small, so nobody presses it by mistake. */

@@ -760,7 +760,7 @@
     const M = 30;
     const TOP = 44; // HIDE's top, under the phone's status bar
     /** L16.6b with HIDE, AND and SEEK each centred on one axis (SEEK's); the scribble and STALK stay with SEEK. Returns the title's box. */
-    function titleLines(root, k, y, { block = false } = {}) {
+    function titleLines(root, k, y, { block = false, mid = false } = {}) {
         const NS = "http://www.w3.org/2000/svg";
         const svg = document.createElementNS(NS, "svg");
         svg.setAttribute("width", W);
@@ -776,9 +776,22 @@
             const tb = t.getBBox();
             t.setAttribute("transform", `translate(${(axis - (tb.x + tb.width / 2)).toFixed(2)} 0)`);
         }
+        // Mid: STALK (the last thing drawn) moved under the black lines' middle, and that middle on the screen's.
+        let cx;
+        if (mid) {
+            const g = document.createElementNS(NS, "g");
+            const st = svg.lastElementChild;
+            svg.replaceChild(g, st);
+            const lb = svg.getBBox();
+            g.appendChild(st);
+            const sb2 = g.getBBox();
+            // Under the lines' middle: the block's, or (lines centred) SEEK's axis.
+            cx = block ? lb.x + lb.width / 2 : axis;
+            g.setAttribute("transform", `translate(${(cx - (sb2.x + sb2.width / 2)).toFixed(2)} 0)`);
+        }
         const b = svg.getBBox();
         // Lines: SEEK's middle on the screen's; block: the whole lockup's box centred.
-        const tx = block ? (W - b.width * k) / 2 - b.x * k : W / 2 - axis * k;
+        const tx = mid ? W / 2 - cx * k : block ? (W - b.width * k) / 2 - b.x * k : W / 2 - axis * k;
         svg.style.transform = `translate(${tx}px,${y - b.y * k}px) scale(${k})`;
         return box(tx + b.x * k, y, b.width * k, b.height * k);
     }
@@ -818,10 +831,10 @@
         };
     }
     /** W54.1b's title (the lockup centred), and B29 (rows 30 px apart) drawn at full size, then scaled down whole. */
-    function homeShrunk({ k, y = 44, shrink }) {
+    function homeShrunk({ k, y = 44, shrink, lines = false }) {
         return async (root) => {
             root.style.background = "#fff";
-            const t = titleLines(root, k, y, { block: true });
+            const t = titleLines(root, k, y, lines ? { mid: true } : { block: true });
             const host = document.createElement("div");
             host.style.cssText = `position:absolute;left:0;top:0;width:${W}px;height:480px;z-index:20;transform-origin:0 0`;
             root.appendChild(host);
@@ -853,7 +866,7 @@
             // The header's STALK in black: the board below has the screen's red.
             const st = Logo.stalk({ color: "#000" });
             const sk = 25 / st.box.h;
-            hdr.innerHTML = `<div style="position:absolute;left:16px;top:25px;font:700 17px ${FONT}">HIDE &amp;</div><svg width="${W}" height="64" style="position:absolute;left:0;top:0;overflow:visible"><g transform="translate(${sx - st.box.x * sk} ${46 - (st.box.y + st.box.h) * sk}) scale(${sk})">${st.svg}</g></svg>`;
+            hdr.innerHTML = `<div style="position:absolute;left:16px;top:25px;font:700 17px ${FONT}">HIDE &amp;</div><svg width="${W}" height="64" style="position:absolute;left:0;top:0;overflow:visible"><g transform="translate(${sx - 1.5 - st.box.x * sk} ${46.5 - (st.box.y + st.box.h) * sk}) scale(${sk})">${st.svg}</g></svg>`;
             button(root);
             const host = document.createElement("div");
             host.style.cssText = `position:absolute;left:0;top:${Math.round(64 + (BTN.y - 64 - 450) / 2) - 26}px;width:${W}px;height:480px;z-index:20`;
@@ -869,6 +882,8 @@
     // middle: past 0.88 of its size it comes closer than 30 px to the edge.
     // The title box's top is y; B29's top row starts 26 px below its dy.
     const under = (k, y, gap = M) => y + 388 * k + gap - 26;
+    // The title's one size and place on every home screen (W54.1b1, b4, W55.1, 1a).
+    const T = { k: 0.84, y: 58 };
     Object.assign(Welcome.extra, {
         // a: the black lines centred; B29's rows 30 px apart; 30 px round everything.
         "54.1a": home7({ k: 0.88, y: 58, place: { ...tight, dy: under(0.88, 58) } }),
@@ -883,13 +898,21 @@
         // b1-b3: W54.1b with the whole board shrunk, as it is (pieces, strings,
         // pins and line weights together), centred under the title with equal
         // room above and below it: 85%, 75%, 65%.
-        "54.1b1": homeShrunk({ k: 0.93, shrink: 0.85 }),
+        "54.1b1": homeShrunk({ k: T.k, y: T.y, shrink: 0.85 }),
         "54.1b2": homeShrunk({ k: 0.93, shrink: 0.75 }),
         "54.1b3": homeShrunk({ k: 0.93, shrink: 0.65 }),
-        // W55: two steps. 1: the title alone, as the app opens.
+        // b4: b1 with HIDE, AND and SEEK each centred, STALK centred under them.
+        "54.1b4": homeShrunk({ k: T.k, y: T.y, shrink: 0.85, lines: true }),
+        // W55: two steps. 1: the title alone, as the app opens: b4's title
+        // (the lines and STALK centred), the same size, in the screen's middle.
         55.1: async (root) => {
             root.style.background = "#fff";
-            titleLines(root, 0.88, Math.round((H - 388 * 0.88) / 2));
+            titleLines(root, T.k, Math.round((H - 388 * T.k) / 2), { mid: true });
+        },
+        // 1a: b1's title (the lockup as it is, centred whole), the same.
+        "55.1a": async (root) => {
+            root.style.background = "#fff";
+            titleLines(root, T.k, Math.round((H - 388 * T.k) / 2), { block: true });
         },
         // 2: B29 whole under the app's header, LET ME IN.
         55.2: step2(),

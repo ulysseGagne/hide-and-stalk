@@ -69,7 +69,8 @@
         const st = Logo.stalk({ color: red });
         const k = 27 / st.box.h;
         const x = a.x + a.width + 7;
-        svg.innerHTML += `<g transform="translate(${x - st.box.x * k} ${31 - (st.box.y + st.box.h) * k}) scale(${k})">${st.svg}</g>`;
+        // A hair toward HIDE &, its baseline a touch below the type's.
+        svg.innerHTML += `<g transform="translate(${x - 1.5 - st.box.x * k} ${31.5 - (st.box.y + st.box.h) * k}) scale(${k})">${st.svg}</g>`;
     }
 
     const noteAt = (L, text, x, y, o = {}) => L.add(Ink.note(text, { x, y, size: o.size ?? 17, maxWidth: o.maxWidth ?? 160, seed: o.seed ?? text, tilt: o.tilt ?? -4, mess: o.mess, importance: o.importance ?? "aside", color: o.color, weight: o.weight }).svg);
@@ -140,16 +141,18 @@
         const hide = (sel) => $$(sel).forEach((el) => (el.style.display = "none"));
         // Never useful: who you are logged in as, the team roll call, GPS chatter, the hint count.
         hide(".whoami, #status-team, #location-status, #hint-status");
+        // The compass prompt reads like a cookie banner: gone from every screen.
+        hide("#compass-notice");
         // Before the game only: the Discord call and the rules.
         if (!["lobby", "ready"].includes(screen)) hide("#discord-btn, #rules-card");
         // During the hunt the screen says it already (timer label, the cards, the bell).
-        if (["cards", "selected", "waiting", "sent", "photo", "question", "choice", "tagcode"].includes(screen)) hide("#status-text");
+        if (["cards", "cardspick", "selected", "waiting", "sent", "photo", "question", "choice", "tagcode"].includes(screen)) hide("#status-text");
         hide("#hider-questions > .muted");
         // The tag code: the hand-written line says what to do with it.
         const qrP = $("#hider-qr > p.muted:not(.hider-qr-text)");
         if (qrP) qrP.style.display = "none";
         // Who sent it is on the card; "tap to send" is no longer true.
-        if (["cards", "selected", "waiting", "photo"].includes(screen)) hide("#card-note");
+        if (["cards", "cardspick", "selected", "waiting", "photo"].includes(screen)) hide("#card-note");
         // The scanner lives here now, not in the header.
         const found = $("#found-btn");
         if (found) found.textContent = "Found them? Scan their code";
@@ -169,9 +172,10 @@
             new MutationObserver(() => st.textContent !== short && (st.textContent = short)).observe(st, { childList: true, characterData: true, subtree: true });
         }
         // Questions so far: a tab up top, not a button in the page.
+        // The hider has the tab too, from the hunt on, as on the post's maps (images 3, 5, 6).
         const hb = $("#history-btn");
-        if (hb && (visible(hb) || screen === "history")) {
-            hb.style.display = "none";
+        if ((hb && (visible(hb) || screen === "history")) || ["question", "choice", "tagcode", "win"].includes(screen)) {
+            if (hb) hb.style.display = "none";
             const tabs = $("#view-tabs");
             if (tabs && !$(".view-tab.q-tab", tabs)) {
                 tabs.insertAdjacentHTML("beforeend", `<button type="button" class="view-tab q-tab" role="tab">QUESTIONS</button>`);
@@ -261,20 +265,48 @@
         d += " L98.5 0";
         return `<svg class="rc-tear" viewBox="0 0 100 12" preserveAspectRatio="none" width="100%" height="12"><path d="${d} Z" fill="#fff" stroke="none"/><path d="${d}" fill="none" stroke="#000" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linejoin="miter"/></svg>`;
     }
+    /**
+     * The receipt, as typeset: the hunt time as big as the hiding countdown
+     * (R2), and where the bar was, the round's final hints map printed on the
+     * slip (R4). The map itself is drawn by the lab (Maps2.drawReceipt) and set
+     * by tools/shoot-app.mjs once the slip is laid out: see receiptMapNeed.
+     */
     function receiptEl(rc) {
-        const row = ([a, b]) => `<div class="rc-row"><span>${a}</span><b>${b === "REDACTED" ? '<i class="rc-redact"></i>' : b}</b></div>`;
+        // "Q1 North or south?": the number in a black box, like the app's labels.
+        const label = (a) => a.replace(/^(Q\d+) /, '<em class="rc-q">$1</em>');
+        const row = ([a, b]) => `<div class="rc-row"><span>${label(a)}</span><b>${b === "REDACTED" ? '<i class="rc-redact"></i>' : b}</b></div>`;
+        const hunt = rc.totals.find(([a]) => a === "Hunt");
+        const hero = hunt ? `<div class="rc-hero"><span>${hunt[0]}</span><b>${hunt[1]}</b></div><div class="rc-rule"></div>` : "";
+        const totals = rc.totals.filter((t) => t !== hunt);
         const html = `<div class="receipt"><div class="rc-paper">
             <div class="rc-title">HIDE AND STALK</div>
             <div class="rc-head">${rc.head}</div>
-            <div class="rc-rule"></div>${rc.lines.map(row).join("")}
-            <div class="rc-rule"></div>${rc.totals.map(row).join("")}
+            <div class="rc-rule"></div>${hero}${rc.lines.map(row).join("")}
+            <div class="rc-rule"></div>${totals.map(row).join("")}
             <div class="rc-rule"></div>
             <div class="rc-row"><span>Questions asked</span><b>${rc.asked} of ${rc.of}</b></div>
-            <div class="rc-bar"></div>
+            <div class="rc-map"><img alt=""></div>
+            <div class="rc-osm">© OpenStreetMap</div>
             <div class="rc-code">${barcode(rc.head)}</div>
         </div>${tear()}</div>`;
         const btn = $("#team-again-btn");
         btn.insertAdjacentHTML("afterend", html);
+    }
+
+    /**
+     * What the receipt's map needs drawn: its size inside the frame, and where
+     * she could still be when the round ended (the app's own answer-by-answer
+     * solve, src/hints.js). Null when there's no slip.
+     */
+    function receiptMapNeed() {
+        const el = $(".rc-map");
+        if (!el) return null;
+        let region = null;
+        HNSHints.onStatus((s) => {
+            if (s.region) region = s.region;
+        });
+        HNSHints.setEnabled(true);
+        return region && { w: el.clientWidth, h: el.clientHeight, region };
     }
 
     function decorate(styleKey, screen, extra = null) {
@@ -319,14 +351,7 @@
                 P.add(Ink.write(who, { x: b.x + 6, y: b.y + b.h - 6, size: 22, seed: `ini${sign.dataset.i}`, color: ink, importance: "info", tilt: -6 }).svg);
             }
         }
-        if (extra?.receipt && S.prune && visible($("#team-again-btn"))) {
-            receiptEl(extra.receipt);
-            const bar = $(".rc-bar");
-            const b = L.box(bar);
-            const w = (b.w - 16) * (extra.receipt.asked / extra.receipt.of);
-            // Ruled out, coloured in by hand; stays inside the bar.
-            L.add(Ink.colorIn([[[b.x + 8, b.y + 8], [b.x + 3 + w, b.y + 8], [b.x + 3 + w, b.y + b.h - 8], [b.x + 8, b.y + b.h - 8]]], { seed: `bar${screen}`, weight: 7, overshoot: 0 }));
-        }
+        if (extra?.receipt && S.prune && visible($("#team-again-btn"))) receiptEl(extra.receipt);
         if (perm) {
             permSheet(perm);
             // The one thing to do next gets the arrow; what's done needs nothing.
@@ -335,13 +360,7 @@
                 const b = P.box(next);
                 P.add(Ink.stubArrow(b.x - 36, b.y + b.h + 50, b.x + 16, b.y + b.h - 10, { seed: `pa${perm.loc}`, weight: 11 }));
             }
-            // Both on: each On gets its own big check.
-            if (perm.loc === "on" && perm.compass === "on") {
-                for (const [i, on] of $$("#perm-sheet .perm-on").entries()) {
-                    const b = P.box(on);
-                    P.add(Ink.bigCheck(b.x + b.w + 2, b.y - 16, 40, { seed: `pdone${i}`, weight: 9 }));
-                }
-            }
+            // Both on: the two Ons say it, no checks.
             const fix = $("#perm-sheet .perm-row[data-perm=loc] .perm-btn");
             if (perm.loc === "blocked" && fix) {
                 const b = P.box(fix);
@@ -360,7 +379,9 @@
                 const tip = [cx - 6, bb.y + bb.h + 6];
                 P.add(Ink.stubArrow(tip[0] - 78, tip[1] + 96, tip[0], tip[1], { seed: `bella${screen}`, weight: 13 }));
                 // Beside the arrow, in the empty end of the badge row.
-                P.add(Ink.write("NEW", { x: tip[0] - 22, y: tip[1] + 104, size: 44, weight: 9, seed: `belln${screen}`, tilt: -8, importance: "key" }).svg);
+                // As in the post (image 4): a touch lower, the N's top-left corner a round turn, not a point, clear of the arrow.
+                const roundN = [0.64, [[[0, 1], [0, 0.34], [0.03, 0.2], [0.11, 0.17], [0.19, 0.25], [0.64, 1], [0.64, 0]]]];
+                P.add(Ink.write("NEW", { x: tip[0] - 22, y: tip[1] + 112, size: 44, weight: 9, seed: `belln${screen}`, tilt: -8, importance: "key", glyphs: { N: roundN } }).svg);
             } else {
                 P.add(Ink.circle(cx, cy, bb.w / 2 + 8, bb.h / 2 + 7, { seed: "bell", weight: 4.5 }));
                 P.add(Ink.handArrow(cx - 150, cy + 96, cx - 16, cy + 18, { seed: `bella${screen}`, weight: 7, head: 26, bend: -0.18 }));
@@ -406,7 +427,7 @@
 
         // The stalker's three cards: pick just one, and there are more below.
         // (Room above them for the note.)
-        if (S.prune && screen === "cards" && $("#card-row")) $("#card-row").style.marginTop = "34px";
+        if (S.prune && (screen === "cards" || screen === "cardspick") && $("#card-row")) $("#card-row").style.marginTop = "34px";
         const cards = $$("#card-row .card").filter(visible);
         if (cards.length) {
             const first = L.box(cards[0]);
@@ -418,11 +439,15 @@
             } else if (styleKey !== "b") {
                 if (S.prune && screen !== "selected") {
                     // Between the rule and the first card (UNTIL QUESTION stays readable), curling up.
-                    L.add(Ink.write("PICK JUST ONE.", { x: first.x + 96, y: first.y - 10, size: 32, weight: 5.6, spacing: 0.3, seed: "pick1", tilt: -5, maxWidth: first.w - 98, importance: "key" }).svg);
+                    L.add(Ink.write("PICK JUST ONE", { x: first.x + 96, y: first.y - 10, size: 32, weight: 5.6, spacing: 0.3, seed: "pick1", tilt: -5, maxWidth: first.w - 98, importance: "key" }).svg);
                 }
                 else if (!S.prune) noteAt(L, "PICK JUST ONE.", first.x + first.w - 190, first.y + 30, { maxWidth: 200, size: 22, tilt: -5, importance: "key" });
             }
-            if (screen === "selected") {
+            if (screen === "cardspick") {
+                // S51's layout with S52's box, exactly, on the same card; no arrow.
+                const c = L.box(cards[1]);
+                L.add(Ink.box(c.x - 4, c.y - 4, c.w + 8, c.h + 8, { seed: "pick", weight: 5.5, jitter: 4 }));
+            } else if (screen === "selected") {
                 const c = L.box(cards[1]);
                 L.add(Ink.box(c.x - 4, c.y - 4, c.w + 8, c.h + 8, { seed: "pick", weight: 5.5, jitter: 4 }));
                 const send = L.box($(".send-btn"));
@@ -433,7 +458,7 @@
                 const last = cards[cards.length - 1].getBoundingClientRect();
                 // E19's arrow, pointing down: bulky, a big pointed head; MORE where
                 // it was, as bold as PICK JUST ONE.
-                if (last.bottom > innerHeight - 10) P.add(Ink.stubArrow(innerWidth - 40, innerHeight - 150, innerWidth - 46, innerHeight - 40, { seed: "scroll2", weight: 11, head: 34 }) + Ink.write("MORE", { x: innerWidth - 116, y: innerHeight - 120, size: 21, weight: 4.8, spacing: 0.3, seed: "more", tilt: -8, importance: "key" }).svg);
+                if (last.bottom > innerHeight - 10) P.add(Ink.stubArrow(innerWidth - 40, innerHeight - 150, innerWidth - 64, innerHeight - 40, { seed: "scroll2", weight: 11, head: 34 })); // no MORE: the arrow says it; askew, the head a little to the left
             }
         }
 
@@ -442,6 +467,8 @@
         if (visible(sent)) {
             const st = L.box($(".sent-stamp", sent));
             $(".sent-stamp", sent).style.visibility = "hidden";
+            // Answered, nothing is drawn where the stamp was: it takes no room.
+            if (sent.dataset.state === "answered") $(".sent-stamp", sent).style.display = "none";
             const ans = $("#sent-answer");
             const prompt = L.box($("#sent-prompt"));
             if (sent.dataset.state === "answered") {
@@ -455,10 +482,19 @@
                 // No stamp: the answer (or the photo) already says it.
                 void prompt;
             } else {
-                // Over the card's edge, a little unhinged.
-                const w = Ink.write("SENT · LOCKED IN", { x: st.x - 6, y: st.y + st.h - 10, size: 22, seed: "sent", tilt: -6, importance: "key" });
-                L.add(Ink.box(st.x - 24, st.y - 30, w.width + 42, st.h + 32, { seed: "sentbox", weight: 4, jitter: 6 }) + w.svg);
+                // Over the card's edge, a little unhinged; the words and the box a touch bold.
+                const w = Ink.write("SENT · LOCKED IN", { x: st.x - 6, y: st.y + st.h - 10, size: 22, seed: "sent", tilt: -6, importance: "key", weight: 22 * 0.2 });
+                L.add(Ink.box(st.x - 24, st.y - 30, w.width + 42, st.h + 32, { seed: "sentbox", weight: 5, jitter: 6 }) + w.svg);
             }
+        }
+
+        // For the post: "nearest sculpture" on a line of its own, underlined by hand in red (the words stay black).
+        const sp = $("#sent-prompt");
+        if (screen === "photo" && sp) {
+            sp.innerHTML = sp.textContent.replace(/\s*nearest sculpture/, `<br><span class="ul-mark">nearest sculpture</span>`);
+            const b = L.box($(".ul-mark", sp));
+            // Snug under the letters: the line box has some air below the baseline.
+            L.add(Ink.underline(b.x, b.y + b.h - 1 + 2.5, b.w, { weight: 5, seed: "ul0a" }));
         }
 
         // Hider: the picked answer is ticked by hand, like a ballot.
@@ -472,9 +508,10 @@
             const cy = b.y + b.h / 2;
             L.add(Ink.check(cx - 0.55 * s + 2, cy - 0.4 * s - 1, s, { seed: `chk${opt.textContent.trim()}`, weight: 7 }));
         }
+        // Answered: the big brush check, clear of the Change button.
         for (const row of $$(".answer-row").filter(visible)) {
             const sAns = L.box($(".answer-row-answer", row));
-            L.add(Ink.sharpCheck(sAns.x + Math.min(sAns.w, 190) + 22, sAns.y - 8, 28, { seed: `rc${sAns.y}`, weight: 8 }));
+            L.add(Ink.bigCheck(sAns.x + Math.min(sAns.w, 190) + 10, sAns.y - 16, 40, { seed: `rc${sAns.y}`, weight: 9 }));
         }
 
         // The tag code: what to do with it, plainly.
@@ -494,17 +531,19 @@
         // Only until they start typing (or press Register).
         if (screen === "login") {
             const reg = L.box($$(".auth-switch-btn")[1]);
-            const cx = reg.x + reg.w / 2;
-            // Just under the tabs, so the username field still reads as empty;
-            // the arrow comes up from the note's start, as thick as its letters.
+            // Just under the tabs, so the username field still reads as empty,
+            // and low enough to leave room above it for the arrow.
             const nw = Ink.write("NEW? CLICK HERE", { x: 0, y: 0, size: 21, seed: "NEW? CLICK HERE", tilt: -4, importance: "info", weight: 4.6 }).width;
-            const base = reg.y + reg.h + 50;
+            const base = reg.y + reg.h + 64;
             const nx = innerWidth - 22 - nw;
             noteAt(L, "NEW? CLICK HERE", nx, base, { size: 21, tilt: -4, maxWidth: 320, importance: "info", weight: 4.6 });
-            // E02's and E19's arrow: it starts just above NEW and curves up a
-            // little to the middle of Register, clear of the words.
-            L.add(Ink.stubArrow(nx + 12, base - 30, cx + 8, reg.y + reg.h + 5, { seed: "reg2", weight: 8, head: 20, bend: -0.16 }));
-            void cx;
+            // E03's arrow, about half its size, touching no text: from the gap over
+            // the note, up and right, its point inside the box just under the R.
+            const rg = document.createRange();
+            rg.selectNodeContents($$(".auth-switch-btn")[1]);
+            const t = L.box(rg);
+            const [ex, ey] = [t.x - 1, reg.y + reg.h - 4];
+            L.add(Ink.stubArrow(ex - 26, ey + 32, ex, ey, { seed: "pareg", weight: 7 }));
         }
         // Black = press me now: only once there's something to log in with.
         if (screen === "loginfilled") $("#auth-submit").classList.add("cta");
@@ -525,10 +564,10 @@
 
         }
         if (screen === "hiding" && tb) {
-            // Under the paragraph, just over its last line and the rule.
+            // Under the paragraph and its rule, clear of both.
             const p = $("#status-text");
             const pb = p && visible(p) ? L.box(p) : { x: tb.x, y: tb.y + 200, w: 300, h: 0 };
-            noteAt(L, "WALK. DON'T RUN.", pb.x + 8, pb.y + pb.h + 36, { size: 30, maxWidth: 330, tilt: -4, importance: "key", weight: 6.2 });
+            noteAt(L, "WALK. DON'T RUN.", pb.x + 8, pb.y + pb.h + 86, { size: 30, maxWidth: 330, tilt: -4, importance: "key", weight: 6.2 });
         }
         if ((screen === "found" || screen === "win") && tb) {
             if (S.prune) {
@@ -582,5 +621,5 @@
         }
     }
 
-    window.InkApp = { decorate };
+    window.InkApp = { decorate, receiptMapNeed };
 })();

@@ -70,6 +70,11 @@
                 await Maps2.drawHint(root, v);
             } else if (set === "skin") {
                 await Maps2.drawSkin(root, v);
+            } else if (set === "receipt") {
+                // The spec is set by tools/shoot-app.mjs before the page loads.
+                await Maps2.drawReceipt(root, window.__receipt, W, H);
+            } else if (set === "post") {
+                await Maps2.drawPost(root, String(q.get("v")));
             } else if (set === "map2") {
                 await Maps2.draw(root, v);
             } else if (set === "map") {

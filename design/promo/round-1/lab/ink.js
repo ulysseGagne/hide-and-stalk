@@ -324,7 +324,7 @@
             if (!g) continue;
             const scale = size * (1 + (r() - 0.5) * 0.22 * mess);
             const [w, strokes] = g;
-            items.push({ x: cursor, scale, w, strokes, ch });
+            items.push({ x: cursor, scale, w, strokes, ch, i: items.length });
             const gap = r.range(0.6, 1.4);
             // o.extra: more room after the i-th letter, in units of size.
             cursor += w * scale + spacing * (o.even ? 1 : gap) + (o.extra?.[items.length - 1] ?? 0) * size;
@@ -384,7 +384,8 @@
         for (const it of items) {
             const s = it.x * squeeze;
             const b = baseline(s);
-            const drift = n(s / (size * 2.2)) * size * 0.1 * mess;
+            // o.lift: the i-th letter moved up (negative) or down, in units of size.
+            const drift = n(s / (size * 2.2)) * size * 0.1 * mess + (o.lift?.[it.i] ?? 0) * size;
             const lean = ((n(s / size + 40) * 5 * mess + (o.slant ?? 0)) * Math.PI) / 180;
             const angle = b.a + lean;
             const sx = it.scale * (0.94 + r() * 0.1) * (squeeze < 1 ? squeeze : 1);
@@ -813,19 +814,21 @@
         const r = rng(o.seed ?? "ring");
         const n = noise1(r);
         const start = r.range(-Math.PI, Math.PI);
-        const sweep = Math.PI * 2 * r.range(1.07, 1.12);
-        const dev = Math.min(2, rad * 0.02);
+        // Round once and a bit more: the pen lands a little inside the line and
+        // leaves it a little outside, so the two ends cross without meeting.
+        const sweep = Math.PI * 2 * r.range(1.08, 1.13);
+        const dev = Math.min(2.6, rad * 0.025);
         const steps = Math.max(90, Math.round(rad * 1.2));
         const pts = [];
         for (let i = 0; i <= steps; i++) {
             const t = i / steps;
             const a = start + t * sweep;
-            // A slow wander; the last stretch, past the start, drifts just outside it.
-            const k = rad + n(t * 5) * dev + Math.max(0, (t - 0.9) / 0.1) * dev * 0.8;
+            const k = rad + n(t * 5) * dev - Math.max(0, 1 - t / 0.1) * dev * 2 + Math.max(0, (t - 0.84) / 0.16) ** 1.4 * dev * 4;
             pts.push([cx + Math.cos(a) * k, cy + Math.sin(a) * k]);
         }
-        const press = (u) => (0.55 + 0.45 * Math.sin(Math.PI * Math.min(1, u * 1.1))) * (0.85 + 0.15 * n(u * 9 + 3));
-        return pressed(pts, press, { size: o.weight ?? 4.5, color: o.color ?? RED, thinning: 0.5, taperStart: 8, taperEnd: 16, wobble: false });
+        // The width wanders all the way round: heavier where the pen pressed, thin where it sped up.
+        const press = (u) => (0.7 + 0.3 * Math.sin(Math.PI * Math.min(1, u * 1.15))) * (0.3 + 0.7 * (0.5 + 0.5 * n(u * 4 + 3)));
+        return pressed(pts, press, { size: (o.weight ?? 4.5) * 1.25, color: o.color ?? RED, thinning: 0.85, taperStart: 3, taperEnd: 14, wobble: false });
     }
 
     function underline(x, y, w, o = {}) {
@@ -881,7 +884,7 @@
      * touch uneven, a white shine. The point sits exactly on the spot.
      *   dot:   "cut" a hole the map shows through (ringed by the edge),
      *          "white" a white dot, "none"
-     *   shine: "oval" (the pushpin's), "arc" round the head, "blade" down the
+     *   shine: "oval" (the pushpin's), "arc" round the head ("arcHand": drawn by hand), "blade" down the
      *          left side, "line" along it, "none"
      */
     function glossPin(x, y, o = {}) {
@@ -923,7 +926,24 @@
             const p1 = [x + Math.cos(a1) * rr, cy + Math.sin(a1) * rr];
             return `<path d="M${p0[0].toFixed(2)} ${p0[1].toFixed(2)}A${rr} ${rr} 0 0 1 ${p1[0].toFixed(2)} ${p1[1].toFixed(2)}" stroke="${white}" stroke-width="${W.toFixed(2)}" stroke-linecap="round" fill="none"/>`;
         };
+        // The arc by hand: one stroke that swells in the middle and thins to
+        // its ends, its width and its curve a little uneven.
+        const arcHand = (a0, a1, rr) => {
+            const m = 20;
+            const outer = [];
+            const inner = [];
+            for (let i = 0; i <= m; i++) {
+                const t = i / m;
+                const f = a0 + (a1 - a0) * t;
+                const rk = rr * (1 + n(90 + t * 3) * 0.05);
+                const hw = (W / 2) * (0.45 + 0.8 * Math.sin(Math.PI * (0.08 + t * 0.84)) ** 0.7) * (1 + n(120 + t * 5) * 0.14);
+                outer.push([x + Math.cos(f) * (rk + hw), cy + Math.sin(f) * (rk + hw)]);
+                inner.push([x + Math.cos(f) * (rk - hw), cy + Math.sin(f) * (rk - hw)]);
+            }
+            return `<path d="${d([...outer, ...inner.reverse()])}" fill="${white}" stroke="${white}" stroke-width="${(W * 0.12).toFixed(2)}" stroke-linejoin="round"/>`;
+        };
         const shine = {
+            arcHand: arcHand((196 * Math.PI) / 180, (265 * Math.PI) / 180, R * 0.7),
             oval: `<ellipse cx="${(x - R * 0.36).toFixed(2)}" cy="${(cy - R * 0.4).toFixed(2)}" rx="${(R * 0.34).toFixed(2)}" ry="${(R * 0.2).toFixed(2)}" fill="${white}" transform="rotate(-35 ${(x - R * 0.36).toFixed(2)} ${(cy - R * 0.4).toFixed(2)})"/>`,
             arc: arc((200 * Math.PI) / 180, (262 * Math.PI) / 180, R * 0.7),
             blade: `<path d="${d([along(0.06, 1.4), along(0.7, 1.2), along(0.16, 3.6)])}" fill="${white}"/>`,
@@ -1174,12 +1194,15 @@
     function stubArrow(x1, y1, x2, y2, o = {}) {
         const r = rng(o.seed ?? "stub");
         const len = Math.hypot(x2 - x1, y2 - y1);
-        const ang = Math.atan2(y2 - y1, x2 - x1);
+        let ang = Math.atan2(y2 - y1, x2 - x1);
         const w = o.weight ?? 12;
         const head = o.head ?? len * 0.55;
         const bow = (o.bend ?? r.range(-0.04, 0.04)) * len;
-        const mx = (x1 + x2) / 2 - Math.sin(ang) * bow;
-        const my = (y1 + y2) / 2 + Math.cos(ang) * bow;
+        // o.ctrl: the curve's control point, given outright; the head then
+        // follows the curve's last direction instead of the straight line.
+        const mx = o.ctrl ? o.ctrl[0] : (x1 + x2) / 2 - Math.sin(ang) * bow;
+        const my = o.ctrl ? o.ctrl[1] : (y1 + y2) / 2 + Math.cos(ang) * bow;
+        if (o.ctrl) ang = Math.atan2(y2 - my, x2 - mx);
         // The shaft stops a little short of the point, inside the head.
         const ex = x2 - Math.cos(ang) * w * 0.6;
         const ey = y2 - Math.sin(ang) * w * 0.6;

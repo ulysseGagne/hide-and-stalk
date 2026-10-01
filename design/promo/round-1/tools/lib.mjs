@@ -44,8 +44,9 @@ export async function browser() {
     return b;
 }
 
+// DPR=3 in the environment renders at 3x (the export for the post); 2x otherwise.
 export async function context(b, opts = {}) {
-    const ctx = await b.newContext({ viewport: opts.viewport ?? { width: 375, height: 812 }, deviceScaleFactor: opts.dpr ?? 2, ...opts.extra });
+    const ctx = await b.newContext({ viewport: opts.viewport ?? { width: 375, height: 812 }, deviceScaleFactor: opts.dpr ?? Number(process.env.DPR ?? 2), ...opts.extra });
     await ctx.route("https://unpkg.com/**", (route) => {
         const rest = route.request().url().replace("https://unpkg.com/", "");
         const key = Object.keys(UNPKG).find((k) => rest.startsWith(k));
