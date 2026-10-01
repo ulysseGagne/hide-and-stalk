@@ -15,6 +15,8 @@ locations.
 | `docs/` | Feature specs, question list, playtest feedback, notes |
 | `design/game-design/` | Game design research: the original Jet Lag game and the ULaval adaptation (start with its `README.md`) |
 | `design/promo/` | Event promotion: poster drafts and inspiration, the Discord announcement (`discord/`: the draft, and earlier posts for the tone), and the promo brief (`prompt.txt`) |
+| `design/promo/round-1/` | The redesign, explored as code: the review gallery (`gallery/`, the target the app is built to), the drawing lab, the mock-ups over the old app (start with its `README.md`) |
+| `design/promo/round-2/` | The redesign built into `src/`: each gallery screen next to the real app, and the tools that shoot, compare and measure it |
 
 ## How a game works
 
@@ -25,40 +27,62 @@ presses **Start** on their phone.
 1. The hider has **10 minutes** to hide. Everyone on the team sees the same
    countdown.
 2. Then the hunt starts: **a new question every 5 minutes**. The stalkers get
-   three questions face up, pick one, and it goes straight to the hider, who
-   answers truthfully. The map (Hints) closes in with every answer.
+   three questions face up, pick one and send it; it goes straight to the
+   hider, who answers truthfully. The map's hints layer closes in with every
+   answer.
 3. The stalkers win by finding the hider (they scan the QR code on the hider's
    screen, or press **Hider has been found**). If question 7 would come first
    (30 minutes of hunting), the hider wins.
 4. **Play again** puts the team back to ready, with the next player hiding.
    Every finished round goes into the results; the longest hide wins.
 
-The rules the players see (home screen): everyone stays in their team's
-Discord call; one hider; the hider walks, stalkers may run; hide within
-10–20 m of a path people use, visible from it; no tunnels; nothing to open
-(no doors, lockers or bins); answer truthfully.
+The rules the players see before the game, most important first: hide near
+a path (within 20 m of one); the hider walks, stalkers can run; no tunnels;
+touch nothing (don't open, move or climb anything); answer truthfully;
+found? show your code, stalkers win; one hider, 10 minutes to hide, a
+question every 5 minutes; stay in the Discord call all game.
 
 ## Frontend (`src/`)
 
-Plain HTML/JS/CSS, no build step.
+Plain HTML/JS/CSS, no build step. The look is the design review's
+(`design/promo/round-1/gallery/`): black and white, one 3 px line, one
+typeface (Arimo, self-hosted in `fonts/`), and red only ever drawn by hand.
 
-- `index.html` – header ("HIDE 'N' STALK", notification bell, camera), MENU/MAP
-  tabs, login/register form, the player's home screen and the admin dashboard
-- `app.js` – tabs, auth, notices, the sync loop, and the player's home screen:
-  one status card that says what to do right now (no team yet / ready / go hide
-  / question N of 6 / result), Start and Play again, the rules, the debug strip
+- `index.html` – the home screen (the app opens on it; a tap goes on), the
+  header (HIDE & STALK, the bell, Log out), the MENU / MAP / QUESTIONS tabs,
+  login/register, "Before you start" (the two permissions, first launch only),
+  the player's home screen, the scanner and the admin dashboard
+- `app.js` – tabs, the home screen, auth, "Before you start", notices, the
+  sync loop, and the player's status card: what to do right now (no team yet /
+  ready / go hide / question N of 6 / result), Start and Play again, the rules
+  (before the game only), the debug strip
+- `marks.js` – the red layer on the app's screens, drawn with `ink.js`: the
+  role stamped at the reveal, PICK JUST ONE, the picked card's box, SENT ·
+  LOCKED IN, the answers written in, the hider's ticks, the arrow and NEW at the
+  bell until a notification is read (on every tab, the map included), and an
+  arrow at the button to press when nothing else is red
 - `admin.js` – the admin dashboard: join QR, Make teams, the drag-and-drop
   board with each team's status and controls, results, settings, to-dos
-- `cards.js` – the stalkers' three cards and the "sent, locked in" card after
-  a pick, the hider's questions and answers (with Change), the history, the bell
-- `map.js` – Leaflet map, overlays (busy-areas heatmap, Hints, the campus
-  layers), the blue dot with its heading cone, other players' pins
-- `hints.js` – turns answered cards into polygons and draws the surviving play
-  area, the way the JetLagHideAndSeek elimination overlay does; also works out
-  which "which X are you closest to?" answers are still possible
-- `endgame.js` – the hider's QR code, the stalker's camera scanner, and the
-  "Hider has been found" button
-- `locations.js` – **generated**; every campus place, as map overlay data
+- `cards.js` – the stalkers' three cards (a tap picks, Send sends) and the sent
+  card (locked in until the answer is written in), the hider's questions and
+  answers (with Change), the QUESTIONS tab, the bell
+- `map.js` – the Leaflet map: the hints layer (what the answers ruled out,
+  inverted; the edge of what's left drawn by hand), the question in a box at
+  the top and what it needs drawn, YOU's arrow with its heading, the other
+  players' pins
+- `mapdraw.js` – draws the campus from OpenStreetMap's data
+  (`data/campus-map.json`, **generated**, see *The map*) as canvas tiles, and
+  for the receipt
+- `receipt.js` – the end of a round as a till receipt, with the final hints
+  map printed on it
+- `hints.js` – turns answered cards into polygons and works out the surviving
+  play area, the way the JetLagHideAndSeek elimination overlay does; also works
+  out which "which X are you closest to?" answers are still possible
+- `endgame.js` – the hider's QR code, the stalker's camera scanner (from "Found
+  them? Scan their code"), and its "Hider has been found" fallback
+- `ink.js`, `vendor/perfect-freehand.js` – the hand-drawn red (from the design
+  lab, unchanged)
+- `locations.js` – **generated**; every campus place, as map data
   (see *Configuring the play area*)
 - `config.js` – **set `apiBase` to your deployed Worker URL**
 
@@ -123,8 +147,9 @@ To test the frontend from another port (e.g. 8081), give the local worker a
 ### Testing
 
 Both need `npm run dev` running and the admin password in
-`HNS_ADMIN_PASSWORD`. **Both start by deleting every player** on the server
-they talk to, so they refuse anything but a local one.
+`HNS_ADMIN_PASSWORD` (and, to log in as a local admin rather than `admin`,
+its name in `HNS_ADMIN_USERNAME`). **Both start by deleting every player** on
+the server they talk to, so they refuse anything but a local one.
 
 ```sh
 HNS_ADMIN_PASSWORD=... npm run smoke      # every rule, in seconds (moves the clock in the DB)
@@ -230,8 +255,9 @@ again and is marked as changed.
   the hider — clever, but hard to follow for someone who wasn't listening.)
 - **The batch is per team, not per stalker.** The first stalker to pick burns it
   for everyone, so the hider answers one question per interval no matter how
-  many stalkers are hunting. After a pick the other two cards disappear and the
-  sent one is stamped "Sent — locked in": there is nothing left to do.
+  many stalkers are hunting. Picking a card only marks it on that phone; Send
+  is what plays it. Then the other two cards disappear and the sent one is
+  stamped SENT · LOCKED IN until the hider's answer is written in.
 - **The deck has a running order.** Every card carries `tiers`: the question
   numbers it may be dealt as. Openers (`[1, 2]` — north/south, the named
   landmarks, the 500 m ring) cut the campus in half; closers (`[6]` — exact
@@ -241,7 +267,7 @@ again and is marked as changed.
 - **No card is offered to the same team twice in a round.** Not just no card
   *played* twice — a card burnt unplayed in an earlier batch is still one the
   team has seen.
-- **Everyone in a team sees the Hints map, always.** The stalkers watch the net
+- **Everyone in a team sees the hints layer.** The stalkers watch the net
   close; the hider watches how much cover they have given away. It is built
   entirely out of answers the hider gave, so it tells them nothing they did not
   say. The hider's "which X are you closest to?" lists only offer the places
@@ -251,12 +277,6 @@ again and is marked as changed.
   only the hider's own screen, held up and scanned (or the stalkers pressing
   the button). That keeps the final moment a face-to-face one, and a bad GPS
   fix can never cost someone the game.
-
-### The busy-areas heatmap, simply
-
-The more paths, benches, cafés, shops and bus stops OpenStreetMap has around a
-spot, the hotter it is on the map. It is a picture of where people tend to be
-(the hider can use it to pick a spot); it does not change any timer.
 
 ### Configuring the play area
 
@@ -272,7 +292,7 @@ That reads the GeoJSON and writes two **generated** files, both committed:
 
 | Generated | Used by | For |
 |-----------|---------|-----|
-| `src/locations.js` | `map.js` | one toggleable overlay per layer, markers with popups |
+| `src/locations.js` | `map.js` | the places a question pins on the map (with their pop-ups), the campus border the map opens on |
 | `worker/src/locations.js` | `worker/src/cards.js` | `PLAY_AREA`, `LANDMARKS`, `LANDMARK_GROUPS` |
 
 So the coordinates the map draws and the coordinates the Hints filter computes
@@ -282,38 +302,39 @@ places in a layer would end up sharing an id, since ids are stored in
 `card_plays.answer`.
 
 Adding a place to a layer automatically adds it to that layer's card: drop a
-feature into `cafes.geojson` and it becomes both a new marker and a new option
-on *"Which café on campus are you closest to?"*. Adding a whole new `.geojson`
+feature into `cafes.geojson` and it becomes both a new pin on the map and a
+new option on *"Which café are you closest to?"*. Adding a whole new `.geojson`
 needs a matching entry in `tools/build-locations.mjs`.
 
-### Map overlays
+### The map
 
-The overlays menu (top right of the map) has two sections. **Busy areas
-(heatmap)** is the game layer you can switch on (the Hints map is always on for
-anyone in a team, so it has no checkbox). Under **Campus** sits one row per
-element of `locations/`:
+The map is drawn by the app, nothing is fetched as tiles: the campus from
+OpenStreetMap's data (every road and path, never tunnels; buildings black;
+woods, grass and fields dotted; the stadium and the track hatched), the hints
+layer, the players and the question. It opens on the whole campus and never
+zooms by itself.
 
-- Campus border, Landmarks, Pavilions, Cafés, Bus stops, àVélo stations
+- **One red thing at a time.** While nothing is waiting, the hints layer:
+  everything the answers have ruled out is inverted (the white is where the
+  hider can still be) and its edge is drawn by hand in red. While a question
+  waits, only what it needs: the east/west or north/south line through the
+  stalker who asked, the circle, the places of a "which X are you closest
+  to?" (tap one for its name and where it is), or a tag on the landmark of a
+  "closer than me?". The other players' pins step aside for a drawing.
+- **The question in a box at the top**, with the time to the next one;
+  between questions, when the next one comes, and, for the hider, how far the
+  closest stalker is, scribbled in the box.
+- **Players.** Everyone else is a red pushpin (tap it for the name); YOU is
+  the red arrow, pointing the way your phone faces (the compass; iPhones ask
+  once, from "Before you start"). It turns white when your GPS has stopped
+  updating, and the app restarts the GPS by itself when that happens. The GPS
+  only starts once location has been allowed or asked for, so the browser's
+  prompt never comes before "Before you start" explains it.
 
-These are public reference points, so everyone gets them — the hider needs to
-see which bus stops count before they can answer which one they are nearest.
-All start off; ticking one while the map is still on the world view moves it to
-campus.
+The data is `src/data/campus-map.json`, **generated** from the campus as
+GeoJSON (`design/promo/round-1/lab/data/osm-campus.json`, © OpenStreetMap
+contributors, ODbL):
 
-They also turn themselves on while a question needs them: play *"which café are
-you closest to?"* and the Cafés layer appears for both sides until the answer
-lands, then goes away again. A layer you tick by hand is yours from then on and
-is never switched off for you. The live question is drawn too — the line you are
-north or south of, the ring you are inside or outside, a circle round the
-landmark being compared. Every marker is clickable, and its popup names the card it answers, so
-the link between a place and the question about it is visible rather than
-implied. (Card prompts come from `/cards/catalog`, so they appear once you are
-logged into a game.)
-
-The base map is OpenStreetMap. The CARTO styles the project started with
-(Voyager, Light, Dark) now answer every tile with "API KEY REQUIRED".
-
-The blue dot is you. The cone on it is the way you are facing (the phone's
-compass; iPhones ask once, from the "Turn on" notice). It turns grey when your
-GPS has stopped updating, and the app restarts the GPS by itself when that
-happens.
+```sh
+npm run build:map           # tools/build-map.mjs
+```

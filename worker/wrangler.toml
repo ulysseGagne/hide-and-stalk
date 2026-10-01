@@ -5,9 +5,9 @@ compatibility_date = "2024-09-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "hidenstalk"
-database_id = "0d88d072-f2cf-4746-88b1-e2411ef3ed12"
+database_id = "1c4ff3cf-15ab-4e38-853a-d6a92a9407be"
 
 [vars]
 # Comma-separated list of origins allowed to call this API.
 # Add your machine's LAN address here too when testing from a phone on the same Wi-Fi.
-ALLOWED_ORIGINS = "https://felixlarrivee1.github.io,http://localhost:8080,http://127.0.0.1:8080,http://192.168.0.139:8080"
+ALLOWED_ORIGINS = "https://ulyssegagne.github.io,http://localhost:8080,http://127.0.0.1:8080,http://192.168.0.139:8080"

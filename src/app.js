@@ -1,19 +1,26 @@
-/* global HNSMap, HNSCards, HNSEndgame, HNSAdmin */
+/* global HNSMap, HNSCards, HNSEndgame, HNSAdmin, HNSMarks, HNSReceipt, HNSHints */
 
 const CONFIG = window.HNS_CONFIG;
 const TOKEN_KEY = "hns.token";
-const COMPASS_DISMISSED_KEY = "hns.compass.dismissed";
+// Set once the player has been through "Before you start" (Done or Later).
+const PERM_SEEN_KEY = "hns.perm.seen";
 
 // ---------------------------------------------------------------------------
-// View tabs (MENU / MAP)
+// View tabs (MENU / MAP / QUESTIONS)
 // ---------------------------------------------------------------------------
 const tabs = document.querySelectorAll(".view-tab");
 const views = {
     menu: document.getElementById("view-menu"),
     map: document.getElementById("view-map"),
+    questions: document.getElementById("view-questions"),
 };
+const questionsTab = document.querySelector('.view-tab[data-view="questions"]');
+let currentView = "menu";
 
 function showView(name) {
+    if (!views[name] || (name === "questions" && questionsTab.hidden)) name = "menu";
+    currentView = name;
+    document.body.dataset.view = name;
     for (const [key, el] of Object.entries(views)) {
         el.hidden = key !== name;
     }
@@ -22,7 +29,9 @@ function showView(name) {
         tab.classList.toggle("active", active);
         tab.setAttribute("aria-selected", String(active));
     }
-    if (name === "map") setTimeout(() => HNSMap.invalidateSize(), 0);
+    if (name === "map") setTimeout(() => HNSMap.shown(), 0);
+    if (name === "questions") HNSCards.showQuestions();
+    scheduleMarks();
 }
 
 for (const tab of tabs) {
@@ -71,14 +80,33 @@ async function api(path, { method = "GET", body, timeoutMs } = {}) {
 const errorText = (err) => (err.status === undefined ? "Could not reach the server" : err.message);
 
 // ---------------------------------------------------------------------------
+// The home screen: the app opens on it, every time; a tap anywhere goes on
+// ---------------------------------------------------------------------------
+const homeScreen = document.getElementById("home-screen");
+
+function leaveHomeScreen() {
+    if (homeScreen.hidden) return;
+    homeScreen.hidden = true;
+    maybeShowPermSheet();
+    renderNotices();
+    scheduleMarks();
+}
+homeScreen.addEventListener("click", leaveHomeScreen);
+homeScreen.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        leaveHomeScreen();
+    }
+});
+homeScreen.focus();
+
+// ---------------------------------------------------------------------------
 // Auth UI
 // ---------------------------------------------------------------------------
 const menuPanel = document.querySelector("#view-menu .menu-panel");
 const authPanel = document.getElementById("auth-panel");
 const playerPanel = document.getElementById("player-panel");
 const adminPanel = document.getElementById("admin-panel");
-const loggedInName = document.getElementById("logged-in-name");
-const locationStatus = document.getElementById("location-status");
 const authForm = document.getElementById("auth-form");
 const authSubmit = document.getElementById("auth-submit");
 const authError = document.getElementById("auth-error");
@@ -98,11 +126,19 @@ function setAuthMode(mode) {
     authForm.password.autocomplete =
         mode === "login" ? "current-password" : "new-password";
     authError.textContent = "";
+    renderAuthButton();
+}
+
+/** Black = press me now: only once there's something to log in with. */
+function renderAuthButton() {
+    authSubmit.classList.toggle("cta", Boolean(authForm.username.value && authForm.password.value));
+    scheduleMarks();
 }
 
 for (const btn of authSwitchBtns) {
     btn.addEventListener("click", () => setAuthMode(btn.dataset.mode));
 }
+authForm.addEventListener("input", renderAuthButton);
 
 authForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -118,6 +154,8 @@ authForm.addEventListener("submit", async (e) => {
         });
         setSession(data.token, data.user);
         authForm.reset();
+        renderAuthButton();
+        maybeShowPermSheet();
     } catch (err) {
         authError.textContent = errorText(err);
     } finally {
@@ -144,6 +182,10 @@ function setSession(newToken, user) {
         stopSync();
         HNSCards.reset();
         HNSEndgame.reset();
+        HNSReceipt.reset();
+        HNSMap.setGame(null);
+        renderTabs();
+        showView("menu");
     }
     renderAuthState();
     if (token) startSync();
@@ -159,27 +201,148 @@ function renderAuthState() {
     adminPanel.hidden = !isAdmin;
     userStatus.hidden = !loggedIn;
     if (loggedIn) {
-        loggedInName.textContent = currentUser.username;
         userStatusName.textContent = isAdmin
             ? `${currentUser.username} (admin)`
             : currentUser.username;
-        renderLocationStatus(HNSMap.getPosition());
     } else {
         HNSMap.setUserPins([], null);
     }
     renderNotices();
     renderHome();
-}
-
-function renderLocationStatus(pos) {
-    locationStatus.textContent = pos
-        ? "Sharing your location with your team."
-        : "Location not shared (denied or unavailable).";
+    scheduleMarks();
 }
 
 // ---------------------------------------------------------------------------
+// First launch: "Before you start", the two permissions, one button each.
+// Location is needed; the compass is optional (iPhones only hand it over
+// after a tap). Shown once per phone, after logging in.
+// ---------------------------------------------------------------------------
+const permSheet = document.getElementById("perm-sheet");
+const permRows = {
+    loc: permSheet.querySelector('.perm-row[data-perm="loc"]'),
+    compass: permSheet.querySelector('.perm-row[data-perm="compass"]'),
+};
+const permDone = document.getElementById("perm-done");
+const permLater = document.getElementById("perm-later");
+// "off" | "asking" | "on" | "blocked"; help: the How to fix text is showing.
+const perm = { loc: "off", compass: "off", locHelp: false, compassHelp: false };
+
+function permSeen() {
+    try {
+        return localStorage.getItem(PERM_SEEN_KEY) === "1";
+    } catch {
+        return false;
+    }
+}
+
+/** What the phone already says, before anyone presses anything. */
+function readPermissions() {
+    if (perm.loc !== "asking") {
+        const problem = HNSMap.getLocationProblem();
+        perm.loc = HNSMap.getLocationPermission() === "granted" || HNSMap.getPosition()
+            ? "on"
+            : problem === "blocked" || problem === "denied" || problem === "insecure" || HNSMap.getLocationPermission() === "denied"
+              ? "blocked"
+              : perm.loc === "blocked" ? "blocked" : "off";
+    }
+    if (perm.compass !== "asking") {
+        const c = HNSMap.getCompassState();
+        perm.compass = c === "on" ? "on" : c === "denied" ? "blocked" : c === "unsupported" ? "none" : "off";
+    }
+}
+
+function maybeShowPermSheet() {
+    if (!currentUser) return;
+    // An admin, or a player who has been through the sheet: follow the GPS
+    // now (the browser asks, if it still has to).
+    if (currentUser.isAdmin || permSeen()) {
+        HNSMap.startLocation();
+        return;
+    }
+    if (!homeScreen.hidden) return;
+    readPermissions();
+    // Nothing to ask for: don't show a sheet of Ons.
+    if (perm.loc === "on" && (perm.compass === "on" || perm.compass === "none")) {
+        HNSMap.startLocation();
+        return;
+    }
+    permSheet.hidden = false;
+    renderPermSheet();
+}
+
+function renderPermSheet() {
+    if (permSheet.hidden) return;
+    readPermissions();
+    const notes = {
+        loc: { off: "Puts you on the map.", asking: "Choose Allow.", on: "Puts you on the map.", blocked: "Blocked. Tap How to fix." },
+        compass: { off: "Shows which way you face.", asking: "Choose Allow.", on: "Shows which way you face.", blocked: "Blocked. Tap How to fix." },
+    };
+    const help = {
+        loc: perm.locHelp ? unblockLocationHelp() : null,
+        compass: perm.compassHelp ? "The compass is blocked. Close Safari completely (swipe it away), open the game again, then try again." : null,
+    };
+    for (const key of ["loc", "compass"]) {
+        const row = permRows[key];
+        const state = perm[key];
+        row.hidden = state === "none";
+        row.dataset.state = state;
+        row.querySelector(".perm-note").textContent = help[key] ?? notes[key][state] ?? notes[key].off;
+        const btn = row.querySelector(".perm-btn");
+        const on = row.querySelector(".perm-on");
+        on.hidden = state !== "on";
+        btn.hidden = state === "on";
+        btn.disabled = state === "asking";
+        btn.textContent = state === "asking" ? "Asking…" : state === "blocked" ? (help[key] ? "Try again" : "How to fix") : "Turn on";
+        // The one to press next is black: location first, then the compass.
+        const next = state === "off" && (key === "loc" || perm.loc === "on");
+        btn.classList.toggle("next", next);
+    }
+    const all = perm.loc === "on" && (perm.compass === "on" || perm.compass === "none");
+    permDone.hidden = !all;
+    permLater.hidden = all;
+    requestAnimationFrame(() => HNSMarks.sheet());
+}
+
+async function permPressed(key) {
+    const state = perm[key];
+    if (state === "blocked" && !perm[`${key}Help`]) {
+        perm[`${key}Help`] = true;
+        renderPermSheet();
+        return;
+    }
+    perm[`${key}Help`] = false;
+    perm[key] = "asking";
+    renderPermSheet();
+    if (key === "loc") {
+        const problem = await HNSMap.requestLocation();
+        perm.loc = problem === null || problem === "unavailable" ? "on" : "blocked";
+    } else {
+        const result = await HNSMap.enableCompass();
+        perm.compass = result === "on" ? "on" : "blocked";
+    }
+    renderPermSheet();
+    renderNotices();
+}
+
+permRows.loc.querySelector(".perm-btn").addEventListener("click", () => permPressed("loc"));
+permRows.compass.querySelector(".perm-btn").addEventListener("click", () => permPressed("compass"));
+
+function closePermSheet() {
+    try {
+        localStorage.setItem(PERM_SEEN_KEY, "1");
+    } catch {
+        /* then it just comes back next time */
+    }
+    permSheet.hidden = true;
+    renderNotices();
+    scheduleMarks();
+}
+permDone.addEventListener("click", closePermSheet);
+permLater.addEventListener("click", closePermSheet);
+
+// ---------------------------------------------------------------------------
 // Connection health + notices. Measured from our own background sync
-// requests; feeds the red banner here and, through /location, the signal icon
+// requests; feeds the black banner here and, through /state, the signal icon
 // on the admin board.
 // ---------------------------------------------------------------------------
 const SYNC_TIMEOUT_MS = 8_000;
@@ -193,9 +356,6 @@ const offlineNotice = document.getElementById("offline-notice");
 const locationNotice = document.getElementById("location-notice");
 const locationNoticeText = document.getElementById("location-notice-text");
 const locationShareBtn = document.getElementById("location-share-btn");
-const compassNotice = document.getElementById("compass-notice");
-const compassBtn = document.getElementById("compass-btn");
-const compassDismiss = document.getElementById("compass-dismiss");
 let requestingLocation = false;
 
 /** api() for the background sync calls: bounded, timed, and tracked. */
@@ -288,17 +448,11 @@ function locationNoticeCopy(problem) {
     };
 }
 
-function compassDismissed() {
-    try {
-        return localStorage.getItem(COMPASS_DISMISSED_KEY) === "1";
-    } catch {
-        return false;
-    }
-}
-
 function renderNotices() {
     const loggedIn = Boolean(token && currentUser);
     const player = loggedIn && !currentUser.isAdmin;
+    // The home screen and "Before you start" come first; the notices after.
+    const settled = homeScreen.hidden && permSheet.hidden;
     const offline = loggedIn && isOffline();
     const pos = HNSMap.getPosition();
     const age = HNSMap.getFixAgeMs();
@@ -306,17 +460,11 @@ function renderNotices() {
     // A fix we still hold but that has stopped moving on is a problem too.
     if (pos && age !== null && age > GPS_STALE_NOTICE_MS && !document.hidden) problem = "stale";
     // No notice while the first fix or the browser's own prompt is pending.
-    const locationOff = player && problem !== null && (problem === "stale" || !pos);
-    const compassOff =
-        player && HNSMap.getCompassState() === "needs-permission" && !compassDismissed();
+    const locationOff = player && settled && problem !== null && (problem === "stale" || !pos);
 
-    const changed =
-        offlineNotice.hidden === offline ||
-        locationNotice.hidden === locationOff ||
-        compassNotice.hidden === compassOff;
+    const changed = offlineNotice.hidden === offline || locationNotice.hidden === locationOff;
     offlineNotice.hidden = !offline;
     locationNotice.hidden = !locationOff;
-    compassNotice.hidden = !compassOff;
     if (locationOff && !requestingLocation) {
         const copy = locationNoticeCopy(problem);
         locationNoticeText.textContent = copy.text;
@@ -324,7 +472,11 @@ function renderNotices() {
         locationShareBtn.textContent = copy.button ?? "";
     }
     // The notices take height from the map, which has to re-measure.
-    if (changed) HNSMap.invalidateSize();
+    if (changed) {
+        HNSMap.invalidateSize();
+        scheduleMarks();
+    }
+    if (!permSheet.hidden) renderPermSheet();
 }
 
 locationShareBtn.addEventListener("click", async () => {
@@ -348,19 +500,6 @@ locationShareBtn.addEventListener("click", async () => {
     }
 });
 
-compassBtn.addEventListener("click", async () => {
-    await HNSMap.enableCompass();
-    renderNotices();
-});
-compassDismiss.addEventListener("click", () => {
-    try {
-        localStorage.setItem(COMPASS_DISMISSED_KEY, "1");
-    } catch {
-        /* then it just comes back next time */
-    }
-    renderNotices();
-});
-
 // ---------------------------------------------------------------------------
 // The home screen: one card that says what to do right now
 // ---------------------------------------------------------------------------
@@ -369,7 +508,6 @@ const roleBadge = document.getElementById("role-badge");
 const statusTitle = document.getElementById("status-title");
 const statusTimer = document.getElementById("status-timer");
 const statusText = document.getElementById("status-text");
-const statusTeam = document.getElementById("status-team");
 const teamStartBtn = document.getElementById("team-start-btn");
 const teamAgainBtn = document.getElementById("team-again-btn");
 const teamError = document.getElementById("team-error");
@@ -381,7 +519,6 @@ const stalkerPanel = document.getElementById("stalker-panel");
 let gameState = null; // last /state payload
 let stateReceivedAt = 0; // performance.now() when gameState arrived
 let clockTimer = null;
-let rulesPhase = null; // the phase the rules card was last opened/closed for
 
 function formatMs(ms) {
     const total = Math.max(0, Math.ceil(ms / 1000));
@@ -413,11 +550,6 @@ function liveTeam() {
     };
 }
 
-const joinNames = (names) =>
-    names.length <= 1
-        ? (names[0] ?? "nobody yet")
-        : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`;
-
 /** Who hides next after Play again: the next player in line, like the server picks. */
 function nextHiderName(users) {
     const members = [...users].sort((a, b) => a.id - b.id);
@@ -431,32 +563,24 @@ function nextHiderName(users) {
  */
 function statusView(team, me, users) {
     const hider = users.find((u) => u.role === "hider")?.username ?? "your hider";
-    const stalkers = users.filter((u) => u.role === "stalker").map((u) => u.username);
     const isHider = me.role === "hider";
     const view = {
         badge: isHider ? "HIDER" : "STALKER",
-        badgeRole: me.role ?? "lobby",
         title: "",
         timer: null,
         timerLabel: "",
         text: "",
-        teamLine: team
-            ? isHider
-                ? `Team ${team.id} · Stalkers hunting you: ${joinNames(stalkers)}`
-                : `Team ${team.id} · Hider: ${hider} · Stalkers: ${joinNames(stalkers)}`
-            : "",
         start: false,
         again: false,
-        result: null,
+        ending: null,
     };
 
     if (!team) {
         return {
             ...view,
             badge: "NO TEAM YET",
-            badgeRole: "lobby",
             title: "Waiting for a team",
-            text: "The admin will put you in a team. Keep this page open, and read the rules below while you wait.",
+            text: "You'll be put in a team. Read the rules while you wait.",
         };
     }
 
@@ -488,27 +612,6 @@ function statusView(team, me, users) {
 
     if (team.phase === "hunting") {
         const last = team.question >= team.maxQuestions;
-        const cards = gameState.cards;
-        let text;
-        if (team.paused) text = "The admin has paused your team.";
-        else if (isHider) {
-            text = cards?.pending?.length
-                ? "A question is waiting for you below. Answer it truthfully."
-                : last
-                  ? "Last question! Stay hidden until the timer runs out and you win."
-                  : "Answer each question truthfully when it comes. Walk, don't run.";
-        } else {
-            const batch = cards?.batch;
-            text = !batch
-                ? "Loading your question…"
-                : !batch.playedCardId
-                  ? `Pick one question below. It goes straight to ${hider}.`
-                  : cards.currentPlay?.answer === null || !cards.currentPlay
-                    ? `Sent! Waiting for ${hider} to answer.`
-                    : last
-                      ? `Last question! Find ${hider} before the timer runs out.`
-                      : "Answered. Use it to close in. The next question comes when the timer hits zero.";
-        }
         return {
             ...view,
             title: `Question ${team.question} of ${team.maxQuestions}${team.paused ? " (paused)" : ""}`,
@@ -518,13 +621,14 @@ function statusView(team, me, users) {
                     ? "until you win"
                     : "left to find the hider"
                 : `until question ${team.question + 1}`,
-            text,
+            // During the hunt the screen says it already (the timer, the
+            // cards, the bell); only a pause needs words.
+            text: team.paused ? "The admin has paused your team." : "",
         };
     }
 
     // Over.
     const stalkersWon = team.outcome === "seekers";
-    const won = stalkersWon !== isHider;
     const huntTime = formatMs(team.huntMs ?? 0);
     const next = nextHiderName(users);
     let title;
@@ -545,47 +649,67 @@ function statusView(team, me, users) {
         title,
         text: `${text}${next ? ` Next up to hide: ${next}.` : ""}`,
         again: true,
-        result: won ? "win" : "loss",
+        // The winners' line, by hand: GOTCHA for the stalkers who found the
+        // hider, HOW ABOUT THAT. for the hider nobody found.
+        ending: stalkersWon && !isHider ? "gotcha" : !stalkersWon && isHider ? "howabout" : null,
     };
 }
+
+let renderedTimerLabel = null;
+let renderedPhase = null;
 
 function renderHome() {
     if (!currentUser || currentUser.isAdmin || !gameState) return;
     const { me, users } = gameState;
     const team = liveTeam();
     const view = statusView(team, me, users);
+    // A new phase (the hunt starting, the round over, Play again) says what
+    // to do at the top of the screen: back up to it.
+    const phaseKey = `${team?.id ?? ""}:${team?.phase ?? "none"}`;
+    if (renderedPhase !== null && phaseKey !== renderedPhase) views.menu.scrollTop = 0;
+    renderedPhase = phaseKey;
 
     roleBadge.textContent = view.badge;
-    roleBadge.dataset.role = view.badgeRole;
     statusCard.dataset.phase = team?.phase ?? "none";
-    if (view.result) statusCard.dataset.result = view.result;
-    else delete statusCard.dataset.result;
-    statusTitle.textContent = view.title;
+    if (statusTitle.textContent !== view.title) statusTitle.textContent = view.title;
     statusTimer.hidden = view.timer === null;
     if (view.timer !== null) {
-        statusTimer.innerHTML = `<span class="timer-value">${formatMs(view.timer)}</span><span class="timer-label"></span>`;
-        statusTimer.querySelector(".timer-label").textContent = view.timerLabel;
-        statusTimer.classList.toggle("expiring", view.timer < 30_000 && !team?.paused);
+        if (renderedTimerLabel !== view.timerLabel || !statusTimer.firstChild) {
+            statusTimer.innerHTML = '<span class="timer-value"></span><span class="timer-label"></span>';
+            statusTimer.querySelector(".timer-label").textContent = view.timerLabel;
+            renderedTimerLabel = view.timerLabel;
+        }
+        statusTimer.querySelector(".timer-value").textContent = formatMs(view.timer);
     }
-    statusText.textContent = view.text;
-    statusTeam.textContent = view.teamLine;
-    statusTeam.hidden = !view.teamLine;
+    if (statusText.textContent !== view.text) statusText.textContent = view.text;
+    statusText.hidden = !view.text;
     teamStartBtn.hidden = !view.start;
     teamAgainBtn.hidden = !view.again;
 
-    hiderPanel.hidden = !(team && me.role === "hider" && team.phase !== "ready");
-    stalkerPanel.hidden = !(team && me.role === "stalker" && team.phase !== "ready");
-
-    const discordUrl = gameState.settings?.discordUrl;
-    discordBtn.hidden = !discordUrl;
-    if (discordUrl) discordBtn.href = discordUrl;
-
-    // The rules are open until the hunt starts, then fold away so the cards
-    // are on screen; a player who opens them again keeps them open.
     const phase = team?.phase ?? "none";
-    if (phase !== rulesPhase) {
-        rulesPhase = phase;
-        rulesCard.open = phase === "none" || phase === "ready";
+    hiderPanel.hidden = !(team && me.role === "hider" && (phase === "hiding" || phase === "hunting"));
+    stalkerPanel.hidden = !(team && me.role === "stalker" && (phase === "hunting" || phase === "hiding"));
+
+    // Before the game only: the Discord call and the rules.
+    const before = phase === "none" || phase === "ready";
+    const discordUrl = gameState.settings?.discordUrl;
+    discordBtn.hidden = !(discordUrl && before);
+    if (discordUrl) discordBtn.href = discordUrl;
+    rulesCard.hidden = !before;
+
+    HNSReceipt.render(phase === "ended" ? { team, me, users } : null);
+    renderTabs();
+    homeMarks = { screen: phase === "none" ? "lobby" : phase === "hunting" || phase === "hiding" || phase === "ready" ? phase : "ended", role: me.role, ending: view.ending };
+    scheduleMarks();
+}
+
+/** QUESTIONS: a tab for both sides, from the hunt on. */
+function renderTabs() {
+    const phase = gameState?.team?.phase;
+    const show = Boolean(currentUser && !currentUser.isAdmin && (phase === "hunting" || phase === "ended"));
+    if (questionsTab.hidden === show) {
+        questionsTab.hidden = !show;
+        if (!show && currentView === "questions") showView("menu");
     }
 }
 
@@ -622,6 +746,43 @@ teamAgainBtn.addEventListener("click", async () => {
     } finally {
         teamAgainBtn.disabled = false;
     }
+});
+
+// ---------------------------------------------------------------------------
+// The red layer: redrawn after anything on screen changes (marks.js only
+// repaints what actually moved)
+// ---------------------------------------------------------------------------
+let homeMarks = null;
+let marksFrame = null;
+
+function scheduleMarks() {
+    if (marksFrame !== null) return;
+    marksFrame = requestAnimationFrame(() => {
+        marksFrame = null;
+        renderMarks();
+    });
+}
+
+function renderMarks() {
+    const cards = gameState?.cards;
+    const unread = currentUser && !currentUser.isAdmin ? (cards?.unread ?? 0) : 0;
+    // A notification is the most important thing on the screen, the map included.
+    HNSMarks.bell(unread > 0 && homeScreen.hidden && permSheet.hidden, cards?.role === "hider" ? "question" : "photo");
+    if (currentView === "menu") {
+        const screen = !currentUser ? "login" : currentUser.isAdmin ? "admin" : homeMarks?.screen ?? "lobby";
+        HNSMarks.menu({ ...(homeMarks ?? {}), screen, role: currentUser?.role ?? null });
+    }
+}
+
+document.getElementById("view-menu").addEventListener("change", scheduleMarks);
+window.addEventListener("resize", () => {
+    HNSMarks.invalidate();
+    scheduleMarks();
+});
+new ResizeObserver(scheduleMarks).observe(menuPanel);
+document.fonts?.ready.then(() => {
+    HNSMarks.invalidate();
+    scheduleMarks();
 });
 
 // ---------------------------------------------------------------------------
@@ -693,6 +854,24 @@ function renderDebugStrip() {
         "DEBUG",
     ];
     debugStrip.textContent = parts.filter(Boolean).join(" · ");
+}
+
+// ---------------------------------------------------------------------------
+// The map's question box and its one red thing follow the game every second
+// ---------------------------------------------------------------------------
+function renderMapGame() {
+    if (!currentUser || currentUser.isAdmin || !gameState) {
+        HNSMap.setGame(currentUser?.isAdmin ? { isAdmin: true } : null);
+        return;
+    }
+    HNSMap.setGame({
+        isAdmin: false,
+        role: gameState.me.role,
+        me: gameState.me.username,
+        team: liveTeam(),
+        cards: gameState.cards,
+        users: gameState.users,
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -772,8 +951,10 @@ async function refreshState() {
         }
         HNSEndgame.render(state);
         // Where the hider can still be: always on, for everyone in a team.
-        HNSMap.setOverlayAvailable("hints", Boolean(state.team) && !state.me.isAdmin);
+        HNSHints.setEnabled(Boolean(state.team) && !state.me.isAdmin);
+        renderMapGame();
         renderDebugStrip();
+        scheduleMarks();
     } catch (err) {
         if (err.status === 401) setSession(null, null);
     }
@@ -789,6 +970,7 @@ function tick() {
     renderDebugStrip();
     if (!gameState || currentUser?.isAdmin) return;
     renderHome();
+    renderMapGame();
     const team = liveTeam();
     if (!team || team.status !== "playing" || team.paused) return;
     const due =
@@ -810,7 +992,6 @@ function startSync() {
     clockTimer = setInterval(tick, 1000);
     hadPosition = Boolean(HNSMap.getPosition());
     unsubscribePosition = HNSMap.onPosition((pos) => {
-        renderLocationStatus(pos);
         renderNotices();
         // The first fix (or one after a gap) goes out now; after that the
         // regular poll carries it.
@@ -827,7 +1008,8 @@ function stopSync() {
     net.failures = 0;
     net.lastSyncAt = null;
     lastPhaseKey = null;
-    rulesPhase = null;
+    homeMarks = null;
+    renderedPhase = null;
     unsubscribePosition?.();
     unsubscribePosition = null;
 }
@@ -842,9 +1024,17 @@ document.addEventListener("visibilitychange", () => {
 // ---------------------------------------------------------------------------
 (async function init() {
     setAuthMode("login");
-    HNSCards.init({ api, onChanged: refreshState, onCue: cue });
+    HNSCards.init({
+        api,
+        onChanged: refreshState,
+        onCue: cue,
+        onRender: scheduleMarks,
+        showView,
+    });
     HNSEndgame.init({ api, onCaught: refreshState });
     HNSAdmin.init({ api, refresh: refreshState });
+    HNSReceipt.init({ api, onRender: scheduleMarks });
+    HNSMap.onRender(scheduleMarks);
 
     // Arrived from the QR code on the admin's screen: they are new, so open
     // straight on Register, and tidy the address bar.
@@ -865,6 +1055,7 @@ document.addEventListener("visibilitychange", () => {
         const { user } = await api("/me");
         setSession(token, user);
         showView("menu");
+        maybeShowPermSheet();
     } catch (err) {
         // Only a rejected token means "logged out". A 500 or a network blip
         // must not wipe the stored session, or every refresh during an outage

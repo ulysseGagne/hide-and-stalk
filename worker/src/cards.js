@@ -7,7 +7,8 @@
 //   id          stable key, stored in card_plays.card_id
 //   category    used for the card back / colour in the UI
 //   prompt      the question the hider sees
-//   short       compact label for the card face and the history list
+//   short       compact label: the line for this question on the end-of-round
+//               receipt ("Q1 North or south?")
 //   answer      how the hider replies:
 //                 { type: "radio",    options: [...] }
 //                 { type: "choice",   group: "<landmark group>" }  options from LANDMARK_GROUPS
@@ -96,7 +97,7 @@ const DIRECTION_CARDS = [
         id: "ns",
         category: "direction",
         prompt: "Are you north or south of me?",
-        short: "North / South",
+        short: "North or south?",
         answer: { type: "radio", options: ["North", "South"] },
         needsAsker: true,
         hint: {
@@ -110,7 +111,7 @@ const DIRECTION_CARDS = [
         id: "ew",
         category: "direction",
         prompt: "Are you east or west of me?",
-        short: "East / West",
+        short: "East or west?",
         answer: { type: "radio", options: ["East", "West"] },
         needsAsker: true,
         hint: {
@@ -135,7 +136,7 @@ const RADIUS_CARDS = [50, 100, 200, 300, 500].map((m) => ({
     id: `radius_${m}`,
     category: "radius",
     prompt: `Are you within ${m} m of me?`,
-    short: `${m} m radius`,
+    short: `Within ${m} m?`,
     answer: { type: "radio", options: YES_NO },
     needsAsker: true,
     hint: { type: "radius", meters: m, keep: { Yes: "within", No: "outside" } },
@@ -147,7 +148,7 @@ const WALK_CARD = {
     category: "radius",
     prompt:
         "Using Google Maps, how many minutes would it take me to walk to you? Round to the nearest minute.",
-    short: "Walking minutes",
+    short: "Minutes to walk?",
     answer: { type: "number", unit: "minutes", min: 0, max: 90 },
     needsAsker: true,
     hint: { type: "walkTime" },
@@ -159,7 +160,7 @@ const CLOSER_CARDS = Object.entries(LANDMARKS).map(([key, { label, phrase }]) =>
     category: "proximity",
     // `phrase` carries its own article: "the church", but "Pub U".
     prompt: `Are you closer to ${phrase} than I am?`,
-    short: `Closer to ${label}?`,
+    short: `Closer to ${phrase}?`,
     answer: { type: "radio", options: YES_NO },
     needsAsker: true,
     hint: {
@@ -195,8 +196,8 @@ const NEAREST_TIERS = {
 const NEAREST_CARDS = Object.entries(LANDMARK_GROUPS).map(([key, { label }]) => ({
     id: `nearest_${key}`,
     category: "proximity",
-    prompt: `Which ${label} on campus are you closest to?`,
-    short: `Nearest ${label}`,
+    prompt: `Which ${label} are you closest to?`,
+    short: `Closest ${label}?`,
     answer: { type: "choice", group: key },
     needsAsker: false,
     hint: { type: "nearest", group: key },
@@ -208,7 +209,7 @@ const CONTEXT_CARDS = [
         id: "inside_outside",
         category: "context",
         prompt: "Are you inside or outside?",
-        short: "Inside / outside",
+        short: "Inside or outside?",
         answer: { type: "radio", options: ["Inside", "Outside"] },
         needsAsker: false,
         hint: null,
@@ -218,7 +219,7 @@ const CONTEXT_CARDS = [
         id: "floor",
         category: "context",
         prompt: "What floor are you on? Ground floor is 0; answer N/A if you are outside.",
-        short: "Floor number",
+        short: "Floor?",
         answer: { type: "text", placeholder: "e.g. 3, or N/A" },
         needsAsker: false,
         hint: null,
@@ -228,7 +229,7 @@ const CONTEXT_CARDS = [
         id: "room_number",
         category: "context",
         prompt: "What are the last three digits of the nearest room number?",
-        short: "Nearest room",
+        short: "Nearest room?",
         answer: { type: "text", placeholder: "e.g. 214" },
         needsAsker: false,
         hint: null,
@@ -238,7 +239,7 @@ const CONTEXT_CARDS = [
         id: "room_id",
         category: "context",
         prompt: "What is the exact id of the nearest room?",
-        short: "Exact room id",
+        short: "Exact room id?",
         answer: { type: "text", placeholder: "e.g. PLT-2701" },
         needsAsker: false,
         // The pavilion code names the building, but only a human reading it
@@ -250,7 +251,7 @@ const CONTEXT_CARDS = [
         id: "exact_coordinates",
         category: "context",
         prompt: "Send me your exact coordinates.",
-        short: "Exact coordinates",
+        short: "Exact coordinates?",
         answer: { type: "coords" },
         needsAsker: false,
         // The card that ends the round: it pins the hider to a GPS fix's worth
@@ -282,7 +283,7 @@ const CONTEXT_CARDS = [
         id: "people_around",
         category: "context",
         prompt: "How many people are around you?",
-        short: "People around",
+        short: "People around?",
         answer: {
             type: "radio",
             options: ["Nobody", "1-5", "6-20", "More than 20"],
@@ -298,7 +299,7 @@ const CONTEXT_CARDS = [
         id: "terrain",
         category: "context",
         prompt: "What kind of path are you closest to?",
-        short: "Nearest path",
+        short: "Nearest path?",
         answer: {
             type: "radio",
             options: [
@@ -318,23 +319,24 @@ const CONTEXT_CARDS = [
 
 // A skyline shot could have been taken from half the campus; the door you are
 // standing at could not.
+// [key, what the prompt asks for, the receipt's short label, tiers]
 const PHOTO_SUBJECTS = [
-    ["tallest", "the tallest thing you can see", EARLY_MID],
-    ["window", "a window", EARLY_MID],
-    ["below", "what is below you", MID],
-    ["above", "what is above you", MID],
-    ["plant", "the biggest plant or tree near you", MID_LATE],
-    ["seat", "the nearest place to sit", MID_LATE],
-    ["car", "a car parked near you", MID_LATE],
-    ["sign", "the nearest sign", LATE],
-    ["door", "the nearest door", LATE],
+    ["tallest", "the tallest thing you can see", "Tallest thing in sight", EARLY_MID],
+    ["window", "a window", "A window", EARLY_MID],
+    ["below", "what is below you", "What is below you", MID],
+    ["above", "what is above you", "What is above you", MID],
+    ["plant", "the biggest plant or tree near you", "Biggest plant or tree", MID_LATE],
+    ["seat", "the nearest place to sit", "Nearest place to sit", MID_LATE],
+    ["car", "a car parked near you", "A car parked near you", MID_LATE],
+    ["sign", "the nearest sign", "Nearest sign", LATE],
+    ["door", "the nearest door", "Nearest door", LATE],
 ];
 
-const PHOTO_CARDS = PHOTO_SUBJECTS.map(([key, subject, tiers]) => ({
+const PHOTO_CARDS = PHOTO_SUBJECTS.map(([key, subject, short, tiers]) => ({
     id: `photo_${key}`,
     category: "photo",
     prompt: `Send a photo of ${subject}.`,
-    short: `Photo: ${subject}`,
+    short,
     answer: { type: "photo" },
     needsAsker: false,
     hint: null,

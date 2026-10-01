@@ -6,7 +6,7 @@
             name="viewport"
             content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
         />
-        <title>Hide 'N' Stalk</title>
+        <title>Hide and Stalk</title>
 
         <link
             rel="stylesheet"
@@ -18,16 +18,23 @@
             href="https://unpkg.com/leaflet-contextmenu@1.4.0/dist/leaflet.contextmenu.css"
             crossorigin=""
         />
+        <link rel="preload" href="fonts/arimo-latin.woff2" as="font" type="font/woff2" crossorigin="" />
         <link rel="stylesheet" href="styles.css" />
     </head>
     <body>
+        <!-- The home screen: the app opens on it, every time. A tap anywhere
+             goes on (app.js). -->
+        <div id="home-screen" class="home-screen" role="button" tabindex="0" aria-label="Hide and Stalk: tap to start">
+            <img src="img/home.png" alt="Hide and Stalk" width="375" height="812" />
+        </div>
+
         <header id="site-header">
-            <h1 id="site-title">HIDE&nbsp;&nbsp;'N'&nbsp;&nbsp;STALK</h1>
+            <h1 id="site-title"><svg class="title-svg" width="200" height="42" viewBox="0 0 200 42" role="img" aria-label="Hide and Stalk"><text x="0" y="28" font-family="Arimo, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-weight="700" font-size="19" letter-spacing="-0.3" fill="#000">HIDE &amp;</text><g class="title-stalk" fill="currentColor" transform="translate(70.733 30.596) scale(0.281)"><path d="M 39.6 -67.9 Q 39.6 -67.9 38.3 -68.9 37.1 -69.9 34.1 -72.1 31.1 -74.3 27.3 -74 23.5 -73.7 20.1 -72 16.7 -70.3 15.2 -67 13.7 -63.7 13.3 -59.9 12.8 -56.1 12.2 -52.5 11.7 -48.9 15.5 -49.9 19.3 -50.9 23.1 -51.3 26.9 -51.6 30.2 -53.3 33.5 -54.9 36.4 -52.8 39.2 -50.7 40.8 -47.4 42.4 -44.1 43.7 -40.6 45 -37.2 45.9 -33.4 46.9 -29.7 47.1 -26 47.3 -22.3 46.1 -18.7 44.9 -15.2 42.1 -12.7 39.3 -10.3 35.7 -9.1 32.2 -8 28.7 -7.4 25.3 -6.8 21.5 -6.3 17.7 -5.7 14 -5.1 10.3 -4.6 4.8 -7.5 -0.7 -10.3 -0.7 -10.3 -0.7 -10.4 -0.7 -10.4 -0.7 -10.4 2.4 -14.5 5.5 -18.6 9.1 -19.1 12.8 -19.6 16.3 -20.1 19.8 -20.7 23.6 -21.2 27.4 -21.8 30.1 -24.1 32.8 -26.3 32 -29.9 31.1 -33.5 31.2 -37.4 31.4 -41.3 34.6 -42.8 37.8 -44.4 35.3 -41.6 32.7 -38.9 29 -38.1 25.2 -37.4 21.5 -37.1 17.8 -36.8 14.3 -36.9 10.8 -36.9 7.2 -37.9 3.7 -38.8 1.2 -42 -1.4 -45.2 -1.4 -49.5 -1.4 -53.8 -0.6 -57.6 0.2 -61.4 0.7 -64.9 1.2 -68.5 2.6 -71.9 4 -75.3 7.1 -78.1 10.1 -80.9 13.4 -82.5 16.7 -84 20.4 -85.1 24.1 -86.1 27.8 -86.2 31.4 -86.2 34.7 -84.6 37.9 -82.9 40.8 -80.3 43.7 -77.7 44.9 -76.6 46.1 -75.5 46.5 -75.1 46.9 -74.6 47.2 -74.1 47.5 -73.6 47.6 -73 47.8 -72.4 47.8 -71.8 47.8 -71.2 47.7 -70.6 47.5 -70 47.2 -69.5 47 -68.9 46.6 -68.5 46.2 -68 45.7 -67.7 45.2 -67.3 44.7 -67.1 44.1 -66.9 43.5 -66.8 42.9 -66.7 42.3 -66.8 41.7 -66.9 41.1 -67.1 40.6 -67.3 40.1 -67.6 39.6 -67.9 39.6 -67.9 Z" /><path d="M 38.7 -61.8 Q 38.7 -61.8 43.9 -62.6 49 -63.4 54.9 -64.7 60.7 -65.9 65.6 -66.9 70.6 -67.9 76.9 -66.5 83.3 -65 83.3 -65 83.3 -65 83.3 -65 83.3 -65 77.8 -61.6 72.4 -58.1 67.4 -57.3 62.5 -56.5 56.6 -55.5 50.6 -54.5 45.5 -53.4 40.4 -52.4 39.9 -52.3 39.3 -52.3 38.7 -52.4 38.1 -52.5 37.6 -52.8 37.1 -53 36.6 -53.4 36.2 -53.7 35.8 -54.2 35.5 -54.6 35.2 -55.2 35 -55.7 34.9 -56.3 34.8 -56.8 34.8 -57.4 34.9 -58 35 -58.6 35.2 -59.1 35.5 -59.6 35.8 -60.1 36.2 -60.5 36.6 -60.9 37.1 -61.2 37.6 -61.5 38.2 -61.7 38.7 -61.8 38.7 -61.8 Z" /><path d="M 62 -64.5 Q 62 -64.5 62.2 -59.3 62.4 -54 63 -48.1 63.6 -42.1 64.2 -37.2 64.9 -32.3 65.5 -27.3 66.2 -22.3 66.6 -17.3 67.1 -12.2 64.6 -8.5 62.2 -4.8 62.2 -4.8 62.2 -4.8 62.1 -4.8 62.1 -4.8 59.3 -8.2 56.5 -11.5 56.2 -16.4 55.9 -21.2 55.4 -26.1 54.9 -31 54.4 -36.2 53.9 -41.3 53.5 -47.4 53.1 -53.4 52.6 -58.6 52.1 -63.9 52.2 -64.4 52.2 -65 52.4 -65.6 52.5 -66.2 52.9 -66.7 53.2 -67.2 53.6 -67.6 54 -68.1 54.5 -68.4 55 -68.7 55.6 -68.9 56.1 -69 56.7 -69.1 57.3 -69.1 57.9 -69 58.5 -68.9 59.1 -68.7 59.6 -68.4 60.1 -68.1 60.5 -67.7 60.9 -67.2 61.3 -66.8 61.5 -66.2 61.8 -65.7 61.9 -65.1 62 -64.5 62 -64.5 Z" /><path d="M 73.1 -7 Q 73.1 -7 74.2 -10.3 75.3 -13.6 76.2 -17.3 77.1 -21.1 78 -24.8 78.9 -28.5 79.9 -32.5 80.8 -36.5 81.8 -40.4 82.8 -44.4 84 -48.5 85.2 -52.6 86.3 -56.3 87.4 -60 89.2 -65 91 -69.9 93.2 -73.7 95.3 -77.5 100.1 -79.5 104.8 -81.4 108.5 -78.8 112.3 -76.1 114.6 -72.1 116.9 -68.1 119.1 -63.1 121.3 -58 122.6 -54.4 124 -50.7 125.4 -46.8 126.8 -42.8 128 -38.9 129.3 -35 130.4 -31.3 131.6 -27.6 133.2 -22.9 134.7 -18.3 133 -13.6 131.3 -8.9 131.3 -8.9 131.3 -8.9 131.3 -8.9 131.3 -8.9 126.7 -11.5 122.1 -14.2 120.5 -18.9 119 -23.7 117.8 -27.4 116.7 -31 115.5 -34.8 114.3 -38.5 112.9 -42.2 111.6 -45.9 109.6 -51.1 107.7 -56.4 105.1 -60.6 102.6 -64.7 100.9 -60.5 99.1 -56.2 98 -52.5 96.8 -48.9 95.7 -45.2 94.5 -41.5 93.4 -37.4 92.3 -33.3 91.2 -29.5 90.1 -25.7 89.1 -21.9 88 -18.1 86.8 -14.1 85.6 -10.2 84.5 -6.8 83.4 -3.5 83.1 -2.9 82.8 -2.3 82.4 -1.8 82 -1.3 81.5 -0.9 80.9 -0.5 80.3 -0.3 79.7 0 79.1 0.1 78.4 0.2 77.8 0.1 77.1 0.1 76.5 -0.1 75.9 -0.3 75.3 -0.7 74.8 -1 74.3 -1.5 73.9 -2 73.5 -2.6 73.2 -3.1 73 -3.8 72.8 -4.4 72.8 -5 72.8 -5.7 72.9 -6.3 73.1 -7 73.1 -7 Z" /><path d="M 81 -42.4 Q 81 -42.4 85.4 -42.1 89.8 -41.8 94.8 -41.5 99.9 -41.2 104.1 -41 108.3 -40.8 113.1 -37.9 118 -34.9 118 -34.9 118 -34.9 118 -34.9 118 -34.9 112.8 -32.3 107.6 -29.6 103.3 -30 99.1 -30.3 94.1 -30.9 89.1 -31.4 84.7 -31.6 80.3 -31.9 79.7 -32 79.1 -32.1 78.5 -32.4 77.9 -32.6 77.4 -33 76.9 -33.4 76.6 -33.9 76.2 -34.4 75.9 -35 75.6 -35.6 75.5 -36.2 75.4 -36.8 75.5 -37.5 75.5 -38.1 75.7 -38.7 75.9 -39.3 76.2 -39.9 76.6 -40.4 77 -40.9 77.5 -41.3 78 -41.6 78.6 -42 79.2 -42.2 79.8 -42.3 80.4 -42.4 81 -42.4 81 -42.4 Z" /><path d="M 145.3 -77 Q 145.3 -77 145.3 -73.8 145.3 -70.7 145.5 -65.5 145.8 -60.3 145.9 -55.1 146.1 -49.9 146.2 -46.3 146.4 -42.6 146.6 -39 146.8 -35.3 147 -30.1 147.3 -24.9 147.9 -20.6 148.4 -16.3 149.5 -12.5 150.5 -8.7 154.6 -9.9 158.6 -11 162.2 -12.9 165.7 -14.8 171.7 -13.9 177.7 -13.1 177.7 -13.1 177.7 -13.1 177.7 -13.1 177.7 -13.1 175 -7.9 172.3 -2.6 168.8 -0.9 165.3 0.9 161.2 2.3 157 3.7 152.7 3.8 148.4 4 144.9 2.1 141.5 0.3 139.5 -3.1 137.5 -6.5 136.7 -10.4 135.8 -14.3 135.3 -19.2 134.8 -24.1 134.6 -29.5 134.5 -34.9 134.4 -38.6 134.3 -42.3 134.2 -46 134.2 -49.7 134.2 -55 134.3 -60.3 134.3 -65.5 134.4 -70.7 134.4 -73.8 134.4 -76.9 134.5 -77.6 134.5 -78.2 134.8 -78.9 135 -79.5 135.4 -80 135.8 -80.5 136.2 -81 136.7 -81.4 137.3 -81.7 137.9 -82 138.5 -82.2 139.2 -82.3 139.8 -82.3 140.5 -82.3 141.1 -82.2 141.7 -82 142.3 -81.7 142.9 -81.4 143.4 -81 143.9 -80.6 144.3 -80 144.6 -79.5 144.9 -78.9 145.1 -78.3 145.2 -77.6 145.3 -77 145.3 -77 Z" /><path d="M 171.9 -88.5 Q 171.9 -88.5 172.8 -84 173.8 -79.6 175.2 -74.6 176.6 -69.6 177.7 -65.3 178.9 -61 179.9 -56.8 181 -52.6 182.1 -48.5 183.2 -44.4 184.3 -40.1 185.4 -35.9 186.3 -31.5 187.3 -27.2 188.2 -23.1 189.1 -19 187.2 -15.4 185.4 -11.8 185.4 -11.8 185.4 -11.8 185.4 -11.8 185.4 -11.8 181.9 -14.1 178.3 -16.4 177.4 -20.7 176.5 -25.1 175.7 -29.2 174.9 -33.4 174 -37.5 173 -41.6 172 -45.9 170.9 -50.2 170 -54.4 169 -58.6 168.1 -62.8 167.1 -67.1 165.9 -72.3 164.6 -77.4 163.5 -81.8 162.3 -86.2 162.3 -86.8 162.2 -87.4 162.3 -88 162.4 -88.6 162.6 -89.1 162.8 -89.7 163.1 -90.2 163.5 -90.6 163.9 -91 164.4 -91.4 164.9 -91.7 165.4 -92 166 -92.1 166.6 -92.2 167.1 -92.2 167.7 -92.2 168.3 -92.1 168.9 -91.9 169.4 -91.6 169.9 -91.4 170.4 -91 170.8 -90.6 171.1 -90.1 171.5 -89.6 171.7 -89 171.9 -88.5 171.9 -88.5 Z" /><path d="M 213 -79.8 Q 213 -79.8 210.8 -78 208.6 -76.2 205.7 -73.5 202.8 -70.8 200.1 -68.2 197.4 -65.7 194.8 -62.9 192.2 -60.2 190 -57.7 187.7 -55.2 185.7 -52.3 183.8 -49.3 187 -47.1 190.2 -44.9 193.2 -43.4 196.2 -42 199.6 -40.5 203 -39.1 206.4 -37.8 209.9 -36.5 213.8 -35 217.8 -33.5 219 -29.6 220.3 -25.8 220.3 -25.8 220.3 -25.8 220.3 -25.7 220.3 -25.7 217.5 -23.4 214.8 -21.1 211.2 -22.6 207.5 -24 204.2 -25.3 200.9 -26.6 197.1 -28.1 193.4 -29.7 189.8 -31.3 186.2 -33 182.9 -35 179.6 -36.9 176.9 -39.4 174.3 -41.9 173.1 -45.6 171.9 -49.2 173.4 -53.2 174.8 -57.1 176.9 -59.9 179 -62.8 181.7 -65.5 184.3 -68.2 187.2 -70.9 190 -73.6 192.9 -76.1 195.8 -78.6 199.1 -81.3 202.3 -84 204.6 -85.8 206.9 -87.6 207.4 -87.9 207.9 -88.2 208.5 -88.4 209 -88.5 209.6 -88.6 210.2 -88.6 210.8 -88.5 211.4 -88.4 211.9 -88.2 212.5 -87.9 213 -87.6 213.4 -87.2 213.8 -86.7 214.2 -86.3 214.4 -85.7 214.7 -85.2 214.8 -84.6 214.9 -84 214.9 -83.4 214.8 -82.8 214.6 -82.3 214.5 -81.7 214.2 -81.2 213.9 -80.7 213.4 -80.2 213 -79.8 213 -79.8 Z" /></g></svg></h1>
             <!-- Rings for the stalker when the hider answers, and for the
                  hider when a new question arrives. -->
             <button type="button" id="bell" class="bell" hidden>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
                      aria-hidden="true">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                     <path d="M13.73 21a2 2 0 0 1-3.46 0" />
@@ -35,39 +42,15 @@
                 <span id="bell-count" class="bell-count" hidden>0</span>
                 <span class="sr-only">Notifications</span>
             </button>
-            <!-- Stalkers only: scan the hider's QR code to catch them. -->
-            <button type="button" id="scan-btn" class="bell scan-btn" hidden>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                     aria-hidden="true">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                    <circle cx="12" cy="13" r="4" />
-                </svg>
-                <span class="sr-only">Scan a hider's code</span>
-            </button>
             <div id="user-status" hidden>
                 <span id="user-status-name"></span>
                 <button type="button" id="logout-btn">Log out</button>
             </div>
+            <!-- Browser-style tabs: the open one is joined to the page. -->
             <nav id="view-tabs" role="tablist" aria-label="Views">
-                <button
-                    type="button"
-                    class="view-tab"
-                    role="tab"
-                    data-view="menu"
-                    aria-selected="false"
-                >
-                    MENU
-                </button>
-                <button
-                    type="button"
-                    class="view-tab active"
-                    role="tab"
-                    data-view="map"
-                    aria-selected="true"
-                >
-                    MAP
-                </button>
+                <button type="button" class="view-tab active" role="tab" data-view="menu" aria-selected="true">MENU</button>
+                <button type="button" class="view-tab" role="tab" data-view="map" aria-selected="false">MAP</button>
+                <button type="button" class="view-tab" role="tab" data-view="questions" aria-selected="false" hidden>QUESTIONS</button>
             </nav>
         </header>
 
@@ -87,20 +70,12 @@
                     Share location
                 </button>
             </div>
-            <!-- iPhones only hand over the compass after a tap. -->
-            <div id="compass-notice" class="notice notice-compass" hidden>
-                <span>Show which way you're facing on the map?</span>
-                <button type="button" id="compass-btn" class="notice-btn">Turn on</button>
-                <button type="button" id="compass-dismiss" class="notice-btn notice-btn-quiet">
-                    No thanks
-                </button>
-            </div>
             <!-- Debug mode (admin switch): what the phone itself knows. -->
             <div id="debug-strip" class="debug-strip" hidden></div>
         </div>
 
         <main id="views">
-            <section id="view-menu" class="view" role="tabpanel" hidden>
+            <section id="view-menu" class="view" role="tabpanel">
                 <div class="menu-panel">
                     <div id="auth-panel">
                         <div class="auth-switch" role="tablist">
@@ -150,9 +125,6 @@
                     <!-- Player: the home screen. Top to bottom: what to do
                          right now, the live cards, then the rules. -->
                     <div id="player-panel" hidden>
-                        <p class="whoami">
-                            Logged in as <strong id="logged-in-name"></strong>.
-                        </p>
                         <!-- The one thing to know right now. app.js rewrites it
                              for every phase: no team, ready, hiding, hunting,
                              over. -->
@@ -161,14 +133,15 @@
                             <h2 id="status-title" class="status-title"></h2>
                             <p id="status-timer" class="status-timer" hidden></p>
                             <p id="status-text" class="status-text"></p>
-                            <p id="status-team" class="status-team muted"></p>
-                            <button type="button" id="team-start-btn" class="big-btn" hidden>
+                            <button type="button" id="team-start-btn" class="big-btn cta" hidden>
                                 Start the game
                             </button>
-                            <button type="button" id="team-again-btn" class="big-btn" hidden>
+                            <button type="button" id="team-again-btn" class="big-btn cta" hidden>
                                 Play again
                             </button>
                             <p id="team-error" class="auth-error" role="alert"></p>
+                            <!-- The round, as a till receipt (receipt.js). -->
+                            <div id="receipt" class="receipt" hidden></div>
                         </section>
                         <a id="discord-btn" class="discord-btn" target="_blank" rel="noopener" hidden>
                             Join the Discord call
@@ -176,7 +149,6 @@
                         <div id="hider-panel" hidden>
                             <div id="hider-questions" class="cards-panel" hidden>
                                 <h3 class="cards-title">Questions for you</h3>
-                                <p class="muted">Answer truthfully.</p>
                                 <div id="hider-question-list"></div>
                             </div>
                             <div id="hider-answers" class="cards-panel" hidden>
@@ -186,10 +158,6 @@
                             </div>
                             <div id="hider-qr" class="hider-qr" hidden>
                                 <h3 class="cards-title">Your tag code</h3>
-                                <p class="muted">
-                                    When a stalker finds you, show them this
-                                    code. They scan it and the round is over.
-                                </p>
                                 <div id="hider-qr-figure" class="hider-qr-figure"></div>
                                 <p class="muted hider-qr-text">
                                     Trouble scanning? Read this out instead:
@@ -199,55 +167,49 @@
                         </div>
                         <div id="stalker-panel" hidden>
                             <div id="stalker-cards" class="cards-panel" hidden>
+                                <!-- Tap a card to pick it; nothing is sent
+                                     until Send. -->
                                 <div id="card-row" class="card-row"></div>
-                                <!-- After a pick: the question as sent, locked
+                                <button type="button" id="send-btn" class="big-btn cta send-btn" hidden>
+                                    Send this question
+                                </button>
+                                <!-- After a send: the question as sent, locked
                                      in, and then its answer. -->
                                 <div id="sent-card" class="sent-card" hidden>
-                                    <span class="sent-stamp">&#10003; Sent &mdash; locked in</span>
+                                    <span class="sent-stamp" aria-hidden="true"></span>
+                                    <span class="sr-only" id="sent-state"></span>
                                     <p id="sent-prompt" class="sent-prompt"></p>
                                     <p id="sent-answer" class="sent-answer"></p>
                                     <img id="sent-photo" class="sent-photo" alt="Photo answer" hidden />
                                 </div>
                                 <p id="card-note" class="muted card-note"></p>
                                 <p id="card-error" class="auth-error"></p>
-                                <div class="cards-actions">
-                                    <button type="button" id="history-btn" class="admin-btn">
-                                        Questions so far<span id="history-count"></span>
-                                    </button>
-                                </div>
                                 <p id="hint-status" class="hint-status"></p>
                             </div>
-                            <!-- The scanner's fallback: end the hunt by hand. -->
+                            <!-- Where the round ends: the scanner. -->
                             <div id="found-panel" class="found-panel" hidden>
-                                <p class="muted">
-                                    Found your hider? Scan their code with the
-                                    camera button at the top. Camera playing up?
-                                    Press this instead.
-                                </p>
-                                <button type="button" id="found-btn" class="admin-btn danger">
-                                    Hider has been found
+                                <button type="button" id="scan-open" class="admin-btn">
+                                    Found them? Scan their code
                                 </button>
-                                <p id="found-error" class="auth-error"></p>
                             </div>
                         </div>
-                        <details id="rules-card" class="rules-card" open>
-                            <summary>Rules</summary>
+                        <!-- Before the game only: the rules, most important first. -->
+                        <section id="rules-card" class="rules-card">
+                            <h3 class="rules-head">Rules</h3>
                             <p class="rules-goal">
-                                The stalkers find the hider before question 7.
-                                The hider stays hidden.
+                                Stalkers win if they find the hider before question 7.
                             </p>
                             <ol class="rules-list">
-                                <li><strong>Discord call.</strong> Everyone on the team stays in the call for the whole game.</li>
-                                <li><strong>One hider</strong> gets 10 minutes to hide. After that, a new question every 5 minutes.</li>
-                                <li><strong>The hider walks.</strong> Never runs. Stalkers may run.</li>
-                                <li><strong>Hide near a path.</strong> Within 10&ndash;20&nbsp;m of a sidewalk, bike path, hallway or trail, where people on it could see you.</li>
+                                <li><strong data-mark="underline">Hide near a path.</strong> Within 20&nbsp;m of one.</li>
+                                <li><strong>The hider walks.</strong> Stalkers can run.</li>
                                 <li><strong>No tunnels.</strong></li>
-                                <li><strong>Nothing to open.</strong> No hiding behind doors, in lockers or in bins: stalkers never open anything.</li>
-                                <li><strong>Answer truthfully.</strong> Every question, every time.</li>
-                                <li><strong>Found?</strong> The hider shows their code and the stalkers win. If question 7 would come first, the hider wins.</li>
+                                <li><strong data-mark="underline">Touch nothing.</strong> Don't open, move or climb anything.</li>
+                                <li><strong>Answer truthfully.</strong></li>
+                                <li><strong>Found?</strong> Show your code. Stalkers win.</li>
+                                <li><strong>One hider.</strong> 10 min to hide, a question every 5 min.</li>
+                                <li><strong>Discord call.</strong> Stay in it all game.</li>
                             </ol>
-                        </details>
-                        <p id="location-status" class="muted"></p>
+                        </section>
                     </div>
                 </div>
 
@@ -333,23 +295,49 @@
                 </div>
             </section>
 
-            <section id="view-map" class="view" role="tabpanel">
-                <div id="map-modal-dialog-container-leaflet">
-                    <div id="map"></div>
+            <section id="view-map" class="view" role="tabpanel" hidden>
+                <div id="map"></div>
+                <!-- The question on the table, in a box at the top of the map
+                     (or, between questions, when the next one comes). -->
+                <div id="map-box" class="map-box" hidden>
+                    <div class="map-box-head"><span id="map-box-kicker"></span><span id="map-box-clock"></span></div>
+                    <p id="map-box-text" class="map-box-text" hidden></p>
+                    <p id="map-box-legend" class="map-box-legend" hidden></p>
+                    <span id="map-box-hand" class="map-box-hand" hidden></span>
                 </div>
+            </section>
+
+            <!-- Every question this team has asked, with the hider's answer. -->
+            <section id="view-questions" class="view" role="tabpanel" hidden>
+                <div id="history-list" class="history-list"></div>
             </section>
         </main>
 
-        <!-- Every question this team has asked, with the hider's answer. -->
-        <div id="history-modal" class="modal" hidden>
-            <div class="modal-card" role="dialog" aria-modal="true" aria-label="Questions so far">
-                <header class="modal-head">
-                    <h2>Questions so far</h2>
-                    <button type="button" id="history-close" class="modal-close">
-                        &times;
-                    </button>
-                </header>
-                <div id="history-list" class="history-list"></div>
+        <!-- First launch: the two permissions, one button each. -->
+        <div id="perm-sheet" class="modal perm-sheet" hidden>
+            <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="perm-title">
+                <div class="modal-head"><h2 id="perm-title">Before you start</h2></div>
+                <div class="perm-body">
+                    <p class="perm-intro">Tap <b>Turn on</b>, then <b>Allow</b>.</p>
+                    <div class="perm-row" data-perm="loc">
+                        <div class="perm-icon">
+                            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-7.6 7-13a7 7 0 0 0-14 0c0 5.4 7 13 7 13Z"/><circle cx="12" cy="9" r="2.6"/></svg>
+                        </div>
+                        <div class="perm-text"><b>1. Location</b><span class="perm-note"></span></div>
+                        <button type="button" class="perm-btn">Turn on</button>
+                        <span class="perm-on" hidden>On</span>
+                    </div>
+                    <div class="perm-row" data-perm="compass">
+                        <div class="perm-icon">
+                            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.6"/><path d="M12 5.8 15 13H9Z" fill="currentColor" stroke="none"/></svg>
+                        </div>
+                        <div class="perm-text"><b>2. Compass</b><span class="perm-note"></span></div>
+                        <button type="button" class="perm-btn">Turn on</button>
+                        <span class="perm-on" hidden>On</span>
+                    </div>
+                    <button type="button" id="perm-done" class="big-btn cta" hidden>Done</button>
+                    <button type="button" id="perm-later" class="small-btn">Later</button>
+                </div>
             </div>
         </div>
 
@@ -359,22 +347,32 @@
                  aria-label="Scan a hider's code">
                 <header class="modal-head">
                     <h2>Catch your hider</h2>
-                    <button type="button" id="scan-close" class="modal-close">
+                    <button type="button" id="scan-close" class="modal-close" aria-label="Close">
                         &times;
                     </button>
                 </header>
-                <div class="scan-stage">
-                    <video id="scan-video" playsinline muted></video>
-                    <div class="scan-reticle" aria-hidden="true"></div>
+                <div class="scan-body">
+                    <div class="scan-stage">
+                        <video id="scan-video" playsinline muted></video>
+                        <div class="scan-reticle" aria-hidden="true"></div>
+                    </div>
+                    <p id="scan-status" class="scan-status">Point the camera at your hider's code.</p>
+                    <p id="scan-error" class="auth-error"></p>
+                    <!-- Fallback for browsers that won't hand over a live camera:
+                         take one photo and decode that instead. -->
+                    <label id="scan-fallback" class="scan-fallback" hidden>
+                        <span>Camera unavailable — take a photo of the code</span>
+                        <input type="file" accept="image/*" capture="environment" />
+                    </label>
+                    <!-- The scanner's fallback: end the hunt by hand. -->
+                    <div class="found-by-hand">
+                        <p class="muted">Camera playing up? Press this instead.</p>
+                        <button type="button" id="found-btn" class="admin-btn">
+                            Hider has been found
+                        </button>
+                        <p id="found-error" class="auth-error"></p>
+                    </div>
                 </div>
-                <p id="scan-status" class="scan-status">Point the camera at your hider's code.</p>
-                <p id="scan-error" class="auth-error"></p>
-                <!-- Fallback for browsers that won't hand over a live camera:
-                     take one photo and decode that instead. -->
-                <label id="scan-fallback" class="scan-fallback" hidden>
-                    <span>Camera unavailable — take a photo of the code</span>
-                    <input type="file" accept="image/*" capture="environment" />
-                </label>
             </div>
         </div>
 
@@ -384,10 +382,6 @@
         ></script>
         <script
             src="https://unpkg.com/leaflet-contextmenu@1.4.0/dist/leaflet.contextmenu.js"
-            crossorigin=""
-        ></script>
-        <script
-            src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"
             crossorigin=""
         ></script>
         <!-- Polygon maths for the Hints filter (same approach as the
@@ -405,15 +399,22 @@
             src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"
             crossorigin=""
         ></script>
+        <!-- The red layer: everything red is drawn by hand (ink.js, on
+             perfect-freehand), never typeset. -->
+        <script src="vendor/perfect-freehand.js"></script>
+        <script src="ink.js"></script>
         <!-- Campus places (generated from locations/geojson by
              tools/build-locations.mjs). Must load before map.js. -->
         <script src="locations.js"></script>
         <script src="config.js"></script>
         <script src="hints.js"></script>
+        <script src="marks.js"></script>
+        <script src="mapdraw.js"></script>
         <script src="map.js"></script>
         <script src="cards.js"></script>
+        <script src="receipt.js"></script>
         <script src="endgame.js"></script>
         <script src="admin.js"></script>
         <script src="app.js"></script>
     </body>
-</html> 
+</html>

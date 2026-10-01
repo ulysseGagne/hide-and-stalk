@@ -1,12 +1,33 @@
-# macOS
-.DS_Store
+### AL ###
+#Template for AL projects for Dynamics 365 Business Central
+#launch.json folder
+.vscode/
+#Cache folder
+.alcache/
+#Symbols folder
+.alpackages/
+#Snapshots folder
+.snapshots/
+#Testing Output folder
+.output/
+#Extension App-file
+*.app
+#Rapid Application Development File
+rad.json
+#Translation Base-file
+*.g.xlf
+#License-files
+*.bclicense
+*.flf
+#Test results file
+TestResults.xml
 
-# Node
-node_modules/
+
+
+#everything inside dependencies folder is ignored, but the folder itself is not
+dependencies/*
 
 # Cloudflare Worker
 .wrangler/
+worker/node_modules/
 worker/.dev.vars
-
-# Local credentials
-cookies.json

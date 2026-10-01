@@ -73,8 +73,8 @@ export const LANDMARK_POINTS = {
         "lng": -71.2748154
     },
     "greenhouses": {
-        "label": "Greenhouses",
-        "phrase": "the greenhouses",
+        "label": "Greenhouse",
+        "phrase": "the greenhouse",
         "lat": 46.7799898,
         "lng": -71.2798912
     },

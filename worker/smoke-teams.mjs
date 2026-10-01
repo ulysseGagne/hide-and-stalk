@@ -21,6 +21,8 @@ import { fileURLToPath } from "node:url";
 const BASE = process.env.HNS_API ?? "http://127.0.0.1:8787";
 const ORIGIN = "http://localhost:8080";
 const ADMIN_PASSWORD = process.env.HNS_ADMIN_PASSWORD;
+// The admin to log in as: "admin" unless HNS_ADMIN_USERNAME names a local one.
+const ADMIN_USERNAME = process.env.HNS_ADMIN_USERNAME || "admin";
 if (!ADMIN_PASSWORD) {
     console.error("Set HNS_ADMIN_PASSWORD to the admin account's password.");
     process.exit(1);
@@ -71,7 +73,7 @@ function check(label, ok, detail) {
 
 const admin = await call("/login", {
     method: "POST",
-    body: { username: "admin", password: ADMIN_PASSWORD },
+    body: { username: ADMIN_USERNAME, password: ADMIN_PASSWORD },
 });
 if (admin.status !== 200) {
     console.error("admin login failed:", admin.status, JSON.stringify(admin.json));
