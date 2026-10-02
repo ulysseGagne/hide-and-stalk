@@ -214,6 +214,8 @@ button:disabled { cursor: default; }
 .send-btn { margin-top: 18px; }
 /* "Which part of <building>?": the building, picked before Send. */
 .target-picker { margin-top: 22px; }
+/* Under the A to D of "in what part of <building>?": the rule from outside. */
+.answer-hint { margin: 8px 0 0; font-size: 14px; }
 .card-note { margin: 12px 0 0; text-align: left; font-size: 16px; }
 .card-note:empty, .hint-status:empty { display: none; }
 .hint-status { margin: 10px 0 0; font-size: 15px; font-weight: 700; }

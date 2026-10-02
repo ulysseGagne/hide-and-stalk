@@ -209,14 +209,14 @@ const NEAREST_CARDS = Object.entries(LANDMARK_GROUPS).map(([key, { label }]) => 
     tiers: NEAREST_TIERS[key],
 }));
 
-// Which part of a building: the stalker names the building as they send it
+// What part of a building: the stalker names the building as they send it
 // (the phone offers only those the hints still allow, a building partly cut
 // off included), and the hider answers with the closest of its section pins,
 // two to four of them, placed by hand (building-sections.geojson). A closer.
 const SECTION_CARD = {
     id: "building_section",
     category: "proximity",
-    prompt: "Which part of {building} are you closest to?",
+    prompt: "In what part of {building} are you?",
     short: "Part of {building}?",
     answer: { type: "section" },
     target: "building",

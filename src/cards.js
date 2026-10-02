@@ -137,7 +137,7 @@ function loadPhoto(play) {
  */
 function promptOf(card, play = null) {
     const building = play?.target ? catalog?.buildings?.[play.target]?.label : null;
-    return (card?.prompt ?? "").replace("{building}", building ?? "a building you pick");
+    return (card?.prompt ?? "").replace("{building}", building ?? "the building");
 }
 
 /** The card's receipt line, the building by its code ("Part of PLT?"). */
@@ -453,6 +453,11 @@ function answerWidget(card, form, play = null) {
                 const distance = pos ? metresBetween(pos, sec) : null;
                 wrap.appendChild(optionLabel("radio", name, { value: sec.id, label: sec.id, distance }));
             }
+            // The answer is the closest part, so it is true from outside too.
+            const outside = document.createElement("p");
+            outside.className = "muted answer-hint";
+            outside.textContent = "Not in it? Pick the closest letter.";
+            wrap.appendChild(outside);
             break;
         }
         case "choice": {

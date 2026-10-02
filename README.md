@@ -279,7 +279,7 @@ again and is marked as changed.
   coordinates, the exact room id) end the round. `batches.js` prefers the tier
   matching the current question and widens to the nearest tiers when one has
   been picked clean.
-- **"Which part of <building> are you closest to?"** The stalker names the
+- **"In what part of <building> are you?"** The stalker names the
   building as they send it, from the pavilions the hints still allow (one
   partly cut off included), nearest first. Each pavilion has two to four
   section pins, A to D, placed by hand on its footprint

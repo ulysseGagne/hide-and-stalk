@@ -459,7 +459,7 @@ const inkLayer = new InkLayer((frame) => {
 }).addTo(map);
 
 /**
- * Which part of <building>: the building and the lines between its sections,
+ * In what part of <building>: the building and the lines between its sections,
  * by hand, and each section's letter where its pin is. Zoomed out, while its
  * sections would sit too close to read, only the building is drawn.
  */
