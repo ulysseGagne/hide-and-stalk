@@ -255,10 +255,14 @@
                 const cy = b.y + b.h / 2;
                 specs.push({ t: "tick", x: r1(cx - 0.55 * 28 + 2), y: r1(cy - 0.4 * 28 - 1), seed: `chk${opt.textContent.trim()}` });
             }
-            // Answered: the big brush check, clear of the Change button.
+            // Answered: the big brush check at the right, just before the Change
+            // button (the check is about 56 px wide), in the gap the question
+            // and its answer leave there; one under the other down the list.
             for (const row of $$("#hider-answer-list .answer-row").filter(visible)) {
                 const a = box($(".answer-row-answer", row));
-                specs.push({ t: "bigcheck", x: a.x + Math.min(a.w, 190) + 10, y: a.y - 16, seed: `rc${row.dataset.playId}` });
+                const change = $(".admin-btn", row);
+                const x = change ? box(change).x - 58 : a.x + Math.min(a.w, 190) + 10;
+                specs.push({ t: "bigcheck", x, y: a.y - 16, seed: `rc${row.dataset.playId}` });
             }
             const qrHead = $("#hider-qr .cards-title");
             // While a question waits, it is the thing to look at; the code's line comes after.
