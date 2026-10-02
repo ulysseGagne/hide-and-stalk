@@ -799,7 +799,8 @@ function renderBox() {
         if (play) {
             const card = cardOf(play.cardId);
             kicker = `Question ${play.question} · from ${play.askedByName ?? "a stalker"}`;
-            text = card?.prompt ?? "";
+            // The room cards' [brackets] mark the part of ABC-1234 asked about; plain here.
+            text = (card?.prompt ?? "").replace(/[[\]]/g, "");
         } else {
             const last = team.question >= team.maxQuestions;
             if (last) {

@@ -124,6 +124,17 @@ function loadPhoto(play) {
 }
 
 /**
+ * A question as HTML. The room cards write out a room id, ABC-1234, with the
+ * part they ask about between [brackets] in the deck: kept on one line, that
+ * part underlined.
+ */
+function promptHtml(prompt) {
+    return escapeCardHtml(prompt).replace(/\[?ABC-[\d[\]]+\]?/g, (code) =>
+        `<span class="room-code">${code.replace(/\[([^\]]*)\]/g, '<span class="code-part">$1</span>')}</span>`,
+    );
+}
+
+/**
  * A photo question, with what it asks for on a line of its own: "Send a photo
  * of the" / "nearest sculpture." marks.js underlines the second line by hand.
  */
@@ -169,7 +180,7 @@ function makeCardFace(card, index, count, { disabled }) {
     // Numbered, so you can tell there are three.
     node.innerHTML = `
         <span class="card-category"><span>${escapeCardHtml(CATEGORY_LABELS[card.category] ?? card.category)}</span><span class="card-count">${index + 1} OF ${count}</span></span>
-        <span class="card-prompt">${escapeCardHtml(card.prompt)}</span>`;
+        <span class="card-prompt">${promptHtml(card.prompt)}</span>`;
     return node;
 }
 
@@ -262,7 +273,7 @@ function renderStalker(cards) {
     }
     const isPhoto = card?.answer.type === "photo";
     if (isPhoto) el.sentPrompt.innerHTML = photoPromptHtml(card.prompt);
-    else el.sentPrompt.textContent = card?.prompt ?? "";
+    else el.sentPrompt.innerHTML = promptHtml(card?.prompt ?? "");
     el.sentCard.classList.remove("has-photo");
     el.sentPhoto.hidden = true;
     delete el.sentCard.dataset.answer;
@@ -604,7 +615,7 @@ function answerForm(play, card, { submitLabel, onCancel }) {
 
     const prompt = document.createElement("p");
     prompt.className = "question-prompt";
-    prompt.textContent = card.prompt;
+    prompt.innerHTML = promptHtml(card.prompt);
 
     const parts = [head, prompt];
     // "How long would it take me to walk to you?" is unanswerable without
@@ -698,7 +709,7 @@ function renderHiderAnswers(cards) {
         const text = document.createElement("div");
         text.className = "answer-row-text";
         text.innerHTML = `<span class="question-meta">${escapeCardHtml(questionLabel(play))}</span>
-            <span class="answer-row-prompt">${escapeCardHtml(card.prompt)}</span>
+            <span class="answer-row-prompt">${promptHtml(card.prompt)}</span>
             <strong class="answer-row-answer">${escapeCardHtml(describeAnswer(card, play.answer) ?? "")}${
                 play.editedAt ? ' <span class="changed-mark">changed</span>' : ""
             }</strong>`;
@@ -803,7 +814,7 @@ function renderHistory(plays) {
                     play.askedByName ?? "?",
                 )} · ${escapeCardHtml(timeAgo(play.askedAt))}</span>
             </header>
-            <p class="history-prompt">${escapeCardHtml(card?.prompt ?? play.cardId)}</p>`;
+            <p class="history-prompt">${promptHtml(card?.prompt ?? play.cardId)}</p>`;
         const answer = document.createElement("p");
         answer.className = `history-answer${answered ? "" : " pending"}`;
         if (!answered) {

@@ -270,6 +270,9 @@ button:disabled { cursor: default; }
 .answer-row-prompt { font-size: 15px; }
 .answer-row-answer { font-size: 18px; font-weight: 700; }
 .answer-row .admin-btn { padding: 9px 12px; font-size: 15px; flex: 0 0 auto; }
+/* A room id in a question (ABC-1234): on one line, the part asked about underlined. */
+.room-code { white-space: nowrap; }
+.code-part { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 4px; }
 /* The tag code: room above it for what to do with it, drawn by hand. */
 .hider-qr { margin-top: 40px; position: relative; }
 /* Room under the code for SHOW THIS TO THE STALKER, drawn by hand (marks.js). */

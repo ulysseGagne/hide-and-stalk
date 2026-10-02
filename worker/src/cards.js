@@ -217,10 +217,14 @@ const CONTEXT_CARDS = [
         // early, so the stalkers learn sooner that it is a building search.
         tiers: EARLY_MID,
     },
+    // A room's id is its pavilion's code, then the floor, then the room:
+    // ABC-1234. One card asks for each part, the part written out in the
+    // prompt between [brackets] (cards.js on the phone underlines it); the
+    // pavilion's code comes from "Which building are you closest to?".
     {
         id: "floor",
         category: "context",
-        prompt: "What floor are you on? Ground floor is 0; answer N/A if you are outside.",
+        prompt: "What floor are you on? It is the first digit of the room numbers there: ABC-[1]234. Answer N/A if you are outside.",
         short: "Floor?",
         answer: { type: "text", placeholder: "e.g. 3, or N/A" },
         needsAsker: false,
@@ -228,11 +232,21 @@ const CONTEXT_CARDS = [
         tiers: MID,
     },
     {
+        id: "room_digit",
+        category: "context",
+        prompt: "What is the second digit of the nearest room number? ABC-1[2]34. Answer N/A if you are outside.",
+        short: "Room's 2nd digit?",
+        answer: { type: "text", placeholder: "e.g. 7, or N/A" },
+        needsAsker: false,
+        hint: null,
+        tiers: MID,
+    },
+    {
         id: "room_number",
         category: "context",
-        prompt: "What are the last three digits of the nearest room number?",
-        short: "Nearest room?",
-        answer: { type: "text", placeholder: "e.g. 214" },
+        prompt: "What are the last two digits of the nearest room number? ABC-12[34]. Answer N/A if you are outside.",
+        short: "Room's last 2 digits?",
+        answer: { type: "text", placeholder: "e.g. 01, or N/A" },
         needsAsker: false,
         hint: null,
         tiers: MID_LATE,
@@ -240,9 +254,9 @@ const CONTEXT_CARDS = [
     {
         id: "room_id",
         category: "context",
-        prompt: "What is the exact id of the nearest room?",
+        prompt: "What is the exact id of the nearest room? [ABC-1234]. Answer N/A if you are outside.",
         short: "Exact room id?",
-        answer: { type: "text", placeholder: "e.g. PLT-2701" },
+        answer: { type: "text", placeholder: "e.g. PLT-2701, or N/A" },
         needsAsker: false,
         // The pavilion code names the building, but only a human reading it
         // knows that, so this narrows nothing on the map by itself.
