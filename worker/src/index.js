@@ -49,6 +49,7 @@ import {
     catalogPayload,
     validateAnswer,
 } from "./cards.js";
+import { BUILDINGS } from "./locations.js";
 import {
     cardIsInBatch,
     liveTeamBatch,
@@ -559,6 +560,7 @@ function publicPlay(row) {
         askedAt: row.asked_at,
         askLat: row.ask_lat,
         askLng: row.ask_lng,
+        target: row.target ?? null,
         answer: row.answer === null ? null : JSON.parse(row.answer),
         hasPhoto: Boolean(row.photo_present),
         answeredAt: row.answered_at,
@@ -567,7 +569,7 @@ function publicPlay(row) {
 }
 
 const PLAY_COLUMNS = `id, batch_id, card_id, question, asked_by, asked_by_name, asked_at,
-                      ask_lat, ask_lng, answer, answered_at, edited_at,
+                      ask_lat, ask_lng, target, answer, answered_at, edited_at,
                       photo IS NOT NULL AS photo_present`;
 
 /**
@@ -666,6 +668,12 @@ async function handleCardPick(request, env, user) {
     const body = await readJson(request);
     const card = CARDS_BY_ID.get(body?.cardId);
     if (!card) return error("Unknown card", 400, request, env);
+    // A card about a building the stalker names as they send it.
+    let target = null;
+    if (card.target === "building") {
+        target = String(body?.target ?? "");
+        if (!BUILDINGS[target]) return error("Pick the building this question is about", 400, request, env);
+    }
 
     const { batch } = await liveTeamBatch(env, team.id, state.question, now);
     if (!cardIsInBatch(batch, card.id)) {
@@ -717,8 +725,8 @@ async function handleCardPick(request, env, user) {
 
     const inserted = await env.DB.prepare(
         `INSERT INTO card_plays
-            (group_id, batch_id, card_id, question, asked_by, asked_by_name, asked_at, ask_lat, ask_lng)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (group_id, batch_id, card_id, question, asked_by, asked_by_name, asked_at, ask_lat, ask_lng, target)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
         .bind(
             team.id,
@@ -730,6 +738,7 @@ async function handleCardPick(request, env, user) {
             now,
             askLat,
             askLng,
+            target,
         )
         .run();
 
@@ -755,7 +764,7 @@ async function handleCardAnswer(request, env, user) {
     if (!Number.isInteger(playId)) return error("Invalid playId", 400, request, env);
 
     const play = await env.DB.prepare(
-        "SELECT id, group_id, card_id, answered_at FROM card_plays WHERE id = ?",
+        "SELECT id, group_id, card_id, target, answered_at FROM card_plays WHERE id = ?",
     )
         .bind(playId)
         .first();
@@ -766,7 +775,7 @@ async function handleCardAnswer(request, env, user) {
     const card = CARDS_BY_ID.get(play.card_id);
     if (!card) return error("Unknown card", 400, request, env);
 
-    const { value, error: invalid } = validateAnswer(card, body?.answer);
+    const { value, error: invalid } = validateAnswer(card, body?.answer, play);
     if (invalid) return error(invalid, 400, request, env);
 
     const isPhoto = card.answer.type === "photo";

@@ -1,0 +1,1135 @@
+{
+ "type": "FeatureCollection",
+ "properties": {
+  "desc": "Sections of each pavilion, for \"Which part of <building> are you closest to?\": 2 to 4 pins per pavilion, placed by hand on its footprint. A is the northernmost; the others follow clockwise (or along the building, for a row). Move a pin to move the section line; keep the letters in that order.",
+  "source": "Placed on the OpenStreetMap footprints (osm in pavillons.geojson)",
+  "count": 75
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PEPS",
+    "section": "A",
+    "name": "de l'éducation physique et des sports A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2774507,
+     46.7853022
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PEPS",
+    "section": "B",
+    "name": "de l'éducation physique et des sports B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2768018,
+     46.784725
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PEPS",
+    "section": "C",
+    "name": "de l'éducation physique et des sports C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2777394,
+     46.7842083
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PEPS",
+    "section": "D",
+    "name": "de l'éducation physique et des sports D"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2785329,
+     46.7848815
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PAP",
+    "section": "A",
+    "name": "Palasis-Prince A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2741398,
+     46.7833514
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PAP",
+    "section": "B",
+    "name": "Palasis-Prince B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2745486,
+     46.7831995
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PAP",
+    "section": "C",
+    "name": "Palasis-Prince C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2748818,
+     46.7829935
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "SSI",
+    "section": "A",
+    "name": "Stade TELUS A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2810249,
+     46.783292
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "SSI",
+    "section": "B",
+    "name": "Stade TELUS B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2805373,
+     46.7828976
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "CSL",
+    "section": "A",
+    "name": "Louis-Jacques-Casault A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2706703,
+     46.7831041
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "CSL",
+    "section": "B",
+    "name": "Louis-Jacques-Casault B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2699278,
+     46.7830499
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "CSL",
+    "section": "C",
+    "name": "Louis-Jacques-Casault C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2700005,
+     46.7824967
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "CSL",
+    "section": "D",
+    "name": "Louis-Jacques-Casault D"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2707741,
+     46.7825559
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "LAU",
+    "section": "A",
+    "name": "La Laurentienne A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2734414,
+     46.7828285
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "LAU",
+    "section": "B",
+    "name": "La Laurentienne B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2735731,
+     46.782526
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "DES",
+    "section": "A",
+    "name": "J.-A.-De Sève A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2741734,
+     46.7823897
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "DES",
+    "section": "B",
+    "name": "J.-A.-De Sève B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2739606,
+     46.7822186
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "JLA",
+    "section": "A",
+    "name": "Jeanne-Lapointe A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2734238,
+     46.7816667
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "JLA",
+    "section": "B",
+    "name": "Jeanne-Lapointe B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2733267,
+     46.7815907
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "COP",
+    "section": "A",
+    "name": "d'Optique-photonique A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2779696,
+     46.7814188
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "COP",
+    "section": "B",
+    "name": "d'Optique-photonique B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2777279,
+     46.7812126
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "DKN",
+    "section": "A",
+    "name": "Charles-De Koninck A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.275245,
+     46.7814874
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "DKN",
+    "section": "B",
+    "name": "Charles-De Koninck B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2745757,
+     46.7813924
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "DKN",
+    "section": "C",
+    "name": "Charles-De Koninck C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2745257,
+     46.7808656
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "DKN",
+    "section": "D",
+    "name": "Charles-De Koninck D"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2752857,
+     46.7810023
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "FAS",
+    "section": "A",
+    "name": "Félix-Antoine-Savard A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2727042,
+     46.7810608
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "FAS",
+    "section": "B",
+    "name": "Félix-Antoine-Savard B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2726097,
+     46.7809839
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "MDE",
+    "section": "A",
+    "name": "de la Médecine dentaire A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2819596,
+     46.7809871
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "MDE",
+    "section": "B",
+    "name": "de la Médecine dentaire B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2818928,
+     46.7805802
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PRN",
+    "section": "A",
+    "name": "Alphonse-Marie-Parent A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2662468,
+     46.780453
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PRN",
+    "section": "B",
+    "name": "Alphonse-Marie-Parent B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2669023,
+     46.7804102
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PRN",
+    "section": "C",
+    "name": "Alphonse-Marie-Parent C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2674829,
+     46.7803026
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "ABP",
+    "section": "A",
+    "name": "Abitibi-Price A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2794509,
+     46.7805002
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "ABP",
+    "section": "B",
+    "name": "Abitibi-Price B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2798166,
+     46.7802825
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "VCH",
+    "section": "A",
+    "name": "Alexandre-Vachon A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2773479,
+     46.7808806
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "VCH",
+    "section": "B",
+    "name": "Alexandre-Vachon B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.277013,
+     46.7805727
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "VCH",
+    "section": "C",
+    "name": "Alexandre-Vachon C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2766392,
+     46.7802554
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "VCH",
+    "section": "D",
+    "name": "Alexandre-Vachon D"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2763983,
+     46.7798866
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "BNF",
+    "section": "A",
+    "name": "Jean-Charles-Bonenfant A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2736932,
+     46.7805092
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "BNF",
+    "section": "B",
+    "name": "Jean-Charles-Bonenfant B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2734187,
+     46.7802775
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "BNF",
+    "section": "C",
+    "name": "Jean-Charles-Bonenfant C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2738838,
+     46.7800198
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "BNF",
+    "section": "D",
+    "name": "Jean-Charles-Bonenfant D"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.274158,
+     46.7802518
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PBM",
+    "section": "A",
+    "name": "H.-Biermans-L.-Moraud A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.268384,
+     46.7799429
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PBM",
+    "section": "B",
+    "name": "H.-Biermans-L.-Moraud B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.268071,
+     46.779634
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PBM",
+    "section": "C",
+    "name": "H.-Biermans-L.-Moraud C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2677243,
+     46.779395
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "GHK",
+    "section": "A",
+    "name": "Gene-H. Kruger A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2803087,
+     46.7801558
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "GHK",
+    "section": "B",
+    "name": "Gene-H. Kruger B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.280709,
+     46.7799255
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "GHK",
+    "section": "C",
+    "name": "Gene-H. Kruger C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2809246,
+     46.7795072
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "CHM",
+    "section": "A",
+    "name": "Charles-Eugène-Marchand A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2785773,
+     46.7796861
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "CHM",
+    "section": "B",
+    "name": "Charles-Eugène-Marchand B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2782469,
+     46.7794858
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "POL",
+    "section": "A",
+    "name": "Maurice-Pollack A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2694875,
+     46.7794525
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "POL",
+    "section": "B",
+    "name": "Maurice-Pollack B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2692699,
+     46.77916
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "POL",
+    "section": "C",
+    "name": "Maurice-Pollack C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.268991,
+     46.7789133
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "ADJ",
+    "section": "A",
+    "name": "Alphonse-Desjardins A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2697299,
+     46.7791702
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "ADJ",
+    "section": "B",
+    "name": "Alphonse-Desjardins B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2693855,
+     46.7787686
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "ADJ",
+    "section": "C",
+    "name": "Alphonse-Desjardins C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2697268,
+     46.778662
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "ADJ",
+    "section": "D",
+    "name": "Alphonse-Desjardins D"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2700856,
+     46.7789432
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PLT",
+    "section": "A",
+    "name": "Adrien-Pouliot A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2756734,
+     46.7793094
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PLT",
+    "section": "B",
+    "name": "Adrien-Pouliot B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2750513,
+     46.7789162
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PLT",
+    "section": "C",
+    "name": "Adrien-Pouliot C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2745539,
+     46.7785145
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "PLT",
+    "section": "D",
+    "name": "Adrien-Pouliot D"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2741217,
+     46.7780689
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "VND",
+    "section": "A",
+    "name": "Ferdinand-Vandry A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2785327,
+     46.7788771
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "VND",
+    "section": "B",
+    "name": "Ferdinand-Vandry B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2780815,
+     46.7784988
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "VND",
+    "section": "C",
+    "name": "Ferdinand-Vandry C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2775689,
+     46.77807
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "LEM",
+    "section": "A",
+    "name": "Ernest-Lemieux A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2681248,
+     46.7787445
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "LEM",
+    "section": "B",
+    "name": "Ernest-Lemieux B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2686533,
+     46.7784787
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "LEM",
+    "section": "C",
+    "name": "Ernest-Lemieux C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2691615,
+     46.778121
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "CMT",
+    "section": "A",
+    "name": "Paul-Comtois A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2764888,
+     46.7767257
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "CMT",
+    "section": "B",
+    "name": "Paul-Comtois B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2765681,
+     46.7763459
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "CMT",
+    "section": "C",
+    "name": "Paul-Comtois C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2771473,
+     46.7762697
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "CMT",
+    "section": "D",
+    "name": "Paul-Comtois D"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2770003,
+     46.7766399
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "LCT",
+    "section": "A",
+    "name": "Agathe-Lacerte A"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2749246,
+     46.7764999
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "LCT",
+    "section": "B",
+    "name": "Agathe-Lacerte B"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2742215,
+     46.7764537
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "LCT",
+    "section": "C",
+    "name": "Agathe-Lacerte C"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2742945,
+     46.7759719
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "pavilion": "LCT",
+    "section": "D",
+    "name": "Agathe-Lacerte D"
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.2749989,
+     46.7760127
+    ]
+   }
+  }
+ ]
+}

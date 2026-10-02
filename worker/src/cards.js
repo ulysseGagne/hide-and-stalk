@@ -6,7 +6,7 @@
 // A card has:
 //   id          stable key, stored in card_plays.card_id
 //   category    used for the card back / colour in the UI
-//   prompt      the question the hider sees
+//   prompt      the question the hider sees ({building}: the one the stalker named)
 //   short       compact label: the line for this question on the end-of-round
 //               receipt ("Q1 North or south?")
 //   answer      how the hider replies:
@@ -17,6 +17,10 @@
 //                 { type: "number",   unit, min, max }
 //                 { type: "coords" }                    -> { lat, lng }
 //                 { type: "photo" }
+//                 { type: "section" }                   a letter, A to D: the
+//                                                       target building's section
+//   target      "building" when the stalker names a building as they send it
+//               (BUILDINGS); kept in card_plays.target
 //   needsAsker  true when the question is relative to the stalker who played it
 //               ("...than me?"). Such cards can only be played while that
 //               stalker is sharing their position, and that position is
@@ -29,6 +33,7 @@
 //               See TIERS below.
 
 import {
+    BUILDINGS,
     CAMPUS_BORDER,
     LANDMARK_POINTS,
     LANDMARK_GROUP_PLACES,
@@ -204,6 +209,22 @@ const NEAREST_CARDS = Object.entries(LANDMARK_GROUPS).map(([key, { label }]) => 
     tiers: NEAREST_TIERS[key],
 }));
 
+// Which part of a building: the stalker names the building as they send it
+// (the phone offers only those the hints still allow, a building partly cut
+// off included), and the hider answers with the closest of its section pins,
+// two to four of them, placed by hand (building-sections.geojson). A closer.
+const SECTION_CARD = {
+    id: "building_section",
+    category: "proximity",
+    prompt: "Which part of {building} are you closest to?",
+    short: "Part of {building}?",
+    answer: { type: "section" },
+    target: "building",
+    needsAsker: false,
+    hint: { type: "section" },
+    tiers: MID_LATE,
+};
+
 const CONTEXT_CARDS = [
     {
         id: "inside_outside",
@@ -366,6 +387,7 @@ export const CARDS = [
     ...CLOSER_CARDS,
     RING_CARD,
     ...NEAREST_CARDS,
+    SECTION_CARD,
     ...CONTEXT_CARDS,
     ...PHOTO_CARDS,
 ];
@@ -385,6 +407,7 @@ export const catalogPayload = () => ({
     cards: CARDS,
     landmarks: LANDMARKS,
     landmarkGroups: LANDMARK_GROUPS,
+    buildings: BUILDINGS,
     playArea: PLAY_AREA,
     walk: {
         speedMPerMin: WALK_SPEED_M_PER_MIN,
@@ -397,9 +420,15 @@ export const catalogPayload = () => ({
  * Validate an answer against its card. Returns { value } (JSON-serialisable)
  * or { error } with a message to show the hider.
  */
-export function validateAnswer(card, raw) {
+/** The answer to `card`, checked; `play` is the play it answers (its target). */
+export function validateAnswer(card, raw, play = null) {
     const spec = card.answer;
     switch (spec.type) {
+        case "section":
+            if (!BUILDINGS[play?.target]?.sections.some((x) => x.id === raw)) {
+                return { error: "Pick one of the options" };
+            }
+            return { value: raw };
         case "radio":
             if (!spec.options.includes(raw)) return { error: "Pick one of the options" };
             return { value: raw };

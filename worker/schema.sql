@@ -137,7 +137,10 @@ CREATE TABLE IF NOT EXISTS card_plays (
     answered_at INTEGER,
     -- Which question (1-6) this was, and when the hider last corrected it.
     question INTEGER,
-    edited_at INTEGER
+    edited_at INTEGER,
+    -- What the stalker named when sending, for a card that asks for it (the
+    -- building of "Which part of <building>...?": a building id). NULL otherwise.
+    target TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_plays_group ON card_plays(group_id, asked_at);

@@ -148,6 +148,40 @@ for (const group of Object.values(groups)) {
 }
 
 // ---------------------------------------------------------------------------
+// Buildings - the "which part of <building> are you closest to?" card
+// ---------------------------------------------------------------------------
+// The stalker names the building when sending the card; the hider answers
+// with the closest of its section pins (building-sections.geojson, placed by
+// hand on the footprint). The outline, the pavilion's OpenStreetMap
+// footprint, lets the phone offer only the buildings the hints still allow.
+const OSM = JSON.parse(
+    readFileSync(join(ROOT, "design", "promo", "round-1", "lab", "data", "osm-campus.json"), "utf8"),
+);
+const footprints = new Map(OSM.features.map((f) => [f.properties.id, f.geometry]));
+const sectionPins = read("building-sections").features;
+const buildings = {};
+for (const [p] of points("pavillons")) {
+    const osmId = String(p.osm).replace(/^way\//, "w").replace(/^relation\//, "r");
+    const geom = footprints.get(osmId);
+    if (!geom) throw new Error(`no footprint for ${p.code} (${p.osm})`);
+    const outer = geom.type === "Polygon" ? geom.coordinates[0] : geom.coordinates[0][0];
+    const sections = sectionPins
+        .filter((f) => f.properties.pavilion === p.code)
+        .map((f) => ({ id: f.properties.section, lat: round(f.geometry.coordinates[1]), lng: round(f.geometry.coordinates[0]) }))
+        .sort((a, b) => a.id.localeCompare(b.id));
+    const letters = sections.map((x) => x.id).join("");
+    if (sections.length < 2 || letters !== "ABCD".slice(0, sections.length)) {
+        throw new Error(`${p.code} needs section pins A, B (and C, D), got "${letters}"`);
+    }
+    buildings[`pav_${slug(p.code)}`] = {
+        label: `${p.name} (${p.code})`,
+        code: p.code,
+        outline: outer.map(([lng, lat]) => [round(lng), round(lat)]),
+        sections,
+    };
+}
+
+// ---------------------------------------------------------------------------
 // Overlay layers for the map
 // ---------------------------------------------------------------------------
 const GROUP_LAYER_LABELS = {
@@ -305,6 +339,8 @@ export const CAMPUS_BORDER = ${literal(
 export const LANDMARK_POINTS = ${literal(workerLandmarks, 4)};
 
 export const LANDMARK_GROUP_PLACES = ${literal(workerGroups, 4)};
+
+export const BUILDINGS = ${literal(buildings, 4)};
 `,
     "utf8",
 );
@@ -314,3 +350,4 @@ const counts = LAYERS.map((l) => `${l.key} ${l.places ? l.places.length : 1}`).j
 );
 console.log(`locations built - ${counts}`);
 console.log(`play area: ${CAMPUS_RING.length} vertices`);
+console.log(`buildings: ${Object.keys(buildings).length}, ${sectionPins.length} section pins`);
