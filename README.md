@@ -306,6 +306,18 @@ feature into `cafes.geojson` and it becomes both a new pin on the map and a
 new option on *"Which café are you closest to?"*. Adding a whole new `.geojson`
 needs a matching entry in `tools/build-locations.mjs`.
 
+The campus perimeter is not drawn by hand either. It is traced from
+OpenStreetMap's streets: the innermost loop of the campus-side carriageways of
+Ch. des Quatre-Bourgeois, Ch. Sainte-Foy, Av. Myrand, Bd René-Lévesque O.,
+Bd Laurier and Autoroute Robert-Bourassa, cutting a corner on a turn lane where
+one joins two of them (René-Lévesque onto Laurier, Quatre-Bourgeois onto
+Robert-Bourassa). The tracer fails if any place in the game would end up
+outside it. Run the other two generators after it:
+
+```sh
+npm run build:border        # tools/build-border.mjs -> campus-border.geojson
+```
+
 ### The map
 
 The map is drawn by the app, nothing is fetched as tiles: the campus from
@@ -338,3 +350,8 @@ contributors, ODbL):
 ```sh
 npm run build:map           # tools/build-map.mjs
 ```
+
+Nothing outside the campus border is kept. Roads are cut where they cross it
+(the street the border runs along stays drawn), and a building, wood or field
+is kept only when it is wholly inside. That keeps the file near 80 KB, about
+30 KB over the wire.

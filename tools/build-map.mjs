@@ -15,6 +15,11 @@
 // fields, the stadium and the running track). Railway, water, car parks and
 // land use are left off, as the key decided.
 //
+// And only campus: nothing outside the campus border
+// (locations/geojson/campus-border.geojson, traced from the streets by
+// tools/build-border.mjs). Roads are cut where they cross it, the streets it
+// runs along kept; an area is kept only when it is wholly inside.
+//
 // Coordinates are Web Mercator pixels at zoom 20 (about 0.1 m here), rounded,
 // relative to the data's top-left corner, and delta-encoded per line.
 import fs from "node:fs";
@@ -23,11 +28,15 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = path.join(ROOT, "design/promo/round-1/lab/data/osm-campus.json");
+const BORDER = path.join(ROOT, "locations/geojson/campus-border.geojson");
 const OUT = path.join(ROOT, "src/data/campus-map.json");
 const Z = 20;
 // Douglas-Peucker tolerance in zoom-20 pixels: 2 px is about 0.2 m, under a
 // pixel even at the map's closest zoom (19).
 const TOLERANCE = 2;
+// How far off the border line still counts as on it, in zoom-20 pixels (about
+// 2 m): the border is the middle of a street, which stays on the map.
+const ON_BORDER = 20;
 
 // Road ranks (osmdraw.js): the lab's RANK_OF, and pedestrian streets drawn as
 // side streets (the key's rule).
@@ -129,16 +138,76 @@ const project = ([lng, lat]) => {
     return [((lng + 180) / 360) * WORLD, (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * WORLD];
 };
 
+// The campus border, in the same zoom-20 pixels.
+const border = JSON.parse(fs.readFileSync(BORDER, "utf8")).features[0].geometry.coordinates[0].map(project);
+const insideBorder = ([x, y]) => {
+    let c = false;
+    for (let i = 0, j = border.length - 1; i < border.length; j = i++) {
+        const [xi, yi] = border[i];
+        const [xj, yj] = border[j];
+        if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
+    }
+    return c;
+};
+const onCampus = (p) => insideBorder(p) || border.some((a, i) => i > 0 && distToSeg(p, border[i - 1], a) <= ON_BORDER);
+const lerp = (a, b, t) => [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])];
+/** Where the segment a-b crosses the border, as fractions of the way from a to b. */
+function crossings(a, b) {
+    const out = [];
+    for (let i = 1; i < border.length; i++) {
+        const c = border[i - 1];
+        const d = border[i];
+        const den = (b[0] - a[0]) * (d[1] - c[1]) - (b[1] - a[1]) * (d[0] - c[0]);
+        if (!den) continue;
+        const t = ((c[0] - a[0]) * (d[1] - c[1]) - (c[1] - a[1]) * (d[0] - c[0])) / den;
+        const u = ((c[0] - a[0]) * (b[1] - a[1]) - (c[1] - a[1]) * (b[0] - a[0])) / den;
+        if (t > 0 && t < 1 && u >= 0 && u <= 1) out.push(t);
+    }
+    return out.sort((x, y) => x - y);
+}
+/** A line's pieces on campus: cut where it crosses the border, each bit kept when its middle is on campus. */
+function clipLine(line) {
+    const pieces = [];
+    let piece = null;
+    for (let i = 0; i < line.length - 1; i++) {
+        const at = [0, ...crossings(line[i], line[i + 1]), 1];
+        for (let k = 0; k < at.length - 1; k++) {
+            const p = lerp(line[i], line[i + 1], at[k]);
+            const q = lerp(line[i], line[i + 1], at[k + 1]);
+            if (!onCampus(lerp(p, q, 0.5))) {
+                piece = null;
+                continue;
+            }
+            if (!piece) pieces.push((piece = [p]));
+            piece.push(q);
+        }
+    }
+    return pieces;
+}
+
 const data = JSON.parse(fs.readFileSync(SRC, "utf8"));
-const kept = data.features.map(classify).filter(Boolean);
-for (const f of kept) if (f.kind === "road" && f.smooth) f.line = smoothLine(f.line);
+const drawn = data.features.map(classify).filter(Boolean);
+for (const f of drawn) if (f.kind === "road" && f.smooth) f.line = smoothLine(f.line);
+
+// Only campus: a road as its pieces on campus, an area only when all of it is.
+const kept = [];
+let offCampus = 0;
+for (const f of drawn) {
+    if (f.kind === "road") {
+        const pieces = clipLine(f.line.map(project));
+        for (const piece of pieces) kept.push({ ...f, px: [piece] });
+        if (!pieces.length) offCampus++;
+    } else {
+        const px = f.rings.map((r) => r.map(project));
+        if (px.every((r) => r.every(onCampus))) kept.push({ ...f, px });
+        else offCampus++;
+    }
+}
 
 // The data's top-left corner, in zoom-20 pixels: every coordinate is relative to it.
 let ox = Infinity;
 let oy = Infinity;
-const projected = (ring) => ring.map(project);
 for (const f of kept) {
-    f.px = f.kind === "road" ? [projected(f.line)] : f.rings.map(projected);
     for (const r of f.px) for (const [x, y] of r) {
         ox = Math.min(ox, x);
         oy = Math.min(oy, y);
@@ -184,7 +253,8 @@ fs.mkdirSync(path.dirname(OUT), { recursive: true });
 fs.writeFileSync(OUT, JSON.stringify(out));
 const count = (list) => list.reduce((n, f) => n + (Array.isArray(f[0]) ? f.reduce((m, r) => m + r.length / 2, 0) : f[2].length / 2), 0);
 console.log(
-    `campus map: ${out.roads.length} roads, ${out.buildings.length} buildings, ${out.wood.length} woods, ${out.grass.length} grass, ${out.sport.length} sport;`,
+    `campus map: ${out.roads.length} roads, ${out.buildings.length} buildings, ${out.wood.length} woods, ${out.grass.length} grass, ${out.sport.length} sport`,
+    `(${offCampus} off campus left out);`,
     `${Math.round(count(out.roads) + count(out.buildings) + count(out.wood) + count(out.grass) + count(out.sport))} points;`,
     `${(fs.statSync(OUT).size / 1024).toFixed(0)} KB -> ${path.relative(ROOT, OUT)}`,
 );

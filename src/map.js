@@ -100,7 +100,7 @@ const map = L.map("map", {
     zoomDelta: 0.5,
     minZoom: 13,
     maxZoom: 19,
-    // The data covers the campus and the streets around it, no further.
+    // The data stops at the campus border; past it is blank paper to pan into.
     maxBounds: campusBounds.pad(1.2),
     maxBoundsViscosity: 0.8,
     contextmenu: true,
