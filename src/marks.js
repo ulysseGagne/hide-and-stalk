@@ -201,10 +201,13 @@
         if (stamped) specs.push({ t: "stamp", text: badge.textContent, ...box(badge) });
 
         if (s.screen === "hiding" && s.role === "hider") {
-            // Under the paragraph and its rule, clear of both.
+            // In the gap above the tag code's heading, sitting on it, so it is
+            // clear of the heading whatever comes between the paragraph and it.
             const p = $("#status-text");
             const pb = visible(p) ? box(p) : box(title);
-            specs.push({ t: "note", text: "WALK. DON'T RUN.", x: pb.x + 8, y: pb.y + pb.h + 86, o: { size: 30, maxWidth: 330, tilt: -4, importance: "key", weight: 6.2 } });
+            const head = $("#hider-qr .cards-title");
+            const y = visible(head) ? box(head).y - 12 : pb.y + pb.h + 86;
+            specs.push({ t: "note", text: "WALK. DON'T RUN.", x: pb.x + 8, y, o: { size: 30, maxWidth: 330, tilt: -4, importance: "key", weight: 6.2 } });
         }
 
         if (s.screen === "hunting" && s.role === "stalker") {
