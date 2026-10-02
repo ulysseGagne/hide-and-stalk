@@ -1,0 +1,144 @@
+<title>Heatmap Question</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;700&display=swap">
+<style>
+/* Layout: one column of decisions; inside each, the options side by side, like the design gallery.
+   Single light look on purpose: the renders are white paper, as in the app. */
+:root {
+    --paper: #fff;
+    --ink: #000;
+    --red: #e7191f;
+    --muted: #5b5656;
+    --tint: #f4f2f2;
+    --rule: 3px;
+    --font: Arimo, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color-scheme: light;
+}
+body { background: var(--paper); color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+.page { max-width: 1080px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; display: grid; gap: 44px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.15; }
+h1 { font-size: clamp(30px, 6vw, 44px); letter-spacing: -0.02em; }
+h2 { font-size: 24px; letter-spacing: -0.01em; }
+p { margin: 0; max-width: 65ch; }
+.lede { font-size: 18px; }
+.muted { color: var(--muted); }
+header.top { display: grid; gap: 12px; border-bottom: var(--rule) solid var(--ink); padding-bottom: 22px; }
+.eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+section { display: grid; gap: 16px; }
+.section-head { display: grid; gap: 6px; border-top: var(--rule) solid var(--ink); padding-top: 16px; }
+.decided { display: grid; gap: 10px; padding: 18px 20px; background: var(--tint); border: var(--rule) solid var(--ink); }
+.decided ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 70ch; }
+.decided q { font-weight: 700; quotes: "“" "”"; }
+.options { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 22px; align-items: start; }
+.options.two { grid-template-columns: repeat(auto-fit, minmax(220px, 300px)); }
+figure { margin: 0; display: grid; gap: 8px; min-width: 0; }
+figure img { display: block; width: 100%; height: auto; border: var(--rule) solid var(--ink); box-sizing: border-box; background: var(--paper); }
+figcaption { display: grid; gap: 2px; font-size: 14px; }
+.opt-name { font-weight: 700; font-size: 15px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pick { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--paper); background: var(--red); padding: 2px 7px; }
+.swatches { display: flex; height: 14px; border: 2px solid var(--ink); }
+.swatches span { flex: 1; }
+.hero { max-width: 760px; }
+.find { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 640px) { .find { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.find figcaption { font-weight: 700; }
+.search { display: grid; gap: 10px; }
+.search-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.scroller { overflow: auto; max-height: 76vh; border: var(--rule) solid var(--ink); background: var(--tint); }
+.scroller img { display: block; max-width: none; width: 1600px; height: auto; }
+button { font: inherit; font-weight: 700; font-size: 15px; color: var(--paper); background: var(--ink); border: var(--rule) solid var(--ink); padding: 8px 16px; cursor: pointer; }
+button[aria-pressed="true"] { background: var(--red); border-color: var(--red); }
+button:focus-visible { outline: 3px dashed var(--red); outline-offset: 3px; }
+.answers { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.how { display: grid; gap: 10px; font-size: 15px; }
+.how ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; max-width: 70ch; }
+</style>
+
+<div class="page">
+    <header class="top">
+        <span class="eyebrow">Question 26 · test renders</span>
+        <h1>Send the heatmap around you</h1>
+        <p class="lede">The hider sends a square of the heatmap with them somewhere inside it. The stalkers turn on the heatmap and look for that pattern. Built from OpenStreetMap. The look is settled; what is left is checking the patches can be found.</p>
+    </header>
+
+    <div class="decided">
+        <span class="eyebrow">Decided</span>
+        <ul>
+            <li>White → black, in six flat tiers like a topographic map, fixed to the ground: a spot keeps its colour at every zoom.</li>
+            <li>Smooth, between the two smoothest tried: busy places merge into broad hills.</li>
+            <li>Drawn as vector shapes: the tiers' edges are smooth curves, sharp at any zoom.</li>
+            <li>The square the hider sends is one phone screen at the closest zoom: 80 × 115 m.</li>
+            <li>Roads leave no mark. Only places people go to, sit at or work in make heat.</li>
+            <li>The square is centred on the hider. No shift: the smooth heat already blurs where in the square they are.</li>
+            <li>The app draws the square itself from the hider's position, heatmap only. The stalkers' phones get the picture, never the position.</li>
+            <li>The hints map does not change.</li>
+            <li>Stalkers get a Heatmap switch on the map screen that stays there.</li>
+            <li>The hider sees the heatmap only after the question has been asked.</li>
+            <li>No "find it" button and no compare mode: matching it by eye is the game.</li>
+        </ul>
+    </div>
+
+    <section aria-labelledby="campus">
+        <div class="section-head">
+            <h2 id="campus">The campus</h2>
+            <p class="muted">White is the quietest third of campus. Above it the tiers rise in even steps of heat, the top three and the two below them merged, then the greys spread evenly over the six.</p>
+        </div>
+        <figure class="hero">
+            <img src="img/campus.svg" alt="The whole campus heatmap in six tiers from white to black" width="800" height="760">
+            <figcaption><div class="swatches"><span style="background:#ffffff"></span><span style="background:#cfcfcf"></span><span style="background:#a0a0a0"></span><span style="background:#707070"></span><span style="background:#414141"></span><span style="background:#111111"></span></div></figcaption>
+        </figure>
+    </section>
+
+    <section aria-labelledby="try">
+        <div class="section-head">
+            <h2 id="try">Try it: find these four</h2>
+            <p class="muted">Four hiders sent their square at the closest zoom. Look for them on the map below, then check.</p>
+        </div>
+        <div class="find">
+            <figure><img src="img/find-1.svg" alt="Patch 1" width="390" height="560"><figcaption>1</figcaption></figure>
+            <figure><img src="img/find-2.svg" alt="Patch 2" width="390" height="560"><figcaption>2</figcaption></figure>
+            <figure><img src="img/find-3.svg" alt="Patch 3" width="390" height="560"><figcaption>3</figcaption></figure>
+            <figure><img src="img/find-4.svg" alt="Patch 4" width="390" height="560"><figcaption>4</figcaption></figure>
+        </div>
+        <div class="search">
+            <div class="search-bar">
+                <span class="muted">The whole campus. Scroll to look around.</span>
+                <button type="button" id="answers-btn" aria-pressed="false">Show where they were</button>
+            </div>
+            <div class="scroller"><img id="search-map" src="img/find-map.svg" alt="The whole campus heatmap to search" width="1600" height="1519"></div>
+            <ol class="answers" id="answers" hidden>
+                <li>Pavillon Adrien-Pouliot (PLT), in the middle of campus.</li>
+                <li>The west edge of campus, by the border street.</li>
+                <li>The PEPS, on the biggest hill.</li>
+                <li>A quiet field in the south. Almost all white: it only says the hider is somewhere quiet.</li>
+            </ol>
+        </div>
+    </section>
+
+    <section class="how" aria-labelledby="how">
+        <div class="section-head"><h2 id="how">How the heat is made</h2></div>
+        <p>Everything comes from OpenStreetMap (fetched 2 October 2026), baked once onto a 2 m grid:</p>
+        <ul>
+            <li>Places people go: doors, bus stops, cafés and restaurants, shops, àVélo stations, libraries.</li>
+            <li>Street furniture: benches, bike racks, picnic tables, bins.</li>
+            <li>Buildings and grounds: a pavilion is warm, a house barely, a sports field a little.</li>
+            <li>Footpaths, faintly. Streets, service roads and parking lanes not at all.</li>
+            <li>By hand: the corner of Chemin Sainte-Foy and Avenue Myrand. A busy place right at the corner, rising as a hill, on an even raise of about two tiers that reaches 350 m around the corner and about 450 m east along Myrand, narrowing. White ground is left between it and the PEPS.</li>
+        </ul>
+        <p class="muted">That is blurred twice, about 45 m for each place and 110 m for each district, cut into tiers and traced as smooth curves.</p>
+    </section>
+</div>
+
+<script>
+const btn = document.getElementById("answers-btn");
+const map = document.getElementById("search-map");
+const list = document.getElementById("answers");
+btn.addEventListener("click", () => {
+    const on = btn.getAttribute("aria-pressed") !== "true";
+    btn.setAttribute("aria-pressed", String(on));
+    btn.textContent = on ? "Hide the answers" : "Show where they were";
+    map.src = on ? "img/find-answers.svg" : "img/find-map.svg";
+    list.hidden = !on;
+});
+</script>
