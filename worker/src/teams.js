@@ -46,6 +46,8 @@ function shuffle(arr) {
 // The clock
 // ---------------------------------------------------------------------------
 const hideMsOf = (team) => team.hide_ms ?? HIDE_MS;
+/** The hiding time a round starting now gets: debug's minute, or none at all when that switch is on. */
+const hideMsFor = ({ debug = false, noHide = false } = {}) => (debug ? (noHide ? 0 : DEBUG_HIDE_MS) : HIDE_MS);
 const intervalMsOf = (team) => team.interval_ms ?? QUESTION_INTERVAL_MS;
 const huntLengthMsOf = (team) => intervalMsOf(team) * MAX_QUESTIONS;
 
@@ -91,7 +93,7 @@ export function teamPhase(team, now) {
  * has not started yet shows the timers it would get if it started now, which
  * depends on debug mode.
  */
-export function publicTeam(team, now, { debug = false } = {}) {
+export function publicTeam(team, now, { debug = false, noHide = false } = {}) {
     const state = teamPhase(team, now);
     const notStarted = team.status === "ready";
     return {
@@ -99,7 +101,7 @@ export function publicTeam(team, now, { debug = false } = {}) {
         status: team.status,
         phase: state.phase,
         paused: Boolean(team.paused_at) && team.status === "playing",
-        hideMs: notStarted ? (debug ? DEBUG_HIDE_MS : HIDE_MS) : hideMsOf(team),
+        hideMs: notStarted ? hideMsFor({ debug, noHide }) : hideMsOf(team),
         intervalMs: notStarted
             ? debug
                 ? DEBUG_QUESTION_INTERVAL_MS
@@ -212,9 +214,10 @@ async function teamMembers(env, teamId) {
 
 /**
  * Start a team's round: the hider has hide_ms to hide from now. `debug` makes
- * it a seven-minute test round. Pressing Start twice is harmless.
+ * it a seven-minute test round, and `noHide` skips the hiding (straight to the
+ * hunt). Pressing Start twice is harmless.
  */
-export async function startTeam(env, teamId, now, { debug = false } = {}) {
+export async function startTeam(env, teamId, now, { debug = false, noHide = false } = {}) {
     const team = await getTeamRow(env, teamId);
     if (!team) throw httpError("That team does not exist", 404);
     if (team.status === "playing") return team; // a teammate beat us to it
@@ -235,7 +238,7 @@ export async function startTeam(env, teamId, now, { debug = false } = {}) {
     )
         .bind(
             now,
-            debug ? DEBUG_HIDE_MS : HIDE_MS,
+            hideMsFor({ debug, noHide }),
             debug ? DEBUG_QUESTION_INTERVAL_MS : QUESTION_INTERVAL_MS,
             teamId,
         )
@@ -435,12 +438,12 @@ export async function assignPlayer(env, now, { userId, teamId, role }) {
 }
 
 /** The admin's own buttons on one team. */
-export async function adminTeamAction(env, teamId, action, now, { debug = false } = {}) {
+export async function adminTeamAction(env, teamId, action, now, options = {}) {
     const team = await loadTeam(env, teamId, now);
     if (!team) throw httpError("That team does not exist", 404);
     switch (action) {
         case "start":
-            return startTeam(env, teamId, now, { debug });
+            return startTeam(env, teamId, now, options);
         case "pause":
             if (team.status !== "playing") throw httpError("That team is not playing", 409);
             await env.DB.prepare(

@@ -409,6 +409,20 @@ check(
 console.log("\nAdmin");
 r = await adminPost("/admin/team", { teamId: teamB, action: "reset" });
 check("reset puts a team back to ready", r.status === 200 && r.json.team.phase === "ready");
+
+// Debug mode's own options: no hiding time, all six questions at once.
+r = await adminPost("/admin/settings", { debugNoHide: true, debugAllQuestions: true });
+check("debug options are saved", r.status === 200 && r.json.settings.debugNoHide === true && r.json.settings.debugAllQuestions === true);
+r = await adminPost("/admin/settings", { debug: true });
+r = await call("/team/start", { method: "POST", token: tok(hiderOf(teamB)) });
+check("no hiding time: straight to the hunt", r.json.team?.phase === "hunting" && r.json.team.hideMs === 0, JSON.stringify(r.json.team));
+s = await call("/state", { token: tok(stalkersOf(teamB)[0]) });
+check("all six questions in hand at once", s.json.cards.inHand === 6 && s.json.cards.batch?.question === 1, `in hand ${s.json.cards.inHand}`);
+r = await adminPost("/admin/settings", { debug: false });
+s = await call("/state", { token: tok(stalkersOf(teamB)[0]) });
+check("with debug off, one question at a time again", s.json.cards.inHand === 1, `in hand ${s.json.cards.inHand}`);
+await adminPost("/admin/settings", { debugNoHide: false, debugAllQuestions: false });
+await adminPost("/admin/team", { teamId: teamB, action: "reset" });
 r = await adminPost("/admin/settings", { discordUrl: "not a link" });
 check("a non-https Discord link is refused", r.status === 400);
 r = await adminPost("/admin/settings", { discordUrl: "https://discord.gg/example", todosDone: ["discord", "poster"] });

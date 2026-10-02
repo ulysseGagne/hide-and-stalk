@@ -289,6 +289,8 @@ button:disabled { cursor: default; }
 .hider-qr-text code { font: 700 16px var(--font); letter-spacing: .06em; color: var(--ink); }
 /* Stalkers: the scanner sits in the page, where the round ends. */
 .found-panel { margin-top: 24px; padding-top: 34px; border-top: 3px solid var(--ink); }
+/* After the answers so far, their last rule is the line: no second one. */
+.stalker-answers:not([hidden]):not(.empty) + .found-panel { margin-top: 0; border-top: none; }
 #scan-open { width: 100%; height: 60px; font-size: 16px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
 
 /* Answers so far: every question the stalkers asked, under their cards ---- */
@@ -484,6 +486,12 @@ button:disabled { cursor: default; }
 .result-time { display: inline-block; margin: 0 6px; font-variant-numeric: tabular-nums; font-weight: 700; }
 .switch-row { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; cursor: pointer; }
 .switch-row input { width: 18px; height: 18px; cursor: pointer; accent-color: #000; }
+/* Debug mode's own options, under its switch; greyed while it is off. */
+.debug-options { display: grid; gap: 10px; margin: 0 0 14px; padding: 10px 14px 14px; border: var(--rule) solid var(--ink); }
+.debug-options legend { padding: 0 6px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.debug-options .switch-row { font-weight: 400; align-items: flex-start; }
+.debug-options .switch-row input { flex: 0 0 auto; margin-top: 1px; }
+.debug-options .switch-row:has(input:disabled) { opacity: .45; cursor: default; }
 .todo-list { list-style: none; margin: 0; padding: 0; }
 .todo-item { margin-bottom: 8px; font-size: 15px; line-height: 1.4; }
 .todo-item label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }

@@ -461,6 +461,10 @@
     function renderSettings() {
         const settings = state.settings ?? {};
         el.debug.checked = Boolean(settings.debug);
+        for (const [name, box] of Object.entries(el.debugOptions)) {
+            box.checked = Boolean(settings[name]);
+            box.disabled = !settings.debug;
+        }
         // Never under the admin's fingers: a 2-second poll would eat the typing.
         if (document.activeElement !== el.discordUrl) el.discordUrl.value = settings.discordUrl ?? "";
         const done = new Set(settings.todosDone ?? []);
@@ -511,6 +515,11 @@
             el.board = $("board-groups");
             el.results = $("results-list");
             el.debug = $("debug-toggle");
+            el.debugOptions = {
+                debugNoHide: $("debug-no-hide"),
+                debugAllQuestions: $("debug-all-questions"),
+                debugFakeLocation: $("debug-fake-location"),
+            };
             el.discordUrl = $("discord-url");
             el.discordSave = $("discord-save");
             el.todos = $("todo-list");
@@ -536,6 +545,9 @@
             el.debug.addEventListener("change", () => {
                 adminAction("/admin/settings", { debug: el.debug.checked });
             });
+            for (const [name, box] of Object.entries(el.debugOptions)) {
+                box.addEventListener("change", () => adminAction("/admin/settings", { [name]: box.checked }));
+            }
             const saveDiscord = () => {
                 el.discordUrl.blur(); // let the next poll write the server's value back
                 adminAction("/admin/settings", { discordUrl: el.discordUrl.value.trim() });

@@ -865,6 +865,7 @@ function renderMapGame() {
         team: liveTeam(),
         cards: gameState.cards,
         users: gameState.users,
+        settings: gameState.settings,
     });
 }
 

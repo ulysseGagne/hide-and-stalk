@@ -222,7 +222,7 @@ Admin-only routes (all `POST`):
 | `/admin/team`       | `{teamId, action}` | `start`, `pause`, `resume` or `reset` one team |
 | `/admin/disband`    | – | everyone back to no team (results are kept) |
 | `/admin/clear`      | – | deletes every non-admin account, team and result |
-| `/admin/settings`   | `{debug?, discordUrl?, todosDone?}` | debug mode, the Discord invite, the to-do ticks |
+| `/admin/settings`   | `{debug?, debugNoHide?, debugAllQuestions?, debugFakeLocation?, discordUrl?, todosDone?}` | debug mode and its options, the Discord invite, the to-do ticks |
 
 Every team keeps exactly one hider: making someone the hider turns the old one
 into a stalker, and taking a team's hider away hands the role to whoever has
@@ -231,7 +231,16 @@ been on it longest. A team left empty is deleted.
 **Debug mode** (admin switch): teams that start while it is on get a 1-minute
 hide and a question every minute (a whole round in 7 minutes), and every
 phone shows a strip with its GPS accuracy, the age of its fix, its heading and
-its connection. A team keeps the timers it started with.
+its connection. A team keeps the timers it started with. Its own options, each
+only in force while it is on:
+
+- **No hiding time:** a team that starts goes straight to the hunt (frozen at
+  Start, like the timers).
+- **All six questions at once:** the stalkers have every question in hand
+  from the start of the hunt and send them back to back.
+- **Fake position:** a long-press on the map (right-click on a computer)
+  offers "Put me here", which stands YOU there in place of the GPS until
+  "Back to my GPS".
 
 #### Cards
 

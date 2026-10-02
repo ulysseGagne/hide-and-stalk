@@ -191,18 +191,18 @@
                                 <p id="card-error" class="auth-error"></p>
                                 <p id="hint-status" class="hint-status"></p>
                             </div>
-                            <!-- Where the round ends: the scanner. -->
-                            <div id="found-panel" class="found-panel" hidden>
-                                <button type="button" id="scan-open" class="admin-btn">
-                                    Found them? Scan their code
-                                </button>
-                            </div>
                             <!-- Every question asked so far and its answer,
                                  newest first, during the hunt (cards.js). -->
                             <section id="stalker-answers" class="stalker-answers" hidden>
                                 <h3 class="cards-title">Answers so far</h3>
                                 <div id="history-list" class="history-list"></div>
                             </section>
+                            <!-- Where the round ends: the scanner, at the end of the page. -->
+                            <div id="found-panel" class="found-panel" hidden>
+                                <button type="button" id="scan-open" class="admin-btn">
+                                    Found them? Scan their code
+                                </button>
+                            </div>
                         </div>
                         <!-- Before the game only: the rules, most important first. -->
                         <section id="rules-card" class="rules-card">
@@ -287,6 +287,22 @@
                             1-minute hide and a question every minute, and every
                             phone shows its GPS and connection details.
                         </p>
+                        <!-- Debug mode's own options: only in force while it is on. -->
+                        <fieldset id="debug-options" class="debug-options">
+                            <legend>While debug mode is on</legend>
+                            <label class="switch-row">
+                                <input type="checkbox" id="debug-no-hide" />
+                                <span>No hiding time: the hunt starts at Start</span>
+                            </label>
+                            <label class="switch-row">
+                                <input type="checkbox" id="debug-all-questions" />
+                                <span>All six questions at once, no wait between them</span>
+                            </label>
+                            <label class="switch-row">
+                                <input type="checkbox" id="debug-fake-location" />
+                                <span>Fake position: long-press the map (right-click on a computer) to stand there</span>
+                            </label>
+                        </fieldset>
                         <div class="admin-field">
                             <label for="discord-url">Discord invite link</label>
                             <input type="url" id="discord-url" class="admin-input wide"

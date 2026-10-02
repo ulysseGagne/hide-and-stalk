@@ -33,7 +33,8 @@
 //   POST /admin/team          { teamId, action: start|pause|resume|reset }
 //   POST /admin/disband       every team back to unassigned (results are kept)
 //   POST /admin/clear         delete every non-admin account and everything else
-//   POST /admin/settings      { debug?, discordUrl?, todosDone? }
+//   POST /admin/settings      { debug?, debugNoHide?, debugAllQuestions?, debugFakeLocation?,
+//                               discordUrl?, todosDone? }
 //
 // Cards:
 //   GET  /cards/catalog       the deck + landmarks + play area (see cards.js)
@@ -68,9 +69,10 @@ import {
     publicTeam,
     startTeam,
     teamPhase,
+    MAX_QUESTIONS,
     TARGET_TEAM_SIZE,
 } from "./teams.js";
-import { getSettings, publicSettings, updateSettings } from "./settings.js";
+import { allQuestionsAtOnce, getSettings, publicSettings, startOptions, updateSettings } from "./settings.js";
 
 const USERNAME_RE = /^[A-Za-z0-9_]{3,20}$/;
 const MIN_PASSWORD_LENGTH = 6;
@@ -468,7 +470,7 @@ async function handleState(request, env, user) {
         }
     }
 
-    const cards = team ? await cardsForUser(env, team, me, now) : null;
+    const cards = team ? await cardsForUser(env, team, me, now, settings) : null;
     // A hider needs their own code to draw the QR; nobody else may ever see it.
     if (me.role === "hider" && team?.status === "playing" && meRow?.catch_code) {
         me.catchCode = CATCH_CODE_PREFIX + meRow.catch_code;
@@ -478,7 +480,7 @@ async function handleState(request, env, user) {
             serverNow: now,
             settings: publicSettings(settings),
             me,
-            team: team ? publicTeam(team, now, { debug: settings.debug }) : null,
+            team: team ? publicTeam(team, now, startOptions(settings)) : null,
             users,
             cards,
         },
@@ -518,7 +520,7 @@ async function adminState(env, now, settings, me) {
     ).all();
     const asked = new Map(counts.map((c) => [c.group_id, c.n]));
     const teams = (await loadTeams(env, now)).map((team) => ({
-        ...publicTeam(team, now, { debug: settings.debug }),
+        ...publicTeam(team, now, startOptions(settings)),
         questionsAsked: asked.get(team.id) ?? 0,
     }));
     const { results: rounds } = await env.DB.prepare(
@@ -584,7 +586,7 @@ const PLAY_COLUMNS = `id, batch_id, card_id, question, asked_by, asked_by_name, 
  * Both get an unread count for the header bell. Once a round is over the
  * geometry stays, so the final map is still there to look at.
  */
-async function cardsForUser(env, team, me, now) {
+async function cardsForUser(env, team, me, now, settings) {
     if (!me.role) return null;
     const live = team.status === "playing";
     const { results: plays } = await env.DB.prepare(
@@ -617,7 +619,7 @@ async function cardsForUser(env, team, me, now) {
     const state = teamPhase(team, now);
     const { batch: batchRow, inHand } =
         live && state.phase === "hunting"
-            ? await liveTeamBatch(env, team.id, state.question, now)
+            ? await liveTeamBatch(env, team.id, allQuestionsAtOnce(settings) ? MAX_QUESTIONS : state.question, now)
             : { batch: null, inHand: 0 };
     const current = batchRow?.played_card_id
         ? plays.find((p) => p.batch_id === batchRow.id)
@@ -676,7 +678,8 @@ async function handleCardPick(request, env, user) {
         if (!BUILDINGS[target]) return error("Pick the building this question is about", 400, request, env);
     }
 
-    const { batch } = await liveTeamBatch(env, team.id, state.question, now);
+    const settings = await getSettings(env);
+    const { batch } = await liveTeamBatch(env, team.id, allQuestionsAtOnce(settings) ? MAX_QUESTIONS : state.question, now);
     if (!cardIsInBatch(batch, card.id)) {
         // Face down already: a teammate sent this question first. If the team
         // has another question in hand, it is face up now.
@@ -839,7 +842,7 @@ async function handleTeamStart(request, env, user) {
     const now = Date.now();
     if (!user.group_id) return error("You are not in a team yet", 409, request, env);
     const settings = await getSettings(env);
-    const team = await startTeam(env, user.group_id, now, { debug: settings.debug });
+    const team = await startTeam(env, user.group_id, now, startOptions(settings));
     return json({ team: publicTeam(team, now) }, 200, request, env);
 }
 
@@ -975,9 +978,7 @@ async function handleAdminTeam(request, env) {
     const teamId = Number(body?.teamId);
     if (!Number.isInteger(teamId)) return error("Invalid teamId", 400, request, env);
     const settings = await getSettings(env);
-    const team = await adminTeamAction(env, teamId, body?.action, now, {
-        debug: settings.debug,
-    });
+    const team = await adminTeamAction(env, teamId, body?.action, now, startOptions(settings));
     return json({ team: publicTeam(team, now) }, 200, request, env);
 }
 

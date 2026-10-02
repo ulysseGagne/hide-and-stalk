@@ -867,6 +867,7 @@ let renderedState = null;
 
 function setGame(next) {
     game = next;
+    renderFakeMenu();
     const play = waitingPlay();
     const key = JSON.stringify([
         Boolean(game),
@@ -901,13 +902,54 @@ HNSHints.onStatus((status) => {
 // Where you are: the GPS fix, watched and kept alive.
 // ---------------------------------------------------------------------------
 
+// Debug: stand anywhere. With the admin's "fake position" switch on, the map's
+// long-press menu (right-click on a computer) puts YOU where it was pressed,
+// in place of the GPS, until "Back to my GPS" or the switch goes off.
+let fakePosition = null;
+let fakeMenu = [];
+let fakeMenuKey = "";
+
+function setFakePosition(latlng) {
+    fakePosition = latlng ? { lat: latlng.lat, lng: latlng.lng, accuracy: 5 } : null;
+    if (fakePosition) {
+        lastKnownPosition = { ...fakePosition };
+        lastFixAt = performance.now();
+        locationProblem = null;
+        gpsHeading = null;
+    } else {
+        // Back to the GPS: nothing until it answers again.
+        lastKnownPosition = null;
+        lastFixAt = null;
+        restartLocation();
+    }
+    notifyPosition();
+    renderYou();
+    renderBox();
+    renderFakeMenu();
+}
+
+function renderFakeMenu() {
+    const on = Boolean(game?.settings?.debugFakeLocation) && !game?.isAdmin;
+    if (!on && fakePosition) return setFakePosition(null);
+    const items = on ? (fakePosition ? ["here", "gps"] : ["here"]) : [];
+    const key = items.join();
+    if (key === fakeMenuKey || !map.contextmenu) return;
+    fakeMenuKey = key;
+    for (const item of fakeMenu) map.contextmenu.removeItem(item);
+    fakeMenu = [];
+    if (items.includes("here")) fakeMenu.push(map.contextmenu.addItem({ text: "Put me here (debug)", callback: (e) => setFakePosition(e.latlng) }));
+    if (items.includes("gps")) fakeMenu.push(map.contextmenu.addItem({ text: "Back to my GPS (debug)", callback: () => setFakePosition(null) }));
+}
+
 function notifyPosition() {
     for (const fn of positionListeners) fn(lastKnownPosition);
 }
 
-const fixAgeMs = () => (lastFixAt === null ? null : performance.now() - lastFixAt);
+// A position put on the map by hand (debug) is always a fresh fix.
+const fixAgeMs = () => (fakePosition ? 0 : lastFixAt === null ? null : performance.now() - lastFixAt);
 
 function handlePosition(pos) {
+    if (fakePosition) return; // standing where debug put us, not where the GPS says
     lastKnownPosition = {
         lat: pos.coords.latitude,
         lng: pos.coords.longitude,
@@ -937,6 +979,7 @@ const SILENT_DENIAL_MS = 400;
  * @param {number|null} askedAt performance.now() when a button asked, if one did
  */
 function handlePositionError(err, askedAt = null) {
+    if (fakePosition) return;
     if (err.code === 1 /* PERMISSION_DENIED */) {
         // Treated as NULL: the player has to do something about it.
         lastKnownPosition = null;
