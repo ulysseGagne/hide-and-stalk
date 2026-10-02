@@ -23,16 +23,6 @@
             who: "Félix",
             text: "Paste the server's invite link under Settings below. Every phone then gets a “Join the Discord call” button.",
         },
-        {
-            id: "announcement",
-            who: "Félix",
-            text: "Post the game announcement on Discord. It goes out Monday, September 28 (Ulysse sent all the info on Discord).",
-        },
-        {
-            id: "poster",
-            who: "Félix",
-            text: "Make the poster (same info, on Discord).",
-        },
     ];
 
     let adminApi = null;
