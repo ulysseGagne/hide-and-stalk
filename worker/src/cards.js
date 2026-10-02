@@ -213,7 +213,9 @@ const CONTEXT_CARDS = [
         answer: { type: "radio", options: ["Inside", "Outside"] },
         needsAsker: false,
         hint: null,
-        tiers: MID,
+        // Hiding inside a pavilion was too strong: the inside questions come
+        // early, so the stalkers learn sooner that it is a building search.
+        tiers: EARLY_MID,
     },
     {
         id: "floor",
@@ -223,7 +225,7 @@ const CONTEXT_CARDS = [
         answer: { type: "text", placeholder: "e.g. 3, or N/A" },
         needsAsker: false,
         hint: null,
-        tiers: MID_LATE,
+        tiers: MID,
     },
     {
         id: "room_number",
@@ -233,7 +235,7 @@ const CONTEXT_CARDS = [
         answer: { type: "text", placeholder: "e.g. 214" },
         needsAsker: false,
         hint: null,
-        tiers: LATE,
+        tiers: MID_LATE,
     },
     {
         id: "room_id",
