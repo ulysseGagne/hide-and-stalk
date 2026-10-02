@@ -264,13 +264,23 @@
                 const x = change ? box(change).x - 58 : a.x + Math.min(a.w, 190) + 10;
                 specs.push({ t: "bigcheck", x, y: a.y - 16, seed: `rc${row.dataset.playId}` });
             }
-            const qrFigure = $("#hider-qr-figure");
+            const qrText = $("#hider-qr .hider-qr-text");
             // While a question waits, it is the thing to look at; the code's line comes after.
             const waiting = $$("#hider-question-list .question-card").some(visible);
-            if (s.screen === "hunting" && visible(qrFigure) && !waiting) {
-                // In the gap under the code (styles.css keeps it), one line.
-                const fig = box(qrFigure);
-                specs.push({ t: "note", text: "SHOW THIS TO THE STALKER", x: fig.x, y: fig.y + fig.h + 60, o: { size: 21, maxWidth: 350, tilt: -3, importance: "key", weight: 5.2 } });
+            if (s.screen === "hunting" && visible(qrText) && !waiting) {
+                // Under the code to read out (styles.css keeps the room), one
+                // line, and an arrow after it pointing up at the code.
+                const t = box(qrText);
+                const text = "SHOW THIS TO THE STALKER";
+                const o = { size: 17, maxWidth: 320, tilt: -3, importance: "key", weight: 4.8 };
+                const y = t.y + t.h + 46;
+                specs.push({ t: "note", text, x: t.x, y, o });
+                const w = Ink.write(text, { x: 0, y: 0, seed: text, ...o }).width;
+                // The tilt lifts the line's end: the arrow starts level with
+                // its foot and leans up and left, toward the code.
+                const ax = r1(t.x + w + 26);
+                const ay = r1(y + 2 - w * Math.tan((3 * Math.PI) / 180));
+                specs.push({ t: "arrow", x1: ax, y1: ay, x2: ax - 14, y2: ay - 36, seed: "qrup", weight: 6 });
             }
         }
 

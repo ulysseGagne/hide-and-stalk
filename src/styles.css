@@ -273,10 +273,9 @@ button:disabled { cursor: default; }
 /* A room id in a question (ABC-1234): on one line, the part asked about underlined. */
 .room-code { white-space: nowrap; }
 .code-part { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 4px; }
-/* The tag code: room above it for what to do with it, drawn by hand. */
-.hider-qr { margin-top: 40px; position: relative; }
-/* Room under the code for SHOW THIS TO THE STALKER, drawn by hand (marks.js). */
-.hider-qr-figure { background: #fff; border: 3px solid #000; margin: 12px 0 80px; max-width: 100%; line-height: 0; }
+/* The tag code: room at the bottom for SHOW THIS TO THE STALKER and its arrow, drawn by hand (marks.js). */
+.hider-qr { margin-top: 40px; padding-bottom: 68px; position: relative; }
+.hider-qr-figure { background: #fff; border: 3px solid #000; margin: 12px 0 0; max-width: 100%; line-height: 0; }
 .hider-qr-figure svg { width: 100%; height: auto; display: block; }
 .hider-qr-text { text-align: left; }
 .hider-qr-text code { font: 700 16px var(--font); letter-spacing: .06em; color: var(--ink); }
