@@ -1,4 +1,4 @@
-/* global HNSHints, HNSMap, HNSMarks, L */
+/* global HNSHints, HNSMap, HNSMapDraw, HNSMarks, L */
 
 // Card UI: the stalkers' batch of three (pick one, then send it, then watch
 // the answer land, and every answer so far under them), the hider's questions
@@ -15,6 +15,7 @@ const CATEGORY_LABELS = {
     proximity: "Proximity",
     context: "Surroundings",
     photo: "Photo",
+    heatmap: "Heatmap",
 };
 
 // Photos are stored inline in D1, so they get shrunk hard before upload.
@@ -95,6 +96,7 @@ function describeAnswer(card, answer) {
         if (answer === NOT_APPLICABLE) return "N/A";
         return card.answer.screenshot ? "Screenshot" : "Photo";
     }
+    if (card?.answer.type === "heatmap") return "Heatmap";
     if (card?.answer.type === "choice") {
         const group = catalog?.landmarkGroups[card.answer.group];
         return group?.places.find((p) => p.id === answer)?.label ?? String(answer);
@@ -374,9 +376,11 @@ function renderStalker(cards) {
         ? "The admin has paused your team."
         : isPhoto
           ? ""
-          : card?.hint
-            ? "The map has been updated with this answer."
-            : "Nothing else to do until the next question.";
+          : card?.answer.type === "heatmap"
+            ? "Look for this square with the map's heatmap switch."
+            : card?.hint
+              ? "The map has been updated with this answer."
+              : "Nothing else to do until the next question.";
     if (play.hasPhoto) {
         el.sentCard.classList.add("has-photo");
         loadPhoto(play)
@@ -598,6 +602,59 @@ function answerWidget(card, form, play = null) {
             wrap.append(input, preview, na);
             break;
         }
+        case "heatmap": {
+            // Drawn here, from where the hider stands, heatmap only: the
+            // stalkers get the picture, never the position.
+            const note = document.createElement("p");
+            note.className = "muted answer-hint";
+            note.textContent = "The heatmap around you: one screen of the map at its closest zoom, centred on you.";
+            const preview = document.createElement("img");
+            preview.className = "answer-preview";
+            preview.alt = "The heatmap around you";
+            preview.hidden = true;
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "admin-btn";
+            button.textContent = "Draw my square";
+            const drawSquare = async () => {
+                button.disabled = true;
+                form.dataset.busy = "1";
+                setFormError(form, "");
+                try {
+                    let pos = HNSMap.getPosition();
+                    if (!pos) {
+                        const problem = await HNSMap.requestLocation();
+                        pos = HNSMap.getPosition();
+                        if (!pos) {
+                            setFormError(
+                                form,
+                                problem === "denied" || problem === "blocked"
+                                    ? "Your browser is blocking location for this site"
+                                    : "Could not get a position — try again outside",
+                            );
+                            return;
+                        }
+                    }
+                    const dataUrl = await HNSMapDraw.heatSquare(pos.lng, pos.lat);
+                    form.dataset.photo = dataUrl;
+                    preview.src = dataUrl;
+                    preview.hidden = false;
+                    button.textContent = "Draw it again from here";
+                    onRender();
+                } catch (err) {
+                    console.error(err);
+                    setFormError(form, "Could not draw the heatmap — try again");
+                } finally {
+                    delete form.dataset.busy;
+                    button.disabled = false;
+                }
+            };
+            button.addEventListener("click", drawSquare);
+            wrap.append(note, preview, button);
+            // Straight away when the phone already knows where it is.
+            if (HNSMap.getPosition()) drawSquare();
+            break;
+        }
         default:
             break;
     }
@@ -658,6 +715,8 @@ function readAnswer(card, form) {
         }
         case "photo":
             if (form.querySelector(`input[value="${NOT_APPLICABLE}"]:checked`)) return NOT_APPLICABLE;
+            return form.dataset.photo || null;
+        case "heatmap":
             return form.dataset.photo || null;
         default:
             return null;
@@ -851,7 +910,7 @@ async function submitAnswer(event, card, form, submit) {
     event.preventDefault();
     setFormError(form, "");
     if (form.dataset.busy) {
-        setFormError(form, "Still processing the photo...");
+        setFormError(form, card.answer.type === "heatmap" ? "Still drawing the heatmap..." : "Still processing the photo...");
         return;
     }
     const answer = readAnswer(card, form);

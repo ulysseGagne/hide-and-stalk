@@ -865,9 +865,29 @@ function renderBox() {
 // ---------------------------------------------------------------------------
 let renderedState = null;
 
+// ---------------------------------------------------------------------------
+// The heatmap switch: there once the heatmap question has been asked this
+// round, for the rest of it. On, the map shows the heat in place of the
+// streets (the hints, pins and names stay on top).
+// ---------------------------------------------------------------------------
+const heatSwitch = document.getElementById("heat-switch");
+let heatOn = false;
+function setHeatOn(on) {
+    heatOn = on;
+    heatSwitch.setAttribute("aria-pressed", String(on));
+    campusLayer.setHeat(on);
+}
+heatSwitch.addEventListener("click", () => setHeatOn(!heatOn));
+function renderHeatSwitch() {
+    const open = Boolean(game && !game.isAdmin && game.cards?.askedCardIds?.includes("heatmap"));
+    heatSwitch.hidden = !open;
+    if (!open && heatOn) setHeatOn(false);
+}
+
 function setGame(next) {
     game = next;
     renderFakeMenu();
+    renderHeatSwitch();
     const play = waitingPlay();
     const key = JSON.stringify([
         Boolean(game),

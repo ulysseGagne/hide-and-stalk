@@ -305,6 +305,14 @@ again and is marked as changed.
   aisles and driveways included, and starts 0.75x its near edge minus 5 m from
   streets only. So a hider who counts a parking aisle as a road, or misjudges
   by a few metres, is never ruled out. Dealt from question 4.
+- **"Send the heatmap around you."** (question 3 to 5) The hider's phone draws
+  the heatmap around them, one screen of the map at its closest zoom (about
+  80 × 115 m), centred on them, and sends the picture: the stalkers never get
+  the position, and the hints map does not change. From that question on,
+  both sides have a HEATMAP switch on the map for the rest of the round; on,
+  the map shows the heat in place of the streets, so the stalkers can look for
+  the square by eye. The heat is the same at every zoom: six flat grey tiers,
+  smooth like terrain, baked from OpenStreetMap (see the map below).
 - **Photo questions can be answered N/A** when there is nothing of the kind
   around. Screenshots (the nearest Street View, the blue dot in Google Maps)
   cannot: they come from the phone's pictures, not the camera.
@@ -411,3 +419,18 @@ Nothing outside the campus border is kept. Roads are cut where they cross it
 (the street the border runs along stays drawn), and a building, wood or field
 is kept only when it is wholly inside. That keeps the file near 80 KB, about
 30 KB over the wire.
+
+The heatmap the HEATMAP switch shows (and the hider's square is drawn from) is
+`src/data/campus-heat.json`, also **generated**, loaded only once the heatmap
+question has been asked:
+
+```sh
+npm run build:heat          # tools/build-heat.mjs, from tools/heat.mjs
+```
+
+`tools/heat.mjs` says how the heat is made: doors, stops, cafés, benches and
+buildings from OpenStreetMap warm the ground around them (roads do not),
+blurred wide, cut into six tiers like a topographic map and traced as smooth
+curves; the corner of Ch. Sainte-Foy and Av. Myrand is made busier by hand.
+`design/heatmap-study/` is how it was settled (`node design/heatmap-study/study.mjs`
+renders its review page from the same module).

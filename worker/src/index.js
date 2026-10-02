@@ -602,6 +602,9 @@ async function cardsForUser(env, team, me, now, settings) {
     const pending = live
         ? plays.filter((p) => p.answered_at === null).map(publicPlay)
         : [];
+    // Every card asked this round: the heatmap question brings the map's
+    // heatmap switch, for both sides.
+    const askedCardIds = [...new Set(plays.map((p) => p.card_id))];
 
     if (me.role === "hider") {
         return {
@@ -614,6 +617,7 @@ async function cardsForUser(env, team, me, now, settings) {
             // The hider sees the same closing net their stalkers do — it is
             // built entirely from answers they gave themselves.
             hints,
+            askedCardIds,
         };
     }
 
@@ -635,6 +639,7 @@ async function cardsForUser(env, team, me, now, settings) {
         historyCount: plays.length,
         unread: answered.filter((p) => p.answered_at > seenAt).length,
         hints,
+        askedCardIds,
     };
 }
 
@@ -783,8 +788,9 @@ async function handleCardAnswer(request, env, user) {
     const { value, error: invalid } = validateAnswer(card, body?.answer, play);
     if (invalid) return error(invalid, 400, request, env);
 
-    // A photo card answered N/A has no photo: the answer is just that.
-    const isPhoto = card.answer.type === "photo" && value !== NOT_APPLICABLE;
+    // A photo card answered N/A has no photo: the answer is just that. The
+    // heatmap's square is a picture too.
+    const isPhoto = (card.answer.type === "photo" && value !== NOT_APPLICABLE) || card.answer.type === "heatmap";
     if (isPhoto && value.length > MAX_PHOTO_CHARS) {
         return error("Photo is too large — try again", 413, request, env);
     }

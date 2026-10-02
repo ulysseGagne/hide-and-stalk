@@ -395,6 +395,13 @@ button:disabled { cursor: default; }
 /* How far the closest stalker is, scribbled at the right of the top line. */
 .map-box-hand { position: absolute; right: 14px; top: 8px; line-height: 0; }
 .map-box-hand svg { display: block; overflow: visible; }
+/* The heatmap switch, at the bottom left: black while the heatmap is on. */
+.heat-switch {
+    position: absolute; left: 12px; bottom: 12px; z-index: 1000;
+    background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); border-radius: 0;
+    padding: 10px 14px; font: 700 14px var(--font); letter-spacing: .12em; text-transform: uppercase;
+}
+.heat-switch[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 /* Pins and tags: drawn SVG in a marker. */
 .map-mark { line-height: 0; }
 .map-mark svg { display: block; overflow: visible; }

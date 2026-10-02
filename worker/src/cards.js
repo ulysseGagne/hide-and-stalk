@@ -19,6 +19,9 @@
 //                 { type: "photo" }                     a photo, or NOT_APPLICABLE
 //                 { type: "photo", screenshot: true }   a screenshot, from the
 //                                                       phone's pictures
+//                 { type: "heatmap" }                   a PNG: the square of the
+//                                                       heatmap around the hider,
+//                                                       drawn by their phone
 //                 { type: "section" }                   a letter, A to D: the
 //                                                       target building's section
 //   target      "building" when the stalker names a building as they send it
@@ -323,14 +326,16 @@ const CONTEXT_CARDS = [
         tiers: ENDGAME,
     },
     {
-        id: "people_around",
-        category: "context",
-        prompt: "How many people can you see right now?",
-        short: "People in sight?",
-        answer: {
-            type: "radio",
-            options: ["Nobody", "1-5", "6-20", "More than 20"],
-        },
+        // The hider's phone draws the heatmap around them (one screen at the
+        // map's closest zoom, centred on them; src/mapdraw.js) and sends the
+        // picture, never the position. The stalkers match it by eye with the
+        // map's heatmap switch, there from this question on; the hints map
+        // does not change. The heat itself: tools/heat.mjs.
+        id: "heatmap",
+        category: "heatmap",
+        prompt: "Send the heatmap around you.",
+        short: "Heatmap",
+        answer: { type: "heatmap" },
         needsAsker: false,
         hint: null,
         tiers: MID,
@@ -515,6 +520,11 @@ export function validateAnswer(card, raw, play = null) {
             // ~1 cm; anything beyond that is noise from the GPS anyway.
             return { value: { lat: Number(lat.toFixed(7)), lng: Number(lng.toFixed(7)) } };
         }
+        case "heatmap":
+            if (typeof raw !== "string" || !raw.startsWith("data:image/png")) {
+                return { error: "Draw your square first" };
+            }
+            return { value: raw };
         case "photo":
             if (raw === NOT_APPLICABLE && !spec.screenshot) return { value: raw };
             if (typeof raw !== "string" || !raw.startsWith("data:image/")) {

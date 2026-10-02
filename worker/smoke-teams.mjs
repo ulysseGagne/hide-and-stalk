@@ -264,6 +264,8 @@ const answerFor = (spec, alt = false) => {
             return { lat: CAMPUS.lat, lng: CAMPUS.lng };
         case "photo":
             return "data:image/jpeg;base64,AAAA";
+        case "heatmap":
+            return "data:image/png;base64,AAAA";
         default:
             return null;
     }

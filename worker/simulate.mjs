@@ -215,6 +215,9 @@ function truthfulAnswer(card, play, hider) {
         case "photo":
             // Now and then nothing of the kind is around.
             return Math.random() < 0.2 && !card.answer.screenshot ? "N/A" : PHOTO;
+        case "heatmap":
+            // The square the phone would draw: any PNG will do here.
+            return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=";
         default:
             return null;
     }

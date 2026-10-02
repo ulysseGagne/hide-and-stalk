@@ -5,6 +5,7 @@
         "build:border": "node tools/build-border.mjs",
         "build:locations": "node tools/build-locations.mjs",
         "build:map": "node tools/build-map.mjs",
-        "build:streets": "node tools/build-streets.mjs"
+        "build:streets": "node tools/build-streets.mjs",
+        "build:heat": "node tools/build-heat.mjs"
     }
 }

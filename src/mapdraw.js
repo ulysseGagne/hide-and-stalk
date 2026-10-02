@@ -131,6 +131,89 @@
             });
     }
 
+    // -----------------------------------------------------------------------
+    // The heatmap (tools/build-heat.mjs): each tier above white as closed
+    // rings, a point every 3 m. Loaded the first time it is needed: only once
+    // the heatmap question has been asked.
+    // -----------------------------------------------------------------------
+    let heat = null;
+    let heatPromise = null;
+    function loadHeat(url = "data/campus-heat.json") {
+        heatPromise ??= fetch(url)
+            .then((r) => {
+                if (!r.ok) throw new Error(`heatmap: HTTP ${r.status}`);
+                return r.json();
+            })
+            .then((raw) => {
+                heat = {
+                    z: raw.z,
+                    ox: raw.origin[0],
+                    oy: raw.origin[1],
+                    colors: raw.colors,
+                    tiers: raw.tiers.map((rings) => rings.map((r) => {
+                        const ring = unpack(r);
+                        return { ring, bbox: bboxOf([ring]) };
+                    })),
+                };
+                return heat;
+            })
+            .catch((err) => {
+                heatPromise = null;
+                throw err;
+            });
+        return heatPromise;
+    }
+
+    /**
+     * The heatmap alone into ctx (view as for draw): white, then each tier on
+     * top, its rings traced as curves through the midpoints between their
+     * points, so the edges have no corners at any zoom.
+     */
+    function drawHeat(ctx, view) {
+        const { z, x: vx, y: vy, w, h } = view;
+        ctx.fillStyle = heat.colors[0];
+        ctx.fillRect(0, 0, w, h);
+        const s = 2 ** (z - heat.z);
+        const bx = heat.ox * s - vx;
+        const by = heat.oy * s - vy;
+        const [x0, y0, x1, y1] = [-bx / s, -by / s, (w - bx) / s, (h - by) / s];
+        heat.tiers.forEach((rings, i) => {
+            ctx.beginPath();
+            let any = false;
+            for (const { ring, bbox } of rings) {
+                if (bbox[2] < x0 || bbox[0] > x1 || bbox[3] < y0 || bbox[1] > y1) continue;
+                const n = ring.length / 2;
+                const X = (k) => ring[2 * (k % n)] * s + bx;
+                const Y = (k) => ring[2 * (k % n) + 1] * s + by;
+                ctx.moveTo((X(n - 1) + X(0)) / 2, (Y(n - 1) + Y(0)) / 2);
+                for (let k = 0; k < n; k++) ctx.quadraticCurveTo(X(k), Y(k), (X(k) + X(k + 1)) / 2, (Y(k) + Y(k + 1)) / 2);
+                ctx.closePath();
+                any = true;
+            }
+            if (!any) return;
+            ctx.fillStyle = heat.colors[i + 1];
+            ctx.fill("evenodd");
+        });
+    }
+
+    // The square the hider sends for the heatmap question: one phone screen of
+    // the map at its closest zoom (about 80 x 115 m), centred on them.
+    const SQUARE = { z: 19, w: 390, h: 560, ratio: 2 };
+
+    /** The heatmap square around (lng, lat), heatmap only, as a PNG data URL. */
+    async function heatSquare(lng, lat) {
+        await loadHeat();
+        const { z, w, h, ratio } = SQUARE;
+        const [px, py] = project(lng, lat, z);
+        const canvas = document.createElement("canvas");
+        canvas.width = w * ratio;
+        canvas.height = h * ratio;
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        drawHeat(ctx, { z, x: px - w / 2, y: py - h / 2, w, h });
+        return canvas.toDataURL("image/png");
+    }
+
     /** Web Mercator: lng/lat to global pixels at zoom z (Leaflet's EPSG:3857 at 256 px). */
     function project(lng, lat, z) {
         const world = 256 * 2 ** z;
@@ -231,9 +314,17 @@
      * Draw the map into ctx, already scaled to CSS pixels.
      * view: { z (any zoom), x, y (the canvas's top-left, global pixels at z),
      *         w, h (CSS pixels), ratio (device pixels per CSS pixel, a whole number),
+     *         heat (optional: the heatmap in place of the streets, once loaded),
      *         mask (optional: rings from ringsAt20, printed inverted) }
      */
     function draw(ctx, view) {
+        if (view.heat && heat) drawHeat(ctx, view);
+        else drawCampus(ctx, view);
+        printMask(ctx, view);
+    }
+
+    /** The streets, buildings and the key's areas (draw, without the heatmap). */
+    function drawCampus(ctx, view) {
         const { z, x: vx, y: vy, w, h } = view;
         const ratio = view.ratio ?? 1;
         ctx.fillStyle = "#fff";
@@ -304,9 +395,11 @@
             ctx.fill("evenodd");
         }
         strokeRoads("bridge");
+    }
 
-        // What the answers ruled out, inverted: a difference with white, as
-        // the receipt prints it.
+    /** What the answers ruled out, inverted: a difference with white, as the receipt prints it. */
+    function printMask(ctx, view) {
+        const { z, x: vx, y: vy } = view;
         if (view.mask?.length) {
             const m = 2 ** (z - 20);
             ctx.globalCompositeOperation = "difference";
@@ -333,6 +426,7 @@
         const queue = [];
         let busy = false;
         let mask = null; // the ruled-out area (ringsAt20), printed inverted on every tile
+        let heatOn = false; // the heatmap in place of the streets
         const pump = () => {
             if (busy) return;
             busy = true;
@@ -363,7 +457,7 @@
                     const ratio = tile.width / size.x;
                     const ctx = tile.getContext("2d");
                     ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-                    draw(ctx, { z: coords.z, x: coords.x * size.x, y: coords.y * size.y, w: size.x, h: size.y, ratio, mask });
+                    draw(ctx, { z: coords.z, x: coords.x * size.x, y: coords.y * size.y, w: size.x, h: size.y, ratio, mask, heat: heatOn });
                     done?.(null, tile);
                 });
                 ready.then(pump);
@@ -375,11 +469,22 @@
              */
             setMask(geometry) {
                 mask = geometry ? ringsAt20(geometry) : null;
+                this._repaint();
+            },
+            /** The heatmap in place of the streets, or not; drawn once it has loaded. */
+            setHeat(on) {
+                if (heatOn === on) return;
+                heatOn = on;
+                if (on && !heat) loadHeat().then(() => heatOn && this._repaint(), (err) => console.error(err));
+                else this._repaint();
+            },
+            /** Draw the tiles already up again where they are, so the map never flashes blank. */
+            _repaint() {
                 for (const t of Object.values(this._tiles ?? {})) this._paint(t.el, t.coords);
             },
         });
         return new Layer({ tileSize: 256, updateWhenZooming: false, keepBuffer: 4, ...options });
     }
 
-    window.HNSMapDraw = { load, ready, draw, project, layer, canvasRatio, isReady: () => Boolean(data) };
+    window.HNSMapDraw = { load, ready, draw, project, layer, canvasRatio, isReady: () => Boolean(data), loadHeat, heatSquare };
 })();
