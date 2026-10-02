@@ -274,11 +274,13 @@
                 const text = "SHOW THIS TO THE STALKER";
                 const o = { size: 17, maxWidth: 320, tilt: -3, importance: "key", weight: 4.8 };
                 const y = t.y + t.h + 46;
-                specs.push({ t: "note", text, x: t.x, y, o });
                 const w = Ink.write(text, { x: 0, y: 0, seed: text, ...o }).width;
+                // Centred, the words and the arrow together.
+                const x = r1(t.x + Math.max(0, (t.w - (w + 30)) / 2));
+                specs.push({ t: "note", text, x, y, o });
                 // The tilt lifts the line's end: the arrow starts level with
                 // its foot and leans up and left, toward the code.
-                const ax = r1(t.x + w + 26);
+                const ax = r1(x + w + 26);
                 const ay = r1(y + 2 - w * Math.tan((3 * Math.PI) / 180));
                 specs.push({ t: "arrow", x1: ax, y1: ay, x2: ax - 14, y2: ay - 36, seed: "qrup", weight: 6 });
             }
@@ -295,6 +297,18 @@
         if (!specs.length && !bellOn) {
             const cta = $$("#view-menu .cta").find(visible);
             if (cta) specs.push(ctaArrow(box(cta), s.screen));
+        }
+
+        // A room question: the part of ABC-1234 it asks about, boxed by hand
+        // wherever the question is on the page (the words stay black). Not
+        // something to do, so it never stands in for the arrow above.
+        for (const part of $$("#view-menu .code-part").filter(visible)) {
+            const size = parseFloat(getComputedStyle(part).fontSize) || 16;
+            [...part.getClientRects()].forEach((rect, i) => {
+                const b = rectIn(view, rect);
+                const pad = r1(size * 0.2);
+                specs.push({ t: "box", x: b.x - pad, y: b.y + r1(size * 0.08), w: b.w + 2 * pad, h: b.h - r1(size * 0.12), seed: `cp${part.textContent}${i}`, weight: r1(Math.max(3, Math.min(4.5, size * 0.17))), jitter: 1.5 });
+            });
         }
         paint(menuLayer, specs);
     }
@@ -357,7 +371,7 @@
     }
 
     // -----------------------------------------------------------------------
-    // Handwriting in the flow of the page (the RESULTS tab's answers)
+    // Handwriting in the flow of the page (the stalkers' answers so far)
     // -----------------------------------------------------------------------
     /** One line of handwriting as an inline SVG, sized to itself. */
     function handwriting(text, o = {}) {

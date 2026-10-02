@@ -1,8 +1,8 @@
 /* global HNSHints, HNSMap, HNSMarks, L */
 
 // Card UI: the stalkers' batch of three (pick one, then send it, then watch
-// the answer land), the hider's questions and answers, the RESULTS tab, and
-// the header bell.
+// the answer land, and every answer so far under them), the hider's questions
+// and answers, and the header bell.
 //
 // The server owns every rule (what is dealt, who may pick, when the next
 // question comes). This file only draws it and posts the actions back. The
@@ -68,7 +68,8 @@ function cacheElements() {
     el.hiderAnswers = document.getElementById("hider-answers");
     el.hiderAnswerList = document.getElementById("hider-answer-list");
     el.historyList = document.getElementById("history-list");
-    el.questionsView = document.getElementById("view-questions");
+    el.menuView = document.getElementById("view-menu");
+    el.stalkerAnswers = document.getElementById("stalker-answers");
     el.hintStatus = document.getElementById("hint-status");
 }
 
@@ -148,7 +149,7 @@ function shortOf(card, play = null) {
 /**
  * A question as HTML. The room cards write out a room id, ABC-1234, with the
  * part they ask about between [brackets] in the deck: kept on one line, that
- * part underlined.
+ * part boxed by hand, in red (marks.js finds .code-part).
  */
 function promptHtml(prompt) {
     return escapeCardHtml(prompt).replace(/\[?ABC-[\d[\]]+\]?/g, (code) =>
@@ -376,7 +377,7 @@ function renderStalker(cards) {
                 onRender();
             })
             .catch(() => {
-                /* the RESULTS tab says so if it still fails there */
+                /* the answers so far say so if it still fails there */
             });
     }
     onRender();
@@ -845,9 +846,11 @@ async function submitAnswer(event, card, form, submit) {
 }
 
 // ---------------------------------------------------------------------------
-// RESULTS: every question so far and its answer, a tab (for the stalkers and the hider)
+// Answers so far: every question the stalkers asked and its answer, newest
+// first, under their cards during the hunt (the hider has "Your answers")
 // ---------------------------------------------------------------------------
-let historyKey = null;
+let historyKey = null; // what the list was last fetched for
+let historySentShown = null; // whether the sent card was up when it was drawn
 let historyPlays = [];
 
 /** What the questions list depends on: re-fetch it only when this changes. */
@@ -860,7 +863,7 @@ function historyStateKey(cards) {
 async function loadHistory() {
     try {
         const { plays } = await cardsApi("/cards/history");
-        historyPlays = plays;
+        historyPlays = plays ?? [];
         renderHistory(plays);
     } catch (err) {
         if (!historyPlays.length) {
@@ -874,10 +877,12 @@ async function loadHistory() {
 
 function renderHistory(plays) {
     el.historyList.innerHTML = "";
-    if (!plays.length) {
-        el.historyList.innerHTML = '<p class="muted history-empty">No questions asked yet.</p>';
-        return;
-    }
+    // The question on the sent card, just above, is not listed twice; with
+    // nothing else to list, the heading goes too.
+    const shown = el.sentCard.hidden ? null : cardsState?.currentPlay?.id;
+    plays = plays.filter((p) => p.id !== shown);
+    el.stalkerAnswers.classList.toggle("empty", !plays.length);
+    if (!plays.length) return;
     // Newest first.
     for (const play of [...plays].sort((a, b) => (b.question ?? 0) - (a.question ?? 0) || b.askedAt - a.askedAt)) {
         const card = cardById(play.cardId);
@@ -931,12 +936,9 @@ function renderHistory(plays) {
     }
 }
 
-/** The RESULTS tab was opened: bring it up to date, and the answers are read. */
-async function showQuestions() {
-    if (!historyPlays.length) el.historyList.innerHTML = '<p class="muted history-empty">Loading...</p>';
-    historyKey = historyStateKey(cardsState);
-    loadHistory();
-    await markSeen();
+/** The QUESTIONS tab was opened: the answers on it are read. */
+function menuShown() {
+    markSeen();
 }
 
 async function markSeen() {
@@ -973,11 +975,11 @@ function renderBell(cards) {
 function bellClicked() {
     const role = cardsState?.role;
     if (role === "stalker") {
-        // The answers are in the RESULTS tab (from the hunt on); before
-        // that, there is nothing to read.
-        const tab = document.querySelector('.view-tab[data-view="questions"]');
-        if (tab && !tab.hidden) goToView("questions");
-        else markSeen();
+        // The newest answer: on the sent card, or at the top of the answers so far.
+        goToView("menu");
+        const newest = !el.sentCard.hidden ? el.sentCard : el.stalkerAnswers;
+        if (!newest.hidden) newest.scrollIntoView({ behavior: "smooth", block: "start" });
+        markSeen();
     } else if (role === "hider") {
         goToView("menu");
         el.hiderQuestions?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1086,19 +1088,29 @@ window.HNSCards = {
             renderHiderQuestions(cards);
             renderHiderAnswers(cards);
         }
-        // The RESULTS tab, kept up to date while it is open.
-        const key = historyStateKey(cards);
-        const questionsOpen = !el.questionsView.hidden;
-        if (questionsOpen && key !== historyKey) {
-            historyKey = key;
-            loadHistory();
+        // The stalkers' answers so far, under their cards, during the hunt
+        // (the receipt has them once it is over). Fetched again only when an
+        // answer changes; redrawn when the sent card above comes or goes.
+        const listed = cards.role === "stalker" && teamState?.phase === "hunting";
+        el.stalkerAnswers.hidden = !listed;
+        if (listed) {
+            const key = historyStateKey(cards);
+            if (key !== historyKey) {
+                historyKey = key;
+                historySentShown = !el.sentCard.hidden;
+                loadHistory();
+            } else if (historySentShown !== !el.sentCard.hidden) {
+                historySentShown = !el.sentCard.hidden;
+                renderHistory(historyPlays);
+            }
         }
-        if (questionsOpen) markSeen();
+        // An answer on this tab is an answer read: no bell while it is open.
+        if (!el.menuView.hidden) markSeen();
         checkCue(cards);
         onRender();
     },
 
-    showQuestions,
+    menuShown,
     /** The round's questions and answers (receipt.js), fetched fresh. */
     async history() {
         await ensureCatalog();

@@ -50,7 +50,6 @@
             <nav id="view-tabs" role="tablist" aria-label="Views">
                 <button type="button" class="view-tab active" role="tab" data-view="menu" aria-selected="true">MENU</button>
                 <button type="button" class="view-tab" role="tab" data-view="map" aria-selected="false">MAP</button>
-                <button type="button" class="view-tab" role="tab" data-view="questions" aria-selected="false" hidden>RESULTS</button>
             </nav>
         </header>
 
@@ -198,6 +197,12 @@
                                     Found them? Scan their code
                                 </button>
                             </div>
+                            <!-- Every question asked so far and its answer,
+                                 newest first, during the hunt (cards.js). -->
+                            <section id="stalker-answers" class="stalker-answers" hidden>
+                                <h3 class="cards-title">Answers so far</h3>
+                                <div id="history-list" class="history-list"></div>
+                            </section>
                         </div>
                         <!-- Before the game only: the rules, most important first. -->
                         <section id="rules-card" class="rules-card">
@@ -314,9 +319,6 @@
             </section>
 
             <!-- Every question this team has asked, with the hider's answer. -->
-            <section id="view-questions" class="view" role="tabpanel" hidden>
-                <div id="history-list" class="history-list"></div>
-            </section>
         </main>
 
         <!-- First launch: the two permissions, one button each. -->

@@ -103,8 +103,9 @@ const REAL_STEPS = {
     selected: async (page) => {
         await page.click("#card-row .card:nth-child(2)");
     },
+    // Every answer so far: under the stalker's cards (the RESULTS tab is gone).
     history: async (page) => {
-        await page.click('.view-tab[data-view="questions"]');
+        await page.evaluate(() => document.getElementById("stalker-answers")?.scrollIntoView({ block: "start" }));
     },
 };
 

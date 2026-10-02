@@ -6,20 +6,18 @@ const TOKEN_KEY = "hns.token";
 const PERM_SEEN_KEY = "hns.perm.seen";
 
 // ---------------------------------------------------------------------------
-// View tabs: MENU (QUESTIONS from the hunt on) / MAP / RESULTS
+// View tabs: MENU (QUESTIONS from the hunt on) / MAP
 // ---------------------------------------------------------------------------
 const tabs = document.querySelectorAll(".view-tab");
 const views = {
     menu: document.getElementById("view-menu"),
     map: document.getElementById("view-map"),
-    questions: document.getElementById("view-questions"),
 };
 const menuTab = document.querySelector('.view-tab[data-view="menu"]');
-const questionsTab = document.querySelector('.view-tab[data-view="questions"]');
 let currentView = "menu";
 
 function showView(name) {
-    if (!views[name] || (name === "questions" && questionsTab.hidden)) name = "menu";
+    if (!views[name]) name = "menu";
     currentView = name;
     document.body.dataset.view = name;
     for (const [key, el] of Object.entries(views)) {
@@ -31,7 +29,7 @@ function showView(name) {
         tab.setAttribute("aria-selected", String(active));
     }
     if (name === "map") setTimeout(() => HNSMap.shown(), 0);
-    if (name === "questions") HNSCards.showQuestions();
+    if (name === "menu") HNSCards.menuShown();
     scheduleMarks();
 }
 
@@ -699,18 +697,14 @@ function renderHome() {
 }
 
 /**
- * From the hunt on, the first tab is where questions are asked and answered,
- * so it says QUESTIONS (MENU before that); RESULTS, every question so far with
- * its answer, appears next to the map for both sides.
+ * From the hunt on, the first tab is where questions are asked and answered
+ * (and, for the stalkers, every answer so far), so it says QUESTIONS; MENU
+ * before that.
  */
 function renderTabs() {
     const phase = gameState?.team?.phase;
-    const show = Boolean(currentUser && !currentUser.isAdmin && (phase === "hunting" || phase === "ended"));
-    menuTab.textContent = show ? "QUESTIONS" : "MENU";
-    if (questionsTab.hidden === show) {
-        questionsTab.hidden = !show;
-        if (!show && currentView === "questions") showView("menu");
-    }
+    const hunt = Boolean(currentUser && !currentUser.isAdmin && (phase === "hunting" || phase === "ended"));
+    menuTab.textContent = hunt ? "QUESTIONS" : "MENU";
 }
 
 teamStartBtn.addEventListener("click", async () => {

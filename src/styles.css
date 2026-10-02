@@ -272,9 +272,10 @@ button:disabled { cursor: default; }
 .answer-row-prompt { font-size: 15px; }
 .answer-row-answer { font-size: 18px; font-weight: 700; }
 .answer-row .admin-btn { padding: 9px 12px; font-size: 15px; flex: 0 0 auto; }
-/* A room id in a question (ABC-1234): on one line, the part asked about underlined. */
+/* A room id in a question (ABC-1234): on one line; marks.js boxes the part
+   asked about (.code-part) by hand, in red, in the room kept around it. */
 .room-code { white-space: nowrap; }
-.code-part { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 4px; }
+.code-part { margin-inline: .24em; }
 /* The tag code: room at the bottom for SHOW THIS TO THE STALKER and its arrow, drawn by hand (marks.js). */
 .hider-qr { margin-top: 40px; padding-bottom: 68px; position: relative; }
 .hider-qr-figure { background: #fff; border: 3px solid #000; margin: 12px 0 0; max-width: 100%; line-height: 0; }
@@ -285,9 +286,11 @@ button:disabled { cursor: default; }
 .found-panel { margin-top: 24px; padding-top: 34px; border-top: 3px solid var(--ink); }
 #scan-open { width: 100%; height: 60px; font-size: 16px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
 
-/* QUESTIONS: every question so far, a tab ---------------------------------- */
-#view-questions { overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.history-list { max-width: 476px; margin: 0 auto; padding: 4px 18px 24px; position: relative; box-sizing: border-box; }
+/* Answers so far: every question the stalkers asked, under their cards ---- */
+/* (the heading goes when there is nothing to list) */
+.stalker-answers { margin-top: 40px; }
+.stalker-answers.empty { display: none; }
+.history-list { position: relative; box-sizing: border-box; }
 /* The answer is written in by hand in the room at the bottom of each row. */
 .history-row { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 14px 0 44px; border-bottom: var(--rule) solid var(--ink); }
 .history-row.has-photo { padding-bottom: 14px; }
