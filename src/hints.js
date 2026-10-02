@@ -13,10 +13,9 @@
 // skipped rather than guessed at, and reported through onStatus() so the UI can
 // say so out loud.
 
-// Padding around the play area, in degrees, for the half-plane rectangles and
-// the shaded mask. Big enough to cover anywhere a player might pan to.
+// Padding around the play area, in degrees, for the half-plane rectangles.
+// Big enough to cover anywhere a player might pan to.
 const HALF_PLANE_PAD = 1;
-const MASK_PAD = 5;
 // "Within 0 minutes' walk" still has to be a shape, not a point.
 const MIN_WALK_RADIUS_M = 25;
 
@@ -277,8 +276,8 @@ function render() {
         return;
     }
     const { region, applied, skipped, contradiction } = result;
-    // What the hider can't be: the padded world with the surviving region
-    // punched out of it.
+    // What the hider can't be: campus with the surviving region punched out
+    // of it. Past the campus border the map is blank and stays white.
     const mask = region ? maskFor(region) : null;
     notify({ applied, skipped, contradiction, ready: true, region, mask });
 }
@@ -288,7 +287,7 @@ let maskShape = null;
 function maskFor(region) {
     if (region !== maskKey) {
         maskKey = region;
-        maskShape = turf.difference(turf.featureCollection([paddedBox(MASK_PAD), region]));
+        maskShape = turf.difference(turf.featureCollection([playAreaPolygon(), region]));
     }
     return maskShape;
 }
@@ -362,6 +361,6 @@ window.HNSHints = {
             return null;
         }
     },
-    /** The world outside a region, for printing it inverted. */
+    /** Campus outside a region, for printing it inverted. */
     maskFor,
 };
