@@ -106,8 +106,6 @@
             }
             case "tick":
                 return Ink.check(s.x, s.y, 28, { seed: s.seed, weight: 7 });
-            case "bigcheck":
-                return Ink.bigCheck(s.x, s.y, 40, { seed: s.seed, weight: 9 });
             case "arrow":
                 return Ink.stubArrow(s.x1, s.y1, s.x2, s.y2, { seed: s.seed, weight: s.weight });
             case "circle":
@@ -255,15 +253,7 @@
                 const cy = b.y + b.h / 2;
                 specs.push({ t: "tick", x: r1(cx - 0.55 * 28 + 2), y: r1(cy - 0.4 * 28 - 1), seed: `chk${opt.textContent.trim()}` });
             }
-            // Answered: the big brush check at the right, just before the Change
-            // button (the check is about 56 px wide), in the gap the question
-            // and its answer leave there; one under the other down the list.
-            for (const row of $$("#hider-answer-list .answer-row").filter(visible)) {
-                const a = box($(".answer-row-answer", row));
-                const change = $(".admin-btn", row);
-                const x = change ? box(change).x - 58 : a.x + Math.min(a.w, 190) + 10;
-                specs.push({ t: "bigcheck", x, y: a.y - 16, seed: `rc${row.dataset.playId}` });
-            }
+            // Answered: the answer itself is written in by hand (cards.js), no check.
             const qrText = $("#hider-qr .hider-qr-text");
             // While a question waits, it is the thing to look at; the code's line comes after.
             const waiting = $$("#hider-question-list .question-card").some(visible);

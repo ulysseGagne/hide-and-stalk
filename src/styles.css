@@ -270,7 +270,9 @@ button:disabled { cursor: default; }
 .answer-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: var(--rule) solid var(--ink); position: relative; }
 .answer-row-text { flex: 1 1 auto; display: flex; flex-direction: column; gap: 3px; min-width: 0; font-size: 15px; }
 .answer-row-prompt { font-size: 15px; }
-.answer-row-answer { font-size: 18px; font-weight: 700; }
+/* The answer, written in by hand in red (marks.js handwriting); "changed" beside it. */
+.answer-row-answer { display: flex; align-items: flex-end; gap: 6px; margin-left: -4px; }
+.answer-row-answer .changed-mark { margin-bottom: 10px; }
 .answer-row .admin-btn { padding: 9px 12px; font-size: 15px; flex: 0 0 auto; }
 /* A room id in a question (ABC-1234): on one line; marks.js boxes the part
    asked about (.code-part) by hand, in red, in the room kept around it. */

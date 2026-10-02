@@ -789,9 +789,9 @@ function renderHiderAnswers(cards) {
         text.className = "answer-row-text";
         text.innerHTML = `<span class="question-meta">${escapeCardHtml(questionLabel(play))}</span>
             <span class="answer-row-prompt">${promptHtml(promptOf(card, play))}</span>
-            <strong class="answer-row-answer">${escapeCardHtml(describeAnswer(card, play.answer) ?? "")}${
-                play.editedAt ? ' <span class="changed-mark">changed</span>' : ""
-            }</strong>`;
+            <span class="answer-row-answer">${HNSMarks.handwriting(handAnswer(card, play.answer), { seed: `a${play.id}` })}<span class="sr-only">${escapeCardHtml(
+                describeAnswer(card, play.answer) ?? "",
+            )}</span>${play.editedAt ? '<span class="changed-mark">changed</span>' : ""}</span>`;
         const change = document.createElement("button");
         change.type = "button";
         change.className = "admin-btn";
