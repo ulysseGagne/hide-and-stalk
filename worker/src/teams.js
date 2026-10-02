@@ -256,8 +256,32 @@ export async function startTeam(env, teamId, now, { debug = false } = {}) {
 }
 
 /**
- * After a round: back to ready, with the next player in line as the hider so
- * everyone gets a turn at hiding. The finished round stays in `rounds`.
+ * Who hides next: one of the players who have hidden the fewest rounds so far
+ * (every round in `rounds`, whichever team it was played in), at random, and
+ * never the one who just hid unless they are the only one there. So everyone
+ * gets the same number of turns at hiding, in no set order.
+ */
+async function nextHider(env, members) {
+    if (!members.length) return null;
+    const { results } = await env.DB.prepare(
+        `SELECT hider_name, COUNT(*) AS n FROM rounds
+         WHERE hider_name IN (${members.map(() => "?").join(", ")})
+         GROUP BY hider_name`,
+    )
+        .bind(...members.map((m) => m.username))
+        .all();
+    const hid = new Map(results.map((r) => [r.hider_name, r.n]));
+    const times = (m) => hid.get(m.username) ?? 0;
+    const others = members.filter((m) => m.role !== "hider");
+    const pool = others.length ? others : members;
+    const fewest = Math.min(...pool.map(times));
+    const due = pool.filter((m) => times(m) === fewest);
+    return due[Math.floor(Math.random() * due.length)];
+}
+
+/**
+ * After a round: back to ready, with a new hider (nextHider). The finished
+ * round stays in `rounds`.
  */
 export async function playAgain(env, teamId) {
     const team = await getTeamRow(env, teamId);
@@ -265,8 +289,7 @@ export async function playAgain(env, teamId) {
     if (team.status === "ready") return team; // a teammate beat us to it
     if (team.status !== "ended") throw httpError("This round is still going", 409);
     const members = await teamMembers(env, teamId);
-    const current = members.findIndex((m) => m.role === "hider");
-    const next = members.length ? members[(current + 1) % members.length] : null;
+    const next = await nextHider(env, members);
     const res = await env.DB.prepare(
         `UPDATE teams SET status = 'ready', started_at = NULL, paused_at = NULL,
              paused_total_ms = 0, ended_at = NULL, outcome = NULL, hider_name = NULL,

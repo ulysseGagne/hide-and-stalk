@@ -383,6 +383,15 @@ check("question 7 never comes: the hider wins", s.json.team.phase === "ended" &&
 check("a full hunt is exactly six questions long", s.json.team.huntMs === 6 * 60000, `${s.json.team.huntMs}`);
 a = await call("/state", { token: at });
 check("both rounds are in the results, longest first", a.json.results.length === 2 && a.json.results[0].huntMs >= a.json.results[1].huntMs);
+r = await call("/team/again", { method: "POST", token: tok(newHider) });
+a = await call("/state", { token: at });
+const thirdHider = hiderOf(teamA);
+const fresh = membersOf(teamA).filter((u) => u.id !== hA.id && u.id !== newHider.id);
+check(
+    "the third hider is someone who has not hidden yet",
+    fresh.length ? fresh.some((u) => u.id === thirdHider.id) : thirdHider.id === hA.id,
+    `${hA.username}, ${newHider.username} -> ${thirdHider.username}`,
+);
 
 // ---------------------------------------------------------------------------
 console.log("\nAdmin");

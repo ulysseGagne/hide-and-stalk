@@ -23,7 +23,7 @@
 //
 // Team (any member of the team):
 //   POST /team/start          start the round: hiding countdown, then the hunt
-//   POST /team/again          after a round: back to ready, next player hides
+//   POST /team/again          after a round: back to ready, a new hider (whoever hid least, at random)
 //   POST /catch               (stalker) { code } from the hider's QR -> { caught }
 //   POST /found               (stalker) end the hunt without a scan
 //

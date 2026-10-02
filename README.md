@@ -34,7 +34,9 @@ presses **Start** on their phone.
 3. The stalkers win by finding the hider (they scan the QR code on the hider's
    screen, or press **Hider has been found**). If question 7 would come first
    (30 minutes of hunting), the hider wins.
-4. **Play again** puts the team back to ready, with the next player hiding.
+4. **Play again** puts the team back to ready with a new hider, picked at
+   random among the players who have hidden the fewest rounds so far (never
+   the one who just hid), so everyone hides equally often.
    Every finished round goes into the results; the longest hide wins.
 
 The rules the players see before the game, most important first: hide near
@@ -193,7 +195,7 @@ limits).
 | POST   | `/state`      | ✓    | same, with the caller's position as the body (`{lat, lng, accuracy?, fixAgeMs?, rttMs?}` or `{lat: null, lng: null}`) — the client's only sync call |
 | POST   | `/location`   | ✓    | the position alone (older clients) |
 | POST   | `/team/start` | team | start the round: hiding countdown, then the hunt |
-| POST   | `/team/again` | team | after a round: back to ready, the next player hides |
+| POST   | `/team/again` | team | after a round: back to ready, a new hider (whoever hid least, at random) |
 | POST   | `/catch`      | stalker | `{code}` from the hider's QR → `{caught, team}` |
 | POST   | `/found`      | stalker | no body — ends the own team's round without a scan |
 

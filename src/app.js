@@ -551,13 +551,6 @@ function liveTeam() {
     };
 }
 
-/** Who hides next after Play again: the next player in line, like the server picks. */
-function nextHiderName(users) {
-    const members = [...users].sort((a, b) => a.id - b.id);
-    const current = members.findIndex((u) => u.role === "hider");
-    return members.length ? members[(current + 1) % members.length].username : null;
-}
-
 /**
  * Everything the status card says, for one player at one moment.
  * Progressive disclosure: only what matters right now, in plain words.
@@ -631,7 +624,6 @@ function statusView(team, me, users) {
     // Over.
     const stalkersWon = team.outcome === "seekers";
     const huntTime = formatMs(team.huntMs ?? 0);
-    const next = nextHiderName(users);
     let title;
     let text;
     if (stalkersWon) {
@@ -648,7 +640,9 @@ function statusView(team, me, users) {
     return {
         ...view,
         title,
-        text: `${text}${next ? ` Next up to hide: ${next}.` : ""}`,
+        // The server picks the next hider when Play again is pressed: one of
+        // those who have hidden least, at random.
+        text: `${text} Play again to pick a new hider.`,
         again: true,
         // The winners' line, by hand: GOTCHA for the stalkers who found the
         // hider, HOW ABOUT THAT. for the hider nobody found.
