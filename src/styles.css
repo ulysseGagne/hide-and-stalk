@@ -361,8 +361,6 @@ button:disabled { cursor: default; }
 .leaflet-container { font-family: var(--font); background: #fff; }
 .leaflet-container .leaflet-control-attribution { background: #fff; color: #000; font: 400 9px var(--font); padding: 1px 4px; margin: 0; }
 .leaflet-control-attribution a { color: #000; text-decoration: none; }
-/* What the hints have ruled out, inverted: a white mask, blended as a difference. */
-.leaflet-invert-pane { mix-blend-mode: difference; pointer-events: none; }
 .leaflet-ink-pane, .leaflet-ink-pane svg { pointer-events: none; }
 .map-ink { position: absolute; overflow: visible; pointer-events: none; }
 /* The question box, at the top. */

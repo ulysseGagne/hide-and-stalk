@@ -8,7 +8,9 @@
 // The data (data/campus-map.json) is built by tools/build-map.mjs: only what
 // is drawn, already sorted, simplified, in Web Mercator pixels at zoom 20.
 // This file draws any view of it onto a 2D canvas: the map's tiles (layer())
-// and the receipt's printed map (receipt.js) use the same drawing.
+// and the receipt's printed map (receipt.js) use the same drawing. The tiles
+// also print the hints' ruled-out area inverted (setMask), right in the
+// canvas, so nothing has to be blended over the map while it zooms.
 
 (function () {
     // Road widths: metres, and the fewest pixels a road may shrink to (the
@@ -47,6 +49,37 @@
         return out;
     }
 
+    /** Twice a ring's signed area (its sign says which way it winds). */
+    function area2(r) {
+        let a = 0;
+        for (let i = 0, j = r.length - 2; i < r.length; j = i, i += 2) a += r[j] * r[i + 1] - r[i] * r[j + 1];
+        return a;
+    }
+    function contains(r, x, y) {
+        let c = false;
+        for (let i = 0, j = r.length - 2; i < r.length; j = i, i += 2) {
+            if (r[i + 1] > y !== r[j + 1] > y && x < ((r[j] - r[i]) * (y - r[i + 1])) / (r[j + 1] - r[i + 1]) + r[i]) c = !c;
+        }
+        return c;
+    }
+    /**
+     * A shape's rings wound outer one way and holes the other, so a kind's
+     * shapes can be filled together with "nonzero" (see fillArea). A ring
+     * inside an odd number of the shape's other rings is a hole.
+     */
+    function wound(rings) {
+        return rings.map((r, k) => {
+            const depth = rings.reduce((n, o, m) => n + (m !== k && contains(o, r[0], r[1]) ? 1 : 0), 0);
+            if (area2(r) > 0 === (depth % 2 === 0)) return r;
+            const out = new Float64Array(r.length);
+            for (let i = 0; i < r.length; i += 2) {
+                out[i] = r[r.length - 2 - i];
+                out[i + 1] = r[r.length - 1 - i];
+            }
+            return out;
+        });
+    }
+
     function bboxOf(rings) {
         let x0 = Infinity;
         let y0 = Infinity;
@@ -68,7 +101,7 @@
         const add = (kind, rings, extra = {}) => features.push({ kind, rings, bbox: bboxOf(rings), ...extra });
         for (const [rank, up, line] of raw.roads) add(up ? "bridge" : "road", [unpack(line)], { rank });
         for (const rings of raw.buildings) add("building", rings.map(unpack));
-        for (const kind of ["sport", "grass", "wood"]) for (const rings of raw[kind]) add(kind, rings.map(unpack));
+        for (const kind of ["sport", "grass", "wood"]) for (const rings of raw[kind]) add(kind, wound(rings.map(unpack)));
         // A coarse grid: which features touch which cell.
         const grid = new Map();
         features.forEach((f, id) => {
@@ -173,13 +206,32 @@
         return pattern;
     }
 
+    /** A GeoJSON Polygon or MultiPolygon as its rings in zoom-20 pixels (global, not relative to the data). */
+    function ringsAt20(geometry) {
+        const polys = geometry.type === "Polygon" ? [geometry.coordinates] : geometry.type === "MultiPolygon" ? geometry.coordinates : [];
+        const out = [];
+        for (const poly of polys) {
+            for (const ring of poly) {
+                const flat = new Float64Array(ring.length * 2);
+                ring.forEach(([lng, lat], i) => {
+                    const [x, y] = project(lng, lat, 20);
+                    flat[2 * i] = x;
+                    flat[2 * i + 1] = y;
+                });
+                out.push(flat);
+            }
+        }
+        return out;
+    }
+
     // -----------------------------------------------------------------------
     // Drawing
     // -----------------------------------------------------------------------
     /**
      * Draw the map into ctx, already scaled to CSS pixels.
      * view: { z (any zoom), x, y (the canvas's top-left, global pixels at z),
-     *         w, h (CSS pixels), ratio (device pixels per CSS pixel, a whole number) }
+     *         w, h (CSS pixels), ratio (device pixels per CSS pixel, a whole number),
+     *         mask (optional: rings from ringsAt20, printed inverted) }
      */
     function draw(ctx, view) {
         const { z, x: vx, y: vy, w, h } = view;
@@ -202,14 +254,22 @@
             for (let i = 2; i < ring.length; i += 2) ctx.lineTo(ring[i] * s + bx, ring[i + 1] * s + by);
             if (close) ctx.closePath();
         };
-        const fillEach = (kind, style) => {
-            ctx.fillStyle = style;
+        // Every shape of a kind in one path, filled once: a patterned fill is
+        // dear however small the shape (the grass is 175 of them), and drawing
+        // them one by one made each tile several times slower. The rings are
+        // wound outer one way, holes the other (decode), so "nonzero" keeps
+        // the holes and fills where shapes overlap.
+        const fillArea = (kind, style) => {
+            ctx.beginPath();
+            let any = false;
             for (const f of list) {
                 if (f.kind !== kind) continue;
-                ctx.beginPath();
                 for (const r of f.rings) trace(r, true);
-                ctx.fill("evenodd");
+                any = true;
             }
+            if (!any) return;
+            ctx.fillStyle = style;
+            ctx.fill("nonzero");
         };
         const roadWidth = (rank) => (rank === PATH ? (far ? 0.6 : 1) : Math.max(RANK[rank].min * 0.7, (RANK[rank].m / mpp) * 0.55));
         const strokeRoads = (kind) => {
@@ -231,9 +291,9 @@
         };
 
         // The stadium and the track under the fields, the fields under the woods.
-        fillEach("sport", areaPattern(ctx, "sport", ratio, vx, vy));
-        fillEach("grass", areaPattern(ctx, "grass", ratio, vx, vy));
-        fillEach("wood", areaPattern(ctx, "wood", ratio, vx, vy));
+        fillArea("sport", areaPattern(ctx, "sport", ratio, vx, vy));
+        fillArea("grass", areaPattern(ctx, "grass", ratio, vx, vy));
+        fillArea("wood", areaPattern(ctx, "wood", ratio, vx, vy));
         strokeRoads("road");
         ctx.fillStyle = "#000";
         for (const f of list) {
@@ -244,6 +304,22 @@
             ctx.fill("evenodd");
         }
         strokeRoads("bridge");
+
+        // What the answers ruled out, inverted: a difference with white, as
+        // the receipt prints it.
+        if (view.mask?.length) {
+            const m = 2 ** (z - 20);
+            ctx.globalCompositeOperation = "difference";
+            ctx.fillStyle = "#fff";
+            ctx.beginPath();
+            for (const ring of view.mask) {
+                ctx.moveTo(ring[0] * m - vx, ring[1] * m - vy);
+                for (let i = 2; i < ring.length; i += 2) ctx.lineTo(ring[i] * m - vx, ring[i + 1] * m - vy);
+                ctx.closePath();
+            }
+            ctx.fill("evenodd");
+            ctx.globalCompositeOperation = "source-over";
+        }
     }
 
     /** Device pixels per CSS pixel for the map's canvases: whole numbers only (see patternCanvas), at most 2. */
@@ -256,6 +332,7 @@
     function layer(options = {}) {
         const queue = [];
         let busy = false;
+        let mask = null; // the ruled-out area (ringsAt20), printed inverted on every tile
         const pump = () => {
             if (busy) return;
             busy = true;
@@ -275,15 +352,30 @@
                 const ratio = canvasRatio();
                 tile.width = size.x * ratio;
                 tile.height = size.y * ratio;
+                this._paint(tile, coords, done);
+                return tile;
+            },
+            /** Draw a tile, in turn with the others; `done` (Leaflet's) when it is a new one. */
+            _paint(tile, coords, done) {
                 queue.push(() => {
-                    if (!tile.isConnected && !this._tiles?.[this._tileCoordsToKey(coords)]) return done(null, tile);
+                    if (!tile.isConnected && !this._tiles?.[this._tileCoordsToKey(coords)]) return done?.(null, tile);
+                    const size = this.getTileSize();
+                    const ratio = tile.width / size.x;
                     const ctx = tile.getContext("2d");
-                    ctx.scale(ratio, ratio);
-                    draw(ctx, { z: coords.z, x: coords.x * size.x, y: coords.y * size.y, w: size.x, h: size.y, ratio });
-                    done(null, tile);
+                    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+                    draw(ctx, { z: coords.z, x: coords.x * size.x, y: coords.y * size.y, w: size.x, h: size.y, ratio, mask });
+                    done?.(null, tile);
                 });
                 ready.then(pump);
-                return tile;
+            },
+            /**
+             * What the answers ruled out (GeoJSON Polygon or MultiPolygon, or
+             * null), printed inverted on the tiles. The tiles already up are
+             * drawn again where they are, so the map never flashes blank.
+             */
+            setMask(geometry) {
+                mask = geometry ? ringsAt20(geometry) : null;
+                for (const t of Object.values(this._tiles ?? {})) this._paint(t.el, t.coords);
             },
         });
         return new Layer({ tileSize: 256, updateWhenZooming: false, keepBuffer: 4, ...options });

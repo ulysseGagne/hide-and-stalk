@@ -130,10 +130,9 @@ const map = L.map("map", {
 map.attributionControl.setPrefix(false);
 map.attributionControl.addAttribution('<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap</a>');
 
-// The panes, bottom to top: the campus (tiles), what's ruled out (inverted),
-// the red layer, the pins, the names, YOU, a place's pop-up.
+// The panes, bottom to top: the campus (tiles, with what's ruled out printed
+// inverted in them), the red layer, the pins, the names, YOU, a place's pop-up.
 for (const [name, z] of [
-    ["invertPane", 250],
     ["inkPane", 450],
     ["tagPane", 650],
     ["youPane", 660],
@@ -141,10 +140,9 @@ for (const [name, z] of [
 ]) {
     map.createPane(name).style.zIndex = String(z);
 }
-map.getPane("invertPane").classList.add("leaflet-invert-pane");
 map.getPane("inkPane").classList.add("leaflet-ink-pane");
 
-HNSMapDraw.layer().addTo(map);
+const campusLayer = HNSMapDraw.layer().addTo(map);
 HNSMapDraw.load("data/campus-map.json").catch((err) => {
     console.error(err);
     showToast("The map could not be loaded. Reload to try again.", 5000);
@@ -231,7 +229,12 @@ function dashedLine(cx, cy, ux, uy, from, to, seed, weight = 6.2) {
 // changes or the map pans out of what is drawn; scaled along with the map
 // while it zooms. Marks are drawn in coordinates fixed to the campus at each
 // zoom, so their hand-drawn wobble doesn't change as the map pans.
+//
+// A wheel or a trackpad zooms in many small steps, each one a new zoom: the
+// marks stay scaled along with the map until it has been still for a moment,
+// then are drawn again once, rather than at every step.
 // ---------------------------------------------------------------------------
+const INK_SETTLE_MS = 250;
 const InkLayer = L.Renderer.extend({
     options: { padding: 0.5, pane: "inkPane" },
     initialize(draw, options) {
@@ -254,6 +257,15 @@ const InkLayer = L.Renderer.extend({
         if (this._map._animatingZoom && this._bounds) return;
         const m = this._map;
         const zoom = m.getZoom();
+        if (this._bounds && this._drawnZoom !== zoom && !this._settling) {
+            clearTimeout(this._settle);
+            this._settle = setTimeout(() => {
+                this._settling = true;
+                if (this._map) this._update();
+                this._settling = false;
+            }, INK_SETTLE_MS);
+            return;
+        }
         const pixelOrigin = m.getPixelOrigin();
         if (!this._dirty && this._bounds && this._drawnZoom === zoom && this._drawnOrigin?.equals(pixelOrigin)) {
             const view = L.bounds(m.containerPointToLayerPoint([0, 0]), m.containerPointToLayerPoint(m.getSize()));
@@ -330,26 +342,18 @@ function drawingOf(play) {
 const showHints = () => Boolean(game && !game.isAdmin && game.team && hints.ready && hints.region && !waitingPlay());
 
 // ---------------------------------------------------------------------------
-// The hints layer: what's ruled out, inverted (a white mask blended as a
-// difference over the campus), and the edge of what's left, by hand
+// The hints layer: what's ruled out, inverted, and the edge of what's left, by
+// hand. The inverting is printed into the campus tiles (mapdraw.js): a white
+// layer blended over the map had to be blended again on every frame of a
+// zoom, which is what made zooming stutter.
 // ---------------------------------------------------------------------------
-const invertRenderer = L.svg({ pane: "invertPane", padding: 0.5 });
-let maskLayer = null;
 let maskShown = null;
 
 function renderMask() {
     const mask = showHints() ? hints.mask : null;
     if (mask === maskShown) return;
     maskShown = mask;
-    if (maskLayer) map.removeLayer(maskLayer);
-    maskLayer = null;
-    if (!mask) return;
-    maskLayer = L.geoJSON(mask, {
-        pane: "invertPane",
-        renderer: invertRenderer,
-        interactive: false,
-        style: { stroke: false, fill: true, fillColor: "#fff", fillOpacity: 1 },
-    }).addTo(map);
+    campusLayer.setMask(mask?.geometry ?? null);
 }
 
 /** A ring's points on screen, cut down to the stretches near the drawn area. */
