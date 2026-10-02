@@ -371,12 +371,24 @@ for (const [q, left] of [[1, 2], [2, 1]]) {
     const b = s.json.cards.batch;
     check(`no wait: question ${q + 1} is face up straight away`, b?.question === q + 1 && b.playedCardId === null && s.json.cards.inHand === left, `batch ${b?.question}, in hand ${s.json.cards.inHand}`);
 }
-r = await call("/cards/pick", { method: "POST", token: tok(sA2[0]), body: { cardId: plainCard(s.json.cards.batch) } });
-check("question 3 sent", r.status === 200, JSON.stringify(r.json));
+// Question 3 is "which part of <building>?": sent with a building, answered with a letter.
+sql(`UPDATE card_batches SET card_ids = '["building_section","ns","ew"]' WHERE group_id = ${teamA} AND question = 3`);
+r = await call("/cards/pick", { method: "POST", token: tok(sA2[0]), body: { cardId: "building_section" } });
+check("a building question needs its building", r.status === 400, r.json.error);
+r = await call("/cards/pick", { method: "POST", token: tok(sA2[0]), body: { cardId: "building_section", target: "pav_nowhere" } });
+check("and a building that exists", r.status === 400, r.json.error);
+r = await call("/cards/pick", { method: "POST", token: tok(sA2[0]), body: { cardId: "building_section", target: "pav_plt" } });
+check("question 3 sent, about Pouliot", r.status === 200, JSON.stringify(r.json));
+const sectionPlay = r.json.playId;
 s = await call("/state", { token: tok(sA2.at(-1)) });
 check("all sent: the last one stays on screen", s.json.cards.inHand === 0 && s.json.cards.batch?.question === 3 && s.json.cards.batch.playedCardId !== null && s.json.cards.currentPlay?.question === 3);
 s = await call("/state", { token: tok(newHider) });
 check("the hider owes all three, numbered as they came", s.json.cards.pending.map((p) => p.question).join(",") === "1,2,3", s.json.cards.pending.map((p) => p.question).join(","));
+check("the building question knows its building", s.json.cards.pending.find((p) => p.id === sectionPlay)?.target === "pav_plt");
+r = await call("/cards/answer", { method: "POST", token: tok(newHider), body: { playId: sectionPlay, answer: "E" } });
+check("a section the building does not have is refused", r.status === 400, r.json.error);
+r = await call("/cards/answer", { method: "POST", token: tok(newHider), body: { playId: sectionPlay, answer: "B" } });
+check("the hider answers with a section", r.status === 200, JSON.stringify(r.json));
 advance(teamA, 4 * 60000); // the rest of the way to question 7
 s = await call("/state", { token: tok(newHider) });
 check("question 7 never comes: the hider wins", s.json.team.phase === "ended" && s.json.team.outcome === "hider", JSON.stringify(s.json.team));

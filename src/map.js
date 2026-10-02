@@ -325,7 +325,7 @@ function waitingPlay() {
     return [...pending].sort((a, b) => a.askedAt - b.askedAt)[0];
 }
 
-/** What a waiting question draws: "ew" | "ns" | "radius" | "nearest" | "tag" | null. */
+/** What a waiting question draws: "ew" | "ns" | "radius" | "nearest" | "section" | "tag" | null. */
 function drawingOf(play) {
     const card = play && cardOf(play.cardId);
     const hint = card?.hint;
@@ -334,6 +334,7 @@ function drawingOf(play) {
     if (hint.type === "halfPlane" && asker) return hint.axis === "ew" ? "ew" : "ns";
     if (hint.type === "radius" && asker) return "radius";
     if (hint.type === "nearest") return "nearest";
+    if (hint.type === "section" && play.target) return "section";
     // Closer than me: only the place's tag, no circle.
     if (hint.type === "closerThan") return "tag";
     return null;
@@ -453,8 +454,36 @@ const inkLayer = new InkLayer((frame) => {
     const play = waitingPlay();
     const kind = drawingOf(play);
     if (kind === "ew" || kind === "ns" || kind === "radius") out += drawQuestion(frame, play, kind);
+    if (kind === "section") out += drawSections(frame, play);
     return out;
 }).addTo(map);
+
+/**
+ * Which part of <building>: the building and the lines between its sections,
+ * by hand, and each section's letter where its pin is. Zoomed out, while its
+ * sections would sit too close to read, only the building is drawn.
+ */
+function drawSections(frame, play) {
+    const shapes = HNSHints.sectionShapes(play.target);
+    if (!shapes) return "";
+    const pt = ([lng, lat]) => frame.P(lat, lng);
+    let out = Ink.wobble(shapes.outline.map(pt), { seed: `secw${play.target}`, weight: 3.6, amp: 1 });
+    const pins = shapes.labels.map((sec) => frame.P(sec.lat, sec.lng));
+    let closest = Infinity;
+    pins.forEach((a, i) => pins.slice(i + 1).forEach((b) => (closest = Math.min(closest, Math.hypot(a[0] - b[0], a[1] - b[1])))));
+    if (closest < 44) return out;
+    shapes.dividers.forEach(([a, b], i) => {
+        out += Ink.wobble([pt(a), pt(b)], { seed: `secd${play.target}${i}`, weight: 3.2, amp: 0.8 });
+    });
+    const size = Math.max(16, Math.min(30, closest * 0.4));
+    for (const sec of shapes.labels) {
+        const [x, y] = frame.P(sec.lat, sec.lng);
+        const o = { size, seed: `secl${play.target}${sec.id}`, importance: "key", weight: size * 0.22 };
+        const w = Ink.write(sec.id, { x: 0, y: 0, ...o }).width;
+        out += Ink.write(sec.id, { ...o, x: x - w / 2, y: y + size * 0.36 }).svg;
+    }
+    return out;
+}
 
 // ---------------------------------------------------------------------------
 // Places: a waiting "which X are you closest to?" pins its places in red;
@@ -649,7 +678,7 @@ function renderTag() {
 let pinsShown = true;
 function renderPinsShown() {
     const kind = drawingOf(waitingPlay());
-    const show = game?.isAdmin || !(kind === "ew" || kind === "ns" || kind === "radius" || kind === "nearest");
+    const show = game?.isAdmin || !(kind === "ew" || kind === "ns" || kind === "radius" || kind === "nearest" || kind === "section");
     if (show === pinsShown) return;
     pinsShown = show;
     if (show) userPinsLayer.addTo(map);
@@ -800,7 +829,7 @@ function renderBox() {
             const card = cardOf(play.cardId);
             kicker = `Question ${play.question} · from ${play.askedByName ?? "a stalker"}`;
             // The room cards' [brackets] mark the part of ABC-1234 asked about; plain here.
-            text = (card?.prompt ?? "").replace(/[[\]]/g, "");
+            text = (window.HNSCards?.promptOf(card, play) ?? card?.prompt ?? "").replace(/[[\]]/g, "");
         } else {
             const last = team.question >= team.maxQuestions;
             if (last) {

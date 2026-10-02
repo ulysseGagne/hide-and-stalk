@@ -39,6 +39,10 @@ let sending = false;
 // teammates) until Send.
 let pickedCardId = null;
 let pickedBatchId = null;
+// For a card about a building the stalker names ("which part of <building>?"):
+// the building picked, and what the list was last drawn for.
+let pickedTarget = null;
+let renderedTargetsKey = null;
 
 // ---------------------------------------------------------------------------
 // Elements
@@ -50,6 +54,8 @@ function cacheElements() {
     el.stalkerCards = document.getElementById("stalker-cards");
     el.cardRow = document.getElementById("card-row");
     el.sendBtn = document.getElementById("send-btn");
+    el.targetPicker = document.getElementById("target-picker");
+    el.targetList = document.getElementById("target-list");
     el.sentCard = document.getElementById("sent-card");
     el.sentState = document.getElementById("sent-state");
     el.sentPrompt = document.getElementById("sent-prompt");
@@ -124,6 +130,22 @@ function loadPhoto(play) {
 }
 
 /**
+ * A card's question, for a play of it: "{building}" is the building the
+ * stalker named as they sent it (play.target). Before it is sent, on the card
+ * itself, it is whichever building they will pick.
+ */
+function promptOf(card, play = null) {
+    const building = play?.target ? catalog?.buildings?.[play.target]?.label : null;
+    return (card?.prompt ?? "").replace("{building}", building ?? "a building you pick");
+}
+
+/** The card's receipt line, the building by its code ("Part of PLT?"). */
+function shortOf(card, play = null) {
+    const code = play?.target ? catalog?.buildings?.[play.target]?.code : null;
+    return (card?.short ?? "").replace("{building}", code ?? "a building");
+}
+
+/**
  * A question as HTML. The room cards write out a room id, ABC-1234, with the
  * part they ask about between [brackets] in the deck: kept on one line, that
  * part underlined.
@@ -180,12 +202,55 @@ function makeCardFace(card, index, count, { disabled }) {
     // Numbered, so you can tell there are three.
     node.innerHTML = `
         <span class="card-category"><span>${escapeCardHtml(CATEGORY_LABELS[card.category] ?? card.category)}</span><span class="card-count">${index + 1} OF ${count}</span></span>
-        <span class="card-prompt">${promptHtml(card.prompt)}</span>`;
+        <span class="card-prompt">${promptHtml(promptOf(card))}</span>`;
     return node;
 }
 
 let renderedBatchKey = null;
 let renderedSentKey = null;
+
+/**
+ * The buildings a "which part of <building>?" card can be sent about: only
+ * those the hints still allow (a building partly cut off included), nearest
+ * first. Drawn again only when that list changes, so a poll never undoes a tap.
+ */
+function renderTargets(show) {
+    if (!show) {
+        el.targetPicker.hidden = true;
+        el.targetList.innerHTML = "";
+        renderedTargetsKey = null;
+        pickedTarget = null;
+        return;
+    }
+    const buildings = catalog?.buildings ?? {};
+    const possible = HNSHints.possibleBuildingIds();
+    const ids = Object.keys(buildings).filter((id) => !possible || possible.has(id));
+    const pos = HNSMap.getPosition();
+    const options = ids.map((id) => {
+        const b = buildings[id];
+        // How far the building is: its nearest section pin, near enough.
+        const distance = pos ? Math.min(...b.sections.map((x) => metresBetween(pos, x))) : null;
+        return { value: id, label: b.label, distance };
+    });
+    if (pos) options.sort((a, b) => a.distance - b.distance);
+    else options.sort((a, b) => a.label.localeCompare(b.label, "fr"));
+    if (pickedTarget && !ids.includes(pickedTarget)) pickedTarget = null;
+    el.targetPicker.hidden = false;
+    const key = `${pickedCardId}:${options.map((o) => o.value).join(",")}`;
+    if (key === renderedTargetsKey) return;
+    renderedTargetsKey = key;
+    el.targetList.innerHTML = "";
+    for (const opt of options) {
+        const label = optionLabel("radio", "target-building", opt, { codeFirst: true });
+        const input = label.querySelector("input");
+        input.checked = opt.value === pickedTarget;
+        input.addEventListener("change", () => {
+            pickedTarget = opt.value;
+            renderPick();
+        });
+        el.targetList.appendChild(label);
+    }
+}
 
 /** Show the pick on the cards (marks.js draws its box) and the Send button. */
 function renderPick() {
@@ -195,7 +260,9 @@ function renderPick() {
         node.setAttribute("aria-pressed", String(picked));
     }
     const rowShown = !el.cardRow.hidden;
-    el.sendBtn.hidden = !(rowShown && pickedCardId);
+    const needsTarget = rowShown && cardById(pickedCardId)?.target === "building";
+    renderTargets(needsTarget);
+    el.sendBtn.hidden = !(rowShown && pickedCardId && (!needsTarget || pickedTarget));
     el.sendBtn.disabled = sending || Boolean(teamState?.paused);
     // Room above the first card for PICK JUST ONE.
     el.cardRow.classList.toggle("with-note", rowShown);
@@ -273,7 +340,7 @@ function renderStalker(cards) {
     }
     const isPhoto = card?.answer.type === "photo";
     if (isPhoto) el.sentPrompt.innerHTML = photoPromptHtml(card.prompt);
-    else el.sentPrompt.innerHTML = promptHtml(card?.prompt ?? "");
+    else el.sentPrompt.innerHTML = promptHtml(promptOf(card, play));
     el.sentCard.classList.remove("has-photo");
     el.sentPhoto.hidden = true;
     delete el.sentCard.dataset.answer;
@@ -368,7 +435,7 @@ function optionLabel(type, name, opt, { codeFirst = false } = {}) {
 
 let widgetSerial = 0;
 
-function answerWidget(card, form) {
+function answerWidget(card, form, play = null) {
     const spec = card.answer;
     const wrap = document.createElement("div");
     wrap.className = "answer-widget";
@@ -377,6 +444,16 @@ function answerWidget(card, form) {
     const name = `answer-${card.id}-${++widgetSerial}`;
 
     switch (spec.type) {
+        case "section": {
+            // The named building's section pins, lettered on the map, each
+            // with how far it is: the closest is the honest answer.
+            const pos = HNSMap.getPosition();
+            for (const sec of catalog?.buildings?.[play?.target]?.sections ?? []) {
+                const distance = pos ? metresBetween(pos, sec) : null;
+                wrap.appendChild(optionLabel("radio", name, { value: sec.id, label: sec.id, distance }));
+            }
+            break;
+        }
         case "choice": {
             const codeFirst = spec.group === "building";
             const { first, more } = choiceOptions(spec);
@@ -526,6 +603,7 @@ function readAnswer(card, form) {
     const spec = card.answer;
     switch (spec.type) {
         case "radio":
+        case "section":
         case "choice": {
             const picked = form.querySelector("input:checked");
             return picked ? picked.value : null;
@@ -615,7 +693,7 @@ function answerForm(play, card, { submitLabel, onCancel }) {
 
     const prompt = document.createElement("p");
     prompt.className = "question-prompt";
-    prompt.innerHTML = promptHtml(card.prompt);
+    prompt.innerHTML = promptHtml(promptOf(card, play));
 
     const parts = [head, prompt];
     // "How long would it take me to walk to you?" is unanswerable without
@@ -643,7 +721,7 @@ function answerForm(play, card, { submitLabel, onCancel }) {
     const error = document.createElement("p");
     error.className = "auth-error answer-error";
 
-    form.append(...parts, answerWidget(card, form), actions, error);
+    form.append(...parts, answerWidget(card, form, play), actions, error);
     form.addEventListener("submit", (e) => submitAnswer(e, card, form, submit));
     return form;
 }
@@ -709,7 +787,7 @@ function renderHiderAnswers(cards) {
         const text = document.createElement("div");
         text.className = "answer-row-text";
         text.innerHTML = `<span class="question-meta">${escapeCardHtml(questionLabel(play))}</span>
-            <span class="answer-row-prompt">${promptHtml(card.prompt)}</span>
+            <span class="answer-row-prompt">${promptHtml(promptOf(card, play))}</span>
             <strong class="answer-row-answer">${escapeCardHtml(describeAnswer(card, play.answer) ?? "")}${
                 play.editedAt ? ' <span class="changed-mark">changed</span>' : ""
             }</strong>`;
@@ -814,7 +892,7 @@ function renderHistory(plays) {
                     play.askedByName ?? "?",
                 )} · ${escapeCardHtml(timeAgo(play.askedAt))}</span>
             </header>
-            <p class="history-prompt">${promptHtml(card?.prompt ?? play.cardId)}</p>`;
+            <p class="history-prompt">${promptHtml(card ? promptOf(card, play) : play.cardId)}</p>`;
         const answer = document.createElement("p");
         answer.className = `history-answer${answered ? "" : " pending"}`;
         if (!answered) {
@@ -964,6 +1042,7 @@ window.HNSCards = {
             const node = e.target.closest?.(".card[data-card-id]");
             if (!node || node.disabled) return;
             pickedCardId = pickedCardId === node.dataset.cardId ? null : node.dataset.cardId;
+            pickedTarget = null;
             el.cardError.textContent = "";
             renderPick();
         });
@@ -1028,6 +1107,8 @@ window.HNSCards = {
     },
     cardById,
     describeAnswer,
+    promptOf,
+    shortOf,
     catalog: () => catalog,
 
     reset() {
@@ -1065,7 +1146,8 @@ async function sendPicked() {
     el.sendBtn.disabled = true;
     for (const node of el.cardRow.querySelectorAll(".card")) node.disabled = true;
     try {
-        await cardsApi("/cards/pick", { method: "POST", body: { cardId } });
+        const target = cardById(cardId)?.target === "building" ? pickedTarget : undefined;
+        await cardsApi("/cards/pick", { method: "POST", body: { cardId, target } });
     } catch (err) {
         el.cardError.textContent =
             err.status === undefined ? "Could not reach the server" : err.message;

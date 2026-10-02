@@ -81,20 +81,19 @@ function localProjection() {
     };
 }
 
-// Each landmark group's cells never change, so they are built once.
+// Each set of places' cells never change, so they are built once.
 const voronoiCache = new Map();
 
 /**
- * Every place of a landmark group mapped to its Voronoi cell: the points closer
- * to it than to any of its siblings. Built in the local projection so "closer"
+ * Every place of a set mapped to its Voronoi cell: the points closer to it
+ * than to any of its siblings. Built in the local projection so "closer"
  * means closer on foot, then mapped straight back — the projection is linear,
  * so the cells' straight edges stay straight. null with fewer than two places.
  * @returns {Map<string, object>|null} place id -> polygon
  */
-function voronoiCells(groupKey) {
-    if (voronoiCache.has(groupKey)) return voronoiCache.get(groupKey);
-    const group = hintsCatalog?.landmarkGroups?.[groupKey];
-    const placed = group?.places.filter(hasCoords) ?? [];
+function voronoiOf(key, places) {
+    if (voronoiCache.has(key)) return voronoiCache.get(key);
+    const placed = places.filter(hasCoords);
     let result = null;
     if (placed.length >= 2) {
         const { forward, inverse } = localProjection();
@@ -114,9 +113,15 @@ function voronoiCells(groupKey) {
             );
         });
     }
-    voronoiCache.set(groupKey, result);
+    voronoiCache.set(key, result);
     return result;
 }
+
+/** A landmark group's places mapped to their cells ("which X are you closest to?"). */
+const voronoiCells = (groupKey) => voronoiOf(`group:${groupKey}`, hintsCatalog?.landmarkGroups?.[groupKey]?.places ?? []);
+
+/** A building's section pins (A to D) mapped to their cells ("which part of <building>?"). */
+const sectionCells = (buildingId) => voronoiOf(`building:${buildingId}`, hintsCatalog?.buildings?.[buildingId]?.sections ?? []);
 
 /**
  * Turn one answered card into a constraint.
@@ -210,6 +215,15 @@ function constraintFor(play) {
             if (!cells) return { skip: "need two or more landmarks" };
             const cell = cells.get(play.answer);
             if (!cell) return { skip: "landmark has no coordinates" };
+            return { shape: cell, mode: "keep" };
+        }
+        case "section": {
+            // Closest of the named building's section pins: true anywhere, in
+            // the building or not.
+            const cells = sectionCells(play.target);
+            if (!cells) return { skip: "unknown building" };
+            const cell = cells.get(play.answer);
+            if (!cell) return { skip: "unknown section" };
             return { shape: cell, mode: "keep" };
         }
         default:
@@ -322,10 +336,84 @@ function possiblePlaceIds(groupKey) {
     return ids;
 }
 
+/**
+ * The buildings a stalker may still ask "which part of <building>?" about:
+ * the ones whose footprint still overlaps where the hider can be, a building
+ * partly cut off included. null when that can't be worked out, meaning "offer
+ * every building".
+ * @returns {Set<string>|null}
+ */
+function possibleBuildingIds() {
+    if (!hintsCatalog?.buildings) return null;
+    let result;
+    try {
+        result = solveCached();
+    } catch {
+        return null;
+    }
+    if (!result.region || !result.applied) return null;
+    const ids = new Set();
+    for (const [id, b] of Object.entries(hintsCatalog.buildings)) {
+        try {
+            if (turf.booleanIntersects(turf.polygon([b.outline]), result.region)) ids.add(id);
+        } catch {
+            ids.add(id); // when in doubt, offer it
+        }
+    }
+    return ids;
+}
+
+/**
+ * A building's sections as the map draws them: its outline, the lines between
+ * its sections (the edges of its pins' cells inside the footprint, each once),
+ * and where each letter goes (its pin). null for an unknown building.
+ */
+const sectionShapeCache = new Map();
+function sectionShapes(buildingId) {
+    if (sectionShapeCache.has(buildingId)) return sectionShapeCache.get(buildingId);
+    const building = hintsCatalog?.buildings?.[buildingId];
+    const cells = building && sectionCells(buildingId);
+    if (!cells) return null;
+    const outline = turf.polygon([building.outline]);
+    const edge = turf.polygonToLine(outline);
+    const dividers = [];
+    const seen = new Set();
+    const keyOf = ([x, y]) => `${x.toFixed(7)},${y.toFixed(7)}`;
+    for (const cell of cells.values()) {
+        let part;
+        try {
+            part = turf.intersect(turf.featureCollection([cell, outline]));
+        } catch {
+            continue;
+        }
+        if (!part) continue;
+        const polys = part.geometry.type === "Polygon" ? [part.geometry.coordinates] : part.geometry.coordinates;
+        for (const ring of polys.flat()) {
+            for (let i = 1; i < ring.length; i++) {
+                const a = ring[i - 1];
+                const b = ring[i];
+                const mid = turf.point([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
+                // On the outline: the footprint's own wall, drawn whole elsewhere.
+                if (turf.pointToLineDistance(mid, edge, { units: "meters" }) < 0.5) continue;
+                const key = [keyOf(a), keyOf(b)].sort().join("|");
+                if (seen.has(key)) continue;
+                seen.add(key);
+                dividers.push([a, b]);
+            }
+        }
+    }
+    const result = { outline: building.outline, dividers, labels: building.sections };
+    sectionShapeCache.set(buildingId, result);
+    return result;
+}
+
 window.HNSHints = {
+    possibleBuildingIds,
+    sectionShapes,
     setCatalog(next) {
         hintsCatalog = next;
         voronoiCache.clear();
+        sectionShapeCache.clear();
         solved = null;
         render();
     },

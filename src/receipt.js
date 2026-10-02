@@ -85,7 +85,7 @@
             .map((play) => {
                 const card = HNSCards.cardById(play.cardId);
                 // "Q1 North or south?": the number in a black box, like the app's labels.
-                return row(`<em class="rc-q">Q${play.question}</em>${escapeHtml(card?.short ?? play.cardId)}`, escapeHtml(slipAnswer(card, play)));
+                return row(`<em class="rc-q">Q${play.question}</em>${escapeHtml(card ? HNSCards.shortOf(card, play) : play.cardId)}`, escapeHtml(slipAnswer(card, play)));
             })
             .join("");
         const found = team.outcome === "seekers";

@@ -237,7 +237,7 @@ its connection. A team keeps the timers it started with.
 | Method | Path              | Auth | Body / Result |
 |--------|-------------------|------|---------------|
 | GET    | `/cards/catalog`  | ✓    | → the deck, landmarks and play area |
-| POST   | `/cards/pick`     | stalker | `{cardId}` → `{playId}` |
+| POST   | `/cards/pick`     | stalker | `{cardId, target?}` → `{playId}`; `target` is the building of "which part of …?" |
 | POST   | `/cards/answer`   | hider | `{playId, answer}` → `{ok, edited}`; sending it again for an answered card corrects it |
 | POST   | `/cards/seen`     | ✓    | clears this user's bell |
 | GET    | `/cards/history`  | ✓    | → `{plays}` for the caller's team |
@@ -278,6 +278,15 @@ again and is marked as changed.
   coordinates, the exact room id) end the round. `batches.js` prefers the tier
   matching the current question and widens to the nearest tiers when one has
   been picked clean.
+- **"Which part of <building> are you closest to?"** The stalker names the
+  building as they send it, from the pavilions the hints still allow (one
+  partly cut off included), nearest first. Each pavilion has two to four
+  section pins, A to D, placed by hand on its footprint
+  (`locations/geojson/building-sections.geojson`; A is the northernmost, the
+  others clockwise or along the building). The hider answers with the closest
+  pin, which is true whether or not they are in that building, and the map
+  draws the building split into its sections, lettered, once zoomed in close
+  enough to read them. Dealt from question 4.
 - **No card is offered to the same team twice in a round.** Not just no card
   *played* twice — a card burnt unplayed in an earlier batch is still one the
   team has seen.
@@ -295,8 +304,9 @@ again and is marked as changed.
 ### Configuring the play area
 
 Every place in the game — the campus perimeter, the six landmarks, the 25
-pavilions, 12 cafés, 23 bus stops and 6 àVélo stations — comes from
-`locations/geojson/*.geojson`. Nothing is typed in by hand anywhere else.
+pavilions and their 75 section pins, 12 cafés, 23 bus stops and 6 àVélo
+stations — comes from `locations/geojson/*.geojson`. Nothing is typed in by
+hand anywhere else.
 
 ```sh
 npm run build:locations     # tools/build-locations.mjs
@@ -319,6 +329,13 @@ Adding a place to a layer automatically adds it to that layer's card: drop a
 feature into `cafes.geojson` and it becomes both a new pin on the map and a
 new option on *"Which café are you closest to?"*. Adding a whole new `.geojson`
 needs a matching entry in `tools/build-locations.mjs`.
+
+A pavilion's sections are points in `building-sections.geojson` (its `code`
+as `pavilion`, a `section` letter), placed by hand: move one in gpx.studio to
+move where its section begins. Every pavilion needs A and B at least, then C
+and D in order, or the generator stops. Its outline, for the map and for
+which buildings a stalker may pick, is its OpenStreetMap footprint (the `osm`
+of `pavillons.geojson`, read from the map's data).
 
 The campus perimeter is not drawn by hand either. It is traced from
 OpenStreetMap's streets: the innermost loop of the campus-side carriageways of

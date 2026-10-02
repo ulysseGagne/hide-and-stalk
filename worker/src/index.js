@@ -37,7 +37,8 @@
 //
 // Cards:
 //   GET  /cards/catalog       the deck + landmarks + play area (see cards.js)
-//   POST /cards/pick          (stalker) { cardId } play one card from the live batch
+//   POST /cards/pick          (stalker) { cardId, target? } play one card from the live batch
+//                             (target: the building of "which part of <building>?")
 //   POST /cards/answer        (hider)   { playId, answer } answer truthfully; sending
 //                             it again for an answered card corrects it
 //   POST /cards/seen          clear this user's bell

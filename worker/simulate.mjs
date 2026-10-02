@@ -189,6 +189,11 @@ function truthfulAnswer(card, play, hider) {
         }
         case "nearest":
             return nearestPlace(card.hint.group, hider);
+        case "section": {
+            // The closest of the named building's section pins.
+            const sections = catalog.buildings[play.target].sections;
+            return sections.reduce((best, x) => (metres(hider, x) < metres(hider, best) ? x : best)).id;
+        }
         case "point":
             return { lat: hider.lat, lng: hider.lng };
         default:
@@ -207,6 +212,12 @@ function truthfulAnswer(card, play, hider) {
             return null;
     }
 }
+
+/** Any building, for a card the stalker names one for ("which part of <building>?"). */
+const randomBuilding = () => {
+    const ids = Object.keys(catalog.buildings);
+    return ids[Math.floor(Math.random() * ids.length)];
+};
 
 function randomSpotOnCampus() {
     const [minX, minY, maxX, maxY] = turf.bbox(campus);
@@ -443,7 +454,7 @@ async function act(p, s) {
                     call("/cards/pick", {
                         method: "POST",
                         token: st.token,
-                        body: { cardId: wanted ?? batch.cardIds[i % 3] },
+                        body: { cardId: wanted ?? batch.cardIds[i % 3], target: randomBuilding() },
                     }),
                 ),
             );
