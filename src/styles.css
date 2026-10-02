@@ -357,8 +357,9 @@ button:disabled { cursor: default; }
 .rc-code { margin-top: 18px; }
 .rc-code svg { display: block; width: 100%; height: 60px; }
 .rc-num { margin-top: 6px; font-size: 13px; font-weight: 700; letter-spacing: .32em; text-align: center; font-variant-numeric: tabular-nums; }
-/* The torn bottom: its line is the sides' line, zigzagging across. */
-.rc-tear { display: block; margin-top: -1px; overflow: visible; width: 100%; height: 12px; }
+/* The torn bottom: its line is the sides' line, zigzagging across. Inset by
+   half that line, so the drawing's sides (its edges) meet the sides' middle. */
+.rc-tear { display: block; margin: -1px 1.5px 0; overflow: visible; width: calc(100% - 3px); height: 12px; }
 
 /* The map ---------------------------------------------------------------- */
 #view-map { position: relative; }

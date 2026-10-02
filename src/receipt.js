@@ -61,12 +61,17 @@
         return `<svg viewBox="0 0 ${x} 44" preserveAspectRatio="none" aria-hidden="true">${bars}</svg><div class="rc-num">${escapeHtml(digits)}</div>`;
     }
 
-    /** The torn bottom: the same 3px line as the sides, zigzagging across. */
+    /**
+     * The torn bottom: the same 3px line as the sides, zigzagging across. The
+     * drawing stretches to the receipt's width, so its sides sit on its own
+     * edges, and styles.css insets it by half a line: they land on the
+     * middle of the sides' line, whatever the width.
+     */
     function tear() {
-        let d = "M1.5 0";
+        let d = "M0 0";
         const n = 20;
-        for (let i = 0; i <= n; i++) d += ` L${(1.5 + (i / n) * 97).toFixed(2)} ${i % 2 ? 1.5 : 10.5}`;
-        d += " L98.5 0";
+        for (let i = 0; i <= n; i++) d += ` L${((i / n) * 100).toFixed(2)} ${i % 2 ? 1.5 : 10.5}`;
+        d += " L100 0";
         return `<svg class="rc-tear" viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true"><path d="${d} Z" fill="#fff" stroke="none"/><path d="${d}" fill="none" stroke="#000" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linejoin="miter"/></svg>`;
     }
 
@@ -134,12 +139,15 @@
         return b;
     }
 
+    let drawn = null; // what the map was last printed with: { canvas, region, w, h }
     async function printMap(canvas, region) {
         await HNSMapDraw.ready;
         const holder = canvas.parentElement;
         const w = holder.clientWidth;
         const h = holder.clientHeight;
         if (!w || !h || !region) return;
+        if (drawn?.canvas === canvas && drawn.region === region && drawn.w === w && drawn.h === h) return;
+        drawn = { canvas, region, w, h };
         const ratio = HNSMapDraw.canvasRatio();
         canvas.width = Math.round(w * ratio);
         canvas.height = Math.round(h * ratio);
@@ -175,13 +183,26 @@
         node.innerHTML = slipHtml({ team, plays });
         node.hidden = false;
         onRender();
+        // The round can end while another tab is open (the map's box is 0
+        // wide until this one is shown) or before the hints have their last
+        // answer: the map is printed whenever its box gets a size, and again
+        // when the hints change (init), not just now.
+        mapObserver?.disconnect();
+        mapObserver = new ResizeObserver(() => printMap(node.querySelector(".rc-map canvas"), HNSHints.region()));
+        mapObserver.observe(node.querySelector(".rc-map"));
         await printMap(node.querySelector(".rc-map canvas"), HNSHints.region());
         onRender();
     }
 
+    let mapObserver = null;
+
     window.HNSReceipt = {
         init(options) {
             onRender = options.onRender ?? (() => {});
+            HNSHints.onStatus(() => {
+                const canvas = renderedKey ? el()?.querySelector(".rc-map canvas") : null;
+                if (canvas) printMap(canvas, HNSHints.region());
+            });
         },
         /** Called with every render of the home screen: { team, me, users } once the round is over, else null. */
         render(ctx) {
@@ -189,6 +210,8 @@
             if (!ctx) {
                 if (renderedKey !== null) {
                     renderedKey = null;
+                    mapObserver?.disconnect();
+                    drawn = null;
                     node.hidden = true;
                     node.innerHTML = "";
                 }
