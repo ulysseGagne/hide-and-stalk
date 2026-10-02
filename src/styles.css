@@ -101,6 +101,12 @@ button:disabled { cursor: default; }
     font-size: 16px; font-weight: 700; letter-spacing: .12em; margin-bottom: 3px;
 }
 .view-tab.active { background: var(--paper); color: var(--ink); height: 46px; margin-bottom: 0; position: relative; z-index: 1; }
+/* Over the map (black wherever the hints have ruled it out) or a black strip
+   (no connection, debug) there is no white to join: the open tab stands on
+   the rule like the others, rather than notching it. */
+.view-tab.active[data-view="map"],
+#site-header:has(+ #notices > #offline-notice:not([hidden])) .view-tab.active,
+#site-header:has(+ #notices > #offline-notice[hidden] + #location-notice[hidden] + #debug-strip:not([hidden])) .view-tab.active { height: 43px; margin-bottom: 3px; }
 
 /* Notices ---------------------------------------------------------------- */
 #notices { flex: 0 0 auto; }
