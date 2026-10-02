@@ -1,7 +1,7 @@
 /* global HNSHints, HNSMap, HNSMarks, L */
 
 // Card UI: the stalkers' batch of three (pick one, then send it, then watch
-// the answer land), the hider's questions and answers, the QUESTIONS tab, and
+// the answer land), the hider's questions and answers, the RESULTS tab, and
 // the header bell.
 //
 // The server owns every rule (what is dealt, who may pick, when the next
@@ -298,7 +298,7 @@ function renderStalker(cards) {
                 onRender();
             })
             .catch(() => {
-                /* the QUESTIONS tab says so if it still fails there */
+                /* the RESULTS tab says so if it still fails there */
             });
     }
     onRender();
@@ -756,7 +756,7 @@ async function submitAnswer(event, card, form, submit) {
 }
 
 // ---------------------------------------------------------------------------
-// QUESTIONS: every question so far, a tab (for the stalkers and the hider)
+// RESULTS: every question so far and its answer, a tab (for the stalkers and the hider)
 // ---------------------------------------------------------------------------
 let historyKey = null;
 let historyPlays = [];
@@ -842,7 +842,7 @@ function renderHistory(plays) {
     }
 }
 
-/** The QUESTIONS tab was opened: bring it up to date, and the answers are read. */
+/** The RESULTS tab was opened: bring it up to date, and the answers are read. */
 async function showQuestions() {
     if (!historyPlays.length) el.historyList.innerHTML = '<p class="muted history-empty">Loading...</p>';
     historyKey = historyStateKey(cardsState);
@@ -884,7 +884,7 @@ function renderBell(cards) {
 function bellClicked() {
     const role = cardsState?.role;
     if (role === "stalker") {
-        // The answers are in the QUESTIONS tab (from the hunt on); before
+        // The answers are in the RESULTS tab (from the hunt on); before
         // that, there is nothing to read.
         const tab = document.querySelector('.view-tab[data-view="questions"]');
         if (tab && !tab.hidden) goToView("questions");
@@ -996,7 +996,7 @@ window.HNSCards = {
             renderHiderQuestions(cards);
             renderHiderAnswers(cards);
         }
-        // The QUESTIONS tab, kept up to date while it is open.
+        // The RESULTS tab, kept up to date while it is open.
         const key = historyStateKey(cards);
         const questionsOpen = !el.questionsView.hidden;
         if (questionsOpen && key !== historyKey) {

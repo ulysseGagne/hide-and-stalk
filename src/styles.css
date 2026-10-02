@@ -101,6 +101,10 @@ button:disabled { cursor: default; }
     font-size: 16px; font-weight: 700; letter-spacing: .12em; margin-bottom: 3px;
 }
 .view-tab.active { background: var(--paper); color: var(--ink); height: 46px; margin-bottom: 0; position: relative; z-index: 1; }
+/* QUESTIONS / MAP / RESULTS still fit side by side on a 360 px phone. */
+@media (max-width: 389px) {
+    .view-tab { min-width: 78px; padding: 0 9px; letter-spacing: .08em; }
+}
 /* Over the map (black wherever the hints have ruled it out) or a black strip
    (no connection, debug) there is no white to join: the open tab stands on
    the rule like the others, rather than notching it. */
@@ -267,8 +271,9 @@ button:disabled { cursor: default; }
 .answer-row-answer { font-size: 18px; font-weight: 700; }
 .answer-row .admin-btn { padding: 9px 12px; font-size: 15px; flex: 0 0 auto; }
 /* The tag code: room above it for what to do with it, drawn by hand. */
-.hider-qr { margin-top: 72px; position: relative; }
-.hider-qr-figure { background: #fff; border: 3px solid #000; margin: 12px 0 0; max-width: 100%; line-height: 0; }
+.hider-qr { margin-top: 40px; position: relative; }
+/* Room under the code for SHOW THIS TO THE STALKER, drawn by hand (marks.js). */
+.hider-qr-figure { background: #fff; border: 3px solid #000; margin: 12px 0 80px; max-width: 100%; line-height: 0; }
 .hider-qr-figure svg { width: 100%; height: auto; display: block; }
 .hider-qr-text { text-align: left; }
 .hider-qr-text code { font: 700 16px var(--font); letter-spacing: .06em; color: var(--ink); }

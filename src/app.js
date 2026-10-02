@@ -6,7 +6,7 @@ const TOKEN_KEY = "hns.token";
 const PERM_SEEN_KEY = "hns.perm.seen";
 
 // ---------------------------------------------------------------------------
-// View tabs (MENU / MAP / QUESTIONS)
+// View tabs: MENU (QUESTIONS from the hunt on) / MAP / RESULTS
 // ---------------------------------------------------------------------------
 const tabs = document.querySelectorAll(".view-tab");
 const views = {
@@ -14,6 +14,7 @@ const views = {
     map: document.getElementById("view-map"),
     questions: document.getElementById("view-questions"),
 };
+const menuTab = document.querySelector('.view-tab[data-view="menu"]');
 const questionsTab = document.querySelector('.view-tab[data-view="questions"]');
 let currentView = "menu";
 
@@ -703,10 +704,15 @@ function renderHome() {
     scheduleMarks();
 }
 
-/** QUESTIONS: a tab for both sides, from the hunt on. */
+/**
+ * From the hunt on, the first tab is where questions are asked and answered,
+ * so it says QUESTIONS (MENU before that); RESULTS, every question so far with
+ * its answer, appears next to the map for both sides.
+ */
 function renderTabs() {
     const phase = gameState?.team?.phase;
     const show = Boolean(currentUser && !currentUser.isAdmin && (phase === "hunting" || phase === "ended"));
+    menuTab.textContent = show ? "QUESTIONS" : "MENU";
     if (questionsTab.hidden === show) {
         questionsTab.hidden = !show;
         if (!show && currentView === "questions") showView("menu");

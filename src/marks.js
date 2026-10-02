@@ -264,13 +264,13 @@
                 const x = change ? box(change).x - 58 : a.x + Math.min(a.w, 190) + 10;
                 specs.push({ t: "bigcheck", x, y: a.y - 16, seed: `rc${row.dataset.playId}` });
             }
-            const qrHead = $("#hider-qr .cards-title");
+            const qrFigure = $("#hider-qr-figure");
             // While a question waits, it is the thing to look at; the code's line comes after.
             const waiting = $$("#hider-question-list .question-card").some(visible);
-            if (s.screen === "hunting" && visible(qrHead) && !waiting) {
-                // In the gap above the heading, one line, clear of the code.
-                const hd = box(qrHead);
-                specs.push({ t: "note", text: "SHOW THIS TO THE STALKER", x: hd.x, y: hd.y - 16, o: { size: 21, maxWidth: 350, tilt: -3, importance: "key", weight: 5.2 } });
+            if (s.screen === "hunting" && visible(qrFigure) && !waiting) {
+                // In the gap under the code (styles.css keeps it), one line.
+                const fig = box(qrFigure);
+                specs.push({ t: "note", text: "SHOW THIS TO THE STALKER", x: fig.x, y: fig.y + fig.h + 60, o: { size: 21, maxWidth: 350, tilt: -3, importance: "key", weight: 5.2 } });
             }
         }
 
@@ -347,7 +347,7 @@
     }
 
     // -----------------------------------------------------------------------
-    // Handwriting in the flow of the page (the QUESTIONS tab's answers)
+    // Handwriting in the flow of the page (the RESULTS tab's answers)
     // -----------------------------------------------------------------------
     /** One line of handwriting as an inline SVG, sized to itself. */
     function handwriting(text, o = {}) {

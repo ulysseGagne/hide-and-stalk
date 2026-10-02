@@ -50,9 +50,10 @@ Plain HTML/JS/CSS, no build step. The look is the design review's
 typeface (Arimo, self-hosted in `fonts/`), and red only ever drawn by hand.
 
 - `index.html` – the home screen (the app opens on it; a tap goes on), the
-  header (HIDE & STALK, the bell, Log out), the MENU / MAP / QUESTIONS tabs,
-  login/register, "Before you start" (the two permissions, first launch only),
-  the player's home screen, the scanner and the admin dashboard
+  header (HIDE & STALK, the bell, Log out), the MENU (QUESTIONS once the hunt
+  is on) / MAP / RESULTS tabs, login/register, "Before you start" (the two
+  permissions, first launch only), the player's home screen, the scanner and
+  the admin dashboard
 - `app.js` – tabs, the home screen, auth, "Before you start", notices, the
   sync loop, and the player's status card: what to do right now (no team yet /
   ready / go hide / question N of 6 / result), Start and Play again, the rules
@@ -66,7 +67,7 @@ typeface (Arimo, self-hosted in `fonts/`), and red only ever drawn by hand.
   board with each team's status and controls, results, settings, to-dos
 - `cards.js` – the stalkers' three cards (a tap picks, Send sends) and the sent
   card (locked in until the answer is written in), the hider's questions and
-  answers (with Change), the QUESTIONS tab, the bell
+  answers (with Change), the RESULTS tab, the bell
 - `map.js` – the Leaflet map: the hints layer (what the answers ruled out,
   inverted; the edge of what's left drawn by hand), the question in a box at
   the top and what it needs drawn, YOU's arrow with its heading, the other
