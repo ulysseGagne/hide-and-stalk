@@ -280,8 +280,9 @@ button:disabled { cursor: default; }
    asked about (.code-part) by hand, in red, in the room kept around it. */
 .room-code { white-space: nowrap; }
 .code-part { margin-inline: .24em; }
-/* The tag code: room at the bottom for SHOW THIS TO THE STALKER and its arrow, drawn by hand (marks.js). */
-.hider-qr { margin-top: 40px; padding-bottom: 68px; position: relative; }
+/* The tag code: room above it for WALK. DON'T RUN. while hiding, and at the
+   bottom for SHOW THIS TO THE STALKER and its arrow (both drawn by hand, marks.js). */
+.hider-qr { margin-top: 72px; padding-bottom: 68px; position: relative; }
 .hider-qr-figure { background: #fff; border: 3px solid #000; margin: 12px 0 0; max-width: 100%; line-height: 0; }
 .hider-qr-figure svg { width: 100%; height: auto; display: block; }
 .hider-qr-text { text-align: left; }
