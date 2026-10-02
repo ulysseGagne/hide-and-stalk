@@ -31,7 +31,6 @@
     function slipAnswer(card, play) {
         if (play.answeredAt === null || play.answer === null) return "—";
         const type = card?.answer.type;
-        if (type === "photo") return "PHOTO";
         if (type === "choice") {
             const place = HNSCards.catalog()?.landmarkGroups[card.answer.group]?.places.find((p) => p.id === play.answer);
             const label = place?.label ?? String(play.answer);

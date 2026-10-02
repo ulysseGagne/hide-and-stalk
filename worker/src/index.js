@@ -48,6 +48,7 @@
 
 import {
     CARDS_BY_ID,
+    NOT_APPLICABLE,
     catalogPayload,
     validateAnswer,
 } from "./cards.js";
@@ -782,7 +783,8 @@ async function handleCardAnswer(request, env, user) {
     const { value, error: invalid } = validateAnswer(card, body?.answer, play);
     if (invalid) return error(invalid, 400, request, env);
 
-    const isPhoto = card.answer.type === "photo";
+    // A photo card answered N/A has no photo: the answer is just that.
+    const isPhoto = card.answer.type === "photo" && value !== NOT_APPLICABLE;
     if (isPhoto && value.length > MAX_PHOTO_CHARS) {
         return error("Photo is too large — try again", 413, request, env);
     }

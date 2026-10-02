@@ -23,20 +23,26 @@ function shuffle(arr) {
 /**
  * Every card this team has been *offered* this round - not just the ones it
  * played. A card burnt unplayed in an earlier batch is still one they have
- * seen, so it does not come back.
+ * seen, so it does not come back. Also the ones it played, for `notAfter`.
  */
-async function dealtSoFar(env, teamId) {
+async function roundSoFar(env, teamId) {
     const { results } = await env.DB.prepare(
-        "SELECT card_ids FROM card_batches WHERE group_id = ?",
+        "SELECT card_ids, played_card_id FROM card_batches WHERE group_id = ?",
     )
         .bind(teamId)
         .all();
     const dealt = new Set();
+    const played = new Set();
     for (const row of results) {
         for (const id of JSON.parse(row.card_ids)) dealt.add(id);
+        if (row.played_card_id) played.add(row.played_card_id);
     }
-    return dealt;
+    return { dealt, played };
 }
+
+/** A card's `notAfter`: one of its sets has been played in full. */
+const ruledOut = (card, played) =>
+    card.notAfter?.some((set) => set.every((id) => played.has(id))) ?? false;
 
 /** How far a card's tier sits from the question being dealt. 0 == right on it. */
 const tierDistance = (card, question) =>
@@ -45,17 +51,24 @@ const tierDistance = (card, question) =>
 /**
  * The three cards for a question.
  *
- * Two rules, in order of precedence:
- *  1. Never offer the same card to the same team twice in a round. Only if the
+ * Three rules, in order of precedence:
+ *  1. Never offer a card its `notAfter` rules out (the exact room id once the
+ *     room number has come out in parts). This one holds even when the deck
+ *     comes back.
+ *  2. Never offer the same card to the same team twice in a round. Only if the
  *     whole deck has been through does everything come back.
- *  2. Prefer cards whose tier matches the question number, so question 1 is
+ *  3. Prefer cards whose tier matches the question number, so question 1 is
  *     openers and question 6 is closers. When a tier has been picked clean the
  *     nearest tiers fill in, rather than the batch drying up.
+ *
+ * Questions are dealt only when they come face up, after every earlier one has
+ * been sent, so `played` is everything the hider has been asked before this.
  */
 async function pickCards(env, teamId, question) {
-    const dealt = await dealtSoFar(env, teamId);
-    let pool = CARDS.filter((c) => !dealt.has(c.id));
-    if (pool.length < 3) pool = CARDS;
+    const { dealt, played } = await roundSoFar(env, teamId);
+    const allowed = CARDS.filter((c) => !ruledOut(c, played));
+    let pool = allowed.filter((c) => !dealt.has(c.id));
+    if (pool.length < 3) pool = allowed;
     // Shuffle first, then a *stable* sort on tier distance: random within a
     // tier, ordered between tiers.
     return shuffle([...pool])

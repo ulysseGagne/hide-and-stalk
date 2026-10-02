@@ -165,8 +165,9 @@ function constraintFor(play) {
             const longestWalk = (minutes + 0.5) * speedMPerMin;
             // Straight-line distance is never more than the walking distance,
             // and a real route is rarely more than detourFactor times longer.
+            // The slack goes on both edges.
             const outer = Math.max(longestWalk * slack, MIN_WALK_RADIUS_M);
-            const inner = shortestWalk / detourFactor;
+            const inner = shortestWalk / (detourFactor * slack);
             const disc = circleM(askLng, askLat, outer);
             if (inner <= MIN_WALK_RADIUS_M) return { shape: disc, mode: "keep" };
             const ring = turf.difference(
@@ -216,6 +217,12 @@ function constraintFor(play) {
             const cell = cells.get(play.answer);
             if (!cell) return { skip: "landmark has no coordinates" };
             return { shape: cell, mode: "keep" };
+        }
+        case "zone": {
+            // Worked out ahead of time, per answer (worker/src/streets.js).
+            const zone = hintsCatalog.zones?.[hint.zones]?.[play.answer];
+            if (!zone) return { skip: "unrecognised answer" };
+            return { shape: turf.feature(zone), mode: "keep" };
         }
         case "section": {
             // Closest of the named building's section pins: true anywhere, in

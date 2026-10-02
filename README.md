@@ -285,7 +285,7 @@ again and is marked as changed.
 - **The deck has a running order.** Every card carries `tiers`: the question
   numbers it may be dealt as. Openers (`[1, 2]` — north/south, the named
   landmarks, the 500 m ring) cut the campus in half; closers (`[6]` — exact
-  coordinates, the exact room id) end the round. `batches.js` prefers the tier
+  coordinates, the full room number, a Google Maps screenshot) end the round. `batches.js` prefers the tier
   matching the current question and widens to the nearest tiers when one has
   been picked clean.
 - **"In what part of <building> are you?"** The stalker names the
@@ -297,9 +297,24 @@ again and is marked as changed.
   pin, which is true whether or not they are in that building, and the map
   draws the building split into its sections, lettered, once zoomed in close
   enough to read them. Dealt from question 4.
+- **"How far is the nearest road open to cars?"** Under 20 m, 20-50 m,
+  50-100 m or over 100 m, and the map keeps the matching band around the
+  roads. Each answer's area is worked out ahead of time from OpenStreetMap
+  (`npm run build:streets` → `worker/src/streets.js`) with room to spare: a
+  band reaches 1.25x its far edge plus 5 m from any road cars use, parking
+  aisles and driveways included, and starts 0.75x its near edge minus 5 m from
+  streets only. So a hider who counts a parking aisle as a road, or misjudges
+  by a few metres, is never ruled out. Dealt from question 4.
+- **Photo questions can be answered N/A** when there is nothing of the kind
+  around. Screenshots (the nearest Street View, the blue dot in Google Maps)
+  cannot: they come from the phone's pictures, not the camera.
 - **No card is offered to the same team twice in a round.** Not just no card
   *played* twice — a card burnt unplayed in an earlier batch is still one the
   team has seen.
+- **The full room number is not dealt once it is out in parts.**
+  Once the floor or the room's second digit has been asked, together with its
+  last two digits, the full-room-number card is no longer dealt. Cards list these
+  rules in `notAfter`; they hold even when the whole deck comes back.
 - **Everyone in a team sees the hints layer.** The stalkers watch the net
   close; the hider watches how much cover they have given away. It is built
   entirely out of answers the hider gave, so it tells them nothing they did not

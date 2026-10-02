@@ -16,7 +16,9 @@
 //                 { type: "text",     placeholder }
 //                 { type: "number",   unit, min, max }
 //                 { type: "coords" }                    -> { lat, lng }
-//                 { type: "photo" }
+//                 { type: "photo" }                     a photo, or NOT_APPLICABLE
+//                 { type: "photo", screenshot: true }   a screenshot, from the
+//                                                       phone's pictures
 //                 { type: "section" }                   a letter, A to D: the
 //                                                       target building's section
 //   target      "building" when the stalker names a building as they send it
@@ -31,6 +33,8 @@
 //               arrives when the hunt starts, question 2 five minutes later, and
 //               so on up to 6, so `tiers: [3, 4, 5]` means "mid-game card".
 //               See TIERS below.
+//   notAfter    optional: sets of card ids. Once every card of any one set has
+//               been played this round, this card is no longer dealt.
 
 import {
     BUILDINGS,
@@ -38,6 +42,7 @@ import {
     LANDMARK_POINTS,
     LANDMARK_GROUP_PLACES,
 } from "./locations.js";
+import { STREET_ZONES } from "./streets.js";
 
 // ---------------------------------------------------------------------------
 // Play area + landmarks
@@ -70,10 +75,13 @@ export const LANDMARK_GROUPS = LANDMARK_GROUP_PLACES;
 // around the stalker rather than a single circle.
 export const WALK_SPEED_M_PER_MIN = 80;
 export const WALK_DETOUR_FACTOR = 1.6;
-// Slack on the outer edge for rounding in whatever app the hider consulted.
+// Slack on both edges of the ring for rounding in whatever app the hider
+// consulted: the outer one goes out by it, the inner one comes in by it.
 export const WALK_SLACK = 1.1;
 
 const YES_NO = ["Yes", "No"];
+// A photo card's other answer, when there is nothing of the kind to photograph.
+export const NOT_APPLICABLE = "N/A";
 
 // ---------------------------------------------------------------------------
 // Tiers
@@ -151,8 +159,7 @@ const RADIUS_CARDS = [50, 100, 200, 300, 500].map((m) => ({
 const WALK_CARD = {
     id: "walk_minutes",
     category: "radius",
-    prompt:
-        "Using Google Maps, how many minutes would it take me to walk to you? Round to the nearest minute.",
+    prompt: "According to Google Maps, how many minutes is my walk to you?",
     short: "Minutes to walk?",
     answer: { type: "number", unit: "minutes", min: 0, max: 90 },
     needsAsker: true,
@@ -225,11 +232,25 @@ const SECTION_CARD = {
     tiers: MID_LATE,
 };
 
+// Each answer's area is worked out ahead of time (tools/build-streets.mjs,
+// worker/src/streets.js), with room for what counts as a road and for a
+// distance judged by eye. Indoors, in the woods or out on a lawn all show.
+const STREET_CARD = {
+    id: "street_distance",
+    category: "proximity",
+    prompt: "How far is the nearest road open to cars?",
+    short: "Nearest road?",
+    answer: { type: "radio", options: Object.keys(STREET_ZONES) },
+    needsAsker: false,
+    hint: { type: "zone", zones: "street" },
+    tiers: MID_LATE,
+};
+
 const CONTEXT_CARDS = [
     {
         id: "inside_outside",
         category: "context",
-        prompt: "Are you inside or outside?",
+        prompt: "Are you inside a building or outside?",
         short: "Inside or outside?",
         answer: { type: "radio", options: ["Inside", "Outside"] },
         needsAsker: false,
@@ -245,7 +266,7 @@ const CONTEXT_CARDS = [
     {
         id: "floor",
         category: "context",
-        prompt: "What floor are you on? It is the first digit of the room numbers there: ABC-[1]234. Answer N/A if you are outside.",
+        prompt: "What floor are you on? It is the first digit of the room numbers: ABC-[1]234. Outside? Answer N/A.",
         short: "Floor?",
         answer: { type: "text", placeholder: "e.g. 3, or N/A" },
         needsAsker: false,
@@ -255,7 +276,7 @@ const CONTEXT_CARDS = [
     {
         id: "room_digit",
         category: "context",
-        prompt: "What is the second digit of the nearest room number? ABC-1[2]34. Answer N/A if you are outside.",
+        prompt: "What is the second digit of the nearest room number? ABC-1[2]34. Outside? Answer N/A.",
         short: "Room's 2nd digit?",
         answer: { type: "text", placeholder: "e.g. 7, or N/A" },
         needsAsker: false,
@@ -265,7 +286,7 @@ const CONTEXT_CARDS = [
     {
         id: "room_number",
         category: "context",
-        prompt: "What are the last two digits of the nearest room number? ABC-12[34]. Answer N/A if you are outside.",
+        prompt: "What are the last two digits of the nearest room number? ABC-12[34]. Outside? Answer N/A.",
         short: "Room's last 2 digits?",
         answer: { type: "text", placeholder: "e.g. 01, or N/A" },
         needsAsker: false,
@@ -275,19 +296,24 @@ const CONTEXT_CARDS = [
     {
         id: "room_id",
         category: "context",
-        prompt: "What is the exact id of the nearest room? [ABC-1234]. Answer N/A if you are outside.",
-        short: "Exact room id?",
+        prompt: "What is the nearest room number, in full? [ABC-1234]. Outside? Answer N/A.",
+        short: "Full room number?",
         answer: { type: "text", placeholder: "e.g. PLT-2701, or N/A" },
         needsAsker: false,
         // The pavilion code names the building, but only a human reading it
         // knows that, so this narrows nothing on the map by itself.
         hint: null,
         tiers: ENDGAME,
+        // Not dealt once the room number has already come out in parts.
+        notAfter: [
+            ["floor", "room_number"],
+            ["room_digit", "room_number"],
+        ],
     },
     {
         id: "exact_coordinates",
         category: "context",
-        prompt: "Send me your exact coordinates.",
+        prompt: "Send your exact coordinates.",
         short: "Exact coordinates?",
         answer: { type: "coords" },
         needsAsker: false,
@@ -297,30 +323,10 @@ const CONTEXT_CARDS = [
         tiers: ENDGAME,
     },
     {
-        id: "street_view",
-        category: "context",
-        prompt: "Could we see you on Google Street View from where you are?",
-        short: "On Street View?",
-        answer: { type: "radio", options: YES_NO },
-        needsAsker: false,
-        hint: null,
-        tiers: MID,
-    },
-    {
-        id: "bike_lane",
-        category: "context",
-        prompt: "Can you see a bike lane?",
-        short: "Bike lane?",
-        answer: { type: "radio", options: YES_NO },
-        needsAsker: false,
-        hint: null,
-        tiers: MID,
-    },
-    {
         id: "people_around",
         category: "context",
-        prompt: "How many people are around you?",
-        short: "People around?",
+        prompt: "How many people can you see right now?",
+        short: "People in sight?",
         answer: {
             type: "radio",
             options: ["Nobody", "1-5", "6-20", "More than 20"],
@@ -356,29 +362,56 @@ const CONTEXT_CARDS = [
 
 // A skyline shot could have been taken from half the campus; the door you are
 // standing at could not.
-// [key, what the prompt asks for, the receipt's short label, tiers]
+// [key, what the prompt asks for, the receipt's short label, tiers, a rule for
+// the photo itself (optional)]
 const PHOTO_SUBJECTS = [
     ["tallest", "the tallest thing you can see", "Tallest thing in sight", EARLY_MID],
-    ["window", "a window", "A window", EARLY_MID],
-    ["below", "what is below you", "What is below you", MID],
-    ["above", "what is above you", "What is above you", MID],
-    ["plant", "the biggest plant or tree near you", "Biggest plant or tree", MID_LATE],
-    ["seat", "the nearest place to sit", "Nearest place to sit", MID_LATE],
-    ["car", "a car parked near you", "A car parked near you", MID_LATE],
+    ["window", "the nearest window", "Nearest window", EARLY_MID],
+    ["below", "what is straight below you", "Straight below you", MID],
+    ["above", "what is straight above you", "Straight above you", MID],
+    ["exit_sign", "the nearest exit sign", "Nearest exit sign", MID],
+    ["plant", "the biggest plant or tree you can see", "Biggest plant or tree", MID_LATE],
+    ["seat", "the nearest seat", "Nearest seat", MID_LATE],
+    ["car", "the nearest parked car", "Nearest parked car", MID_LATE, "Fit the whole car in the frame."],
     ["sign", "the nearest sign", "Nearest sign", LATE],
     ["door", "the nearest door", "Nearest door", LATE],
 ];
 
-const PHOTO_CARDS = PHOTO_SUBJECTS.map(([key, subject, short, tiers]) => ({
+const PHOTO_CARDS = PHOTO_SUBJECTS.map(([key, subject, short, tiers, rule]) => ({
     id: `photo_${key}`,
     category: "photo",
-    prompt: `Send a photo of ${subject}.`,
+    prompt: rule ? `Send a photo of ${subject}. ${rule}` : `Send a photo of ${subject}.`,
     short,
     answer: { type: "photo" },
     needsAsker: false,
     hint: null,
     tiers,
 }));
+
+// Read off Google Maps rather than taken with the camera. No N/A: there is
+// always a map, and always a Street View somewhere.
+const SCREENSHOT_CARDS = [
+    {
+        id: "screenshot_street_view",
+        category: "photo",
+        prompt: "Send a screenshot of the Street View nearest you.",
+        short: "Nearest Street View",
+        answer: { type: "photo", screenshot: true },
+        needsAsker: false,
+        hint: null,
+        tiers: LATE,
+    },
+    {
+        id: "screenshot_map",
+        category: "photo",
+        prompt: "Send a screenshot of your blue dot in Google Maps. Zoom in to street level.",
+        short: "Google Maps screenshot",
+        answer: { type: "photo", screenshot: true },
+        needsAsker: false,
+        hint: null,
+        tiers: ENDGAME,
+    },
+];
 
 export const CARDS = [
     ...DIRECTION_CARDS,
@@ -388,8 +421,10 @@ export const CARDS = [
     RING_CARD,
     ...NEAREST_CARDS,
     SECTION_CARD,
+    STREET_CARD,
     ...CONTEXT_CARDS,
     ...PHOTO_CARDS,
+    ...SCREENSHOT_CARDS,
 ];
 
 export const CARDS_BY_ID = new Map(CARDS.map((card) => [card.id, card]));
@@ -400,6 +435,12 @@ for (const card of CARDS) {
     if (!Array.isArray(card.tiers) || card.tiers.length === 0) {
         throw new Error(`card "${card.id}" has no tiers`);
     }
+    // Same for a misspelt id in notAfter: that set could never be complete.
+    for (const id of card.notAfter?.flat() ?? []) {
+        if (!CARDS_BY_ID.has(id)) {
+            throw new Error(`card "${card.id}" names unknown card "${id}" in notAfter`);
+        }
+    }
 }
 
 /** Everything the frontend needs to render and geometrise the deck. */
@@ -409,6 +450,8 @@ export const catalogPayload = () => ({
     landmarkGroups: LANDMARK_GROUPS,
     buildings: BUILDINGS,
     playArea: PLAY_AREA,
+    // "zone" hints: per answer, the area a hider giving it can be in.
+    zones: { street: STREET_ZONES },
     walk: {
         speedMPerMin: WALK_SPEED_M_PER_MIN,
         detourFactor: WALK_DETOUR_FACTOR,
@@ -473,6 +516,7 @@ export function validateAnswer(card, raw, play = null) {
             return { value: { lat: Number(lat.toFixed(7)), lng: Number(lng.toFixed(7)) } };
         }
         case "photo":
+            if (raw === NOT_APPLICABLE && !spec.screenshot) return { value: raw };
             if (typeof raw !== "string" || !raw.startsWith("data:image/")) {
                 return { error: "Attach a photo" };
             }

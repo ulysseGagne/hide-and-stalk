@@ -82,12 +82,19 @@ const escapeCardHtml = (str) =>
 
 const cardById = (id) => catalog?.cards.find((c) => c.id === id) ?? null;
 
+// A photo card's other answer (worker/src/cards.js), when there is nothing of
+// the kind to photograph.
+const NOT_APPLICABLE = "N/A";
+
 const formatLatLng = (lat, lng) => `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
 
 /** Human-readable answer for the history / question lists. */
 function describeAnswer(card, answer) {
     if (answer === null || answer === undefined) return null;
-    if (card?.answer.type === "photo") return "Photo";
+    if (card?.answer.type === "photo") {
+        if (answer === NOT_APPLICABLE) return "N/A";
+        return card.answer.screenshot ? "Screenshot" : "Photo";
+    }
     if (card?.answer.type === "choice") {
         const group = catalog?.landmarkGroups[card.answer.group];
         return group?.places.find((p) => p.id === answer)?.label ?? String(answer);
@@ -160,11 +167,14 @@ function promptHtml(prompt) {
 /**
  * A photo question, with what it asks for on a line of its own: "Send a photo
  * of the" / "nearest sculpture." marks.js underlines the second line by hand.
+ * A rule for the photo after it ("Fit the whole car in the frame.") is not
+ * underlined. Screenshots the same.
  */
 function photoPromptHtml(prompt) {
-    const m = /^(Send a photo of (?:(?:the|a|an) )?)(.+?)(\.?)$/.exec(prompt);
+    const m = /^(Send a (?:photo|screenshot) of (?:(?:the|a|an|your) )?)(.+?)(?:(\.)(?: (.+))?)?$/.exec(prompt);
     if (!m) return escapeCardHtml(prompt);
-    return `${escapeCardHtml(m[1].trim())}<br><span class="ul-mark">${escapeCardHtml(m[2])}</span>${escapeCardHtml(m[3])}`;
+    const rule = m[4] ? ` ${escapeCardHtml(m[4])}` : "";
+    return `${escapeCardHtml(m[1].trim())}<br><span class="ul-mark">${escapeCardHtml(m[2])}</span>${m[3] ?? ""}${rule}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -549,13 +559,28 @@ function answerWidget(card, form, play = null) {
             input.type = "file";
             input.className = "answer-file";
             input.accept = "image/*";
-            input.capture = "environment";
+            // A screenshot is already in the phone's pictures: no camera.
+            if (!spec.screenshot) input.capture = "environment";
             const preview = document.createElement("img");
             preview.className = "answer-preview";
             preview.hidden = true;
+            // Nothing of the kind around: N/A instead of a photo. One or the
+            // other, so picking either drops the other. Not for screenshots.
+            const na = optionLabel("checkbox", name, { value: NOT_APPLICABLE, label: "N/A (does not apply)" });
+            const naInput = na.querySelector("input");
+            na.hidden = Boolean(spec.screenshot);
+            naInput.addEventListener("change", () => {
+                if (!naInput.checked) return;
+                delete form.dataset.photo;
+                input.value = "";
+                preview.hidden = true;
+                preview.removeAttribute("src");
+                onRender();
+            });
             input.addEventListener("change", async () => {
                 const file = input.files?.[0];
                 if (!file) return;
+                naInput.checked = false;
                 form.dataset.busy = "1";
                 try {
                     const dataUrl = await downscalePhoto(file);
@@ -570,7 +595,7 @@ function answerWidget(card, form, play = null) {
                     delete form.dataset.busy;
                 }
             });
-            wrap.append(input, preview);
+            wrap.append(input, preview, na);
             break;
         }
         default:
@@ -632,6 +657,7 @@ function readAnswer(card, form) {
             return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
         }
         case "photo":
+            if (form.querySelector(`input[value="${NOT_APPLICABLE}"]:checked`)) return NOT_APPLICABLE;
             return form.dataset.photo || null;
         default:
             return null;

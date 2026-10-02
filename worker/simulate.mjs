@@ -196,6 +196,12 @@ function truthfulAnswer(card, play, hider) {
         }
         case "point":
             return { lat: hider.lat, lng: hider.lng };
+        case "zone": {
+            // The first answer whose area holds the hider (the areas overlap).
+            const pt = turf.point([hider.lng, hider.lat]);
+            const zones = catalog.zones[card.hint.zones];
+            return Object.keys(zones).find((a) => turf.booleanPointInPolygon(pt, turf.feature(zones[a])));
+        }
         default:
             break;
     }
@@ -207,7 +213,8 @@ function truthfulAnswer(card, play, hider) {
         case "number":
             return 3;
         case "photo":
-            return PHOTO;
+            // Now and then nothing of the kind is around.
+            return Math.random() < 0.2 && !card.answer.screenshot ? "N/A" : PHOTO;
         default:
             return null;
     }
