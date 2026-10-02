@@ -226,7 +226,13 @@ function renderStalker(cards) {
             const faces = batch.cardIds.map(cardById).filter(Boolean);
             faces.forEach((card, i) => el.cardRow.appendChild(makeCardFace(card, i, faces.length, { disabled: sending || paused })));
         }
-        el.cardNote.textContent = paused ? "The admin has paused your team." : "";
+        // Questions the team let slip pile up: the next one shows the moment this one goes.
+        const inHand = cards.inHand ?? 1;
+        el.cardNote.textContent = paused
+            ? "The admin has paused your team."
+            : inHand > 1
+              ? `You have ${inHand} questions to send. The next one shows up as soon as this one is sent.`
+              : "";
         renderPick();
         return;
     }
@@ -906,10 +912,11 @@ function renderHintStatus(status) {
 let cueKey = null;
 
 function checkCue(cards) {
-    // Stalkers: a new batch. Hider: a question they had not seen yet.
+    // Stalkers: a new batch, or one more question in hand. Hider: a question
+    // they had not seen yet.
     const key =
         cards?.role === "stalker"
-            ? `s:${cards.batch?.id ?? ""}`
+            ? `s:${cards.batch?.id ?? ""}:${cards.inHand ?? 0}`
             : cards?.role === "hider"
               ? `h:${cards.pending.map((p) => p.id).join(",")}`
               : null;
@@ -918,7 +925,9 @@ function checkCue(cards) {
     // Nothing to compare with on the first poll after loading the page.
     if (previous === null || key === null || key === previous) return;
     if (cards.role === "stalker" && cards.batch) {
-        onCue("New question! Pick one.");
+        const [, batchBefore, inHandBefore] = previous.split(":");
+        if (String(cards.batch.id) !== batchBefore) onCue("New question! Pick one.");
+        else if ((cards.inHand ?? 0) > Number(inHandBefore)) onCue(`Another question! You have ${cards.inHand} to send.`);
     } else if (cards.role === "hider") {
         const before = new Set(previous.slice(2).split(",").filter(Boolean));
         if (cards.pending.some((p) => !before.has(String(p.id)))) {

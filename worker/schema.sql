@@ -104,7 +104,8 @@ CREATE TABLE IF NOT EXISTS card_batches (
     played_card_id TEXT,
     played_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
     played_at INTEGER,
-    -- 1 once the next question arrived and replaced this batch.
+    -- Left over from when an unsent batch expired with the next question;
+    -- no longer written or read.
     closed INTEGER NOT NULL DEFAULT 0,
     -- Which question (1-6) this batch was dealt as.
     question INTEGER

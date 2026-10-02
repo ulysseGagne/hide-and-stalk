@@ -1,10 +1,14 @@
 // Card batches: three cards per question, one question every interval.
 //
-// The team clock (teams.js) says which question is due; this file deals it.
-// A batch belongs to the team, not to one stalker: the first stalker to pick
-// burns it for everyone, so the hider answers one question per interval no
-// matter how many stalkers are hunting them. A batch nobody picked from simply
-// expires when the next question arrives.
+// The team clock (teams.js) says how many questions have arrived; this file
+// deals them. A batch belongs to the team, not to one stalker: the first
+// stalker to pick burns it for everyone, so the hider answers one question per
+// interval no matter how many stalkers are hunting them.
+//
+// A question the stalkers let slip is not lost: it stays in hand, and the
+// questions pile up until they are sent. The oldest one in hand is the one
+// face up, and the moment it goes out the next one in hand is face up too,
+// with no waiting for the timer.
 
 import { CARDS, CARDS_BY_ID } from "./cards.js";
 
@@ -66,29 +70,45 @@ const batchFor = (env, teamId, question) =>
         .first();
 
 /**
- * The team's batch for `question`, dealing it if it is not there yet. Safe to
- * race: (group_id, question) is unique, so two teammates polling the moment a
- * question arrives both end up looking at the same three cards.
+ * The batch the team's stalkers are looking at, and how many questions they
+ * have in hand. Every question the clock has brought so far (1 to `question`)
+ * is theirs until they send it; the oldest one not sent is face up, dealt now
+ * if nobody has looked at it yet. With nothing in hand, it is the last one
+ * they sent, so its card stays on screen while the answer comes in.
+ *
+ * Safe to race: (group_id, question) is unique, so two teammates polling the
+ * moment a question arrives both end up looking at the same three cards.
+ * @returns {Promise<{ batch: object, inHand: number }>}
  */
-export async function syncTeamBatch(env, teamId, question, now) {
-    const existing = await batchFor(env, teamId, question);
-    if (existing) return existing;
-    const cardIds = await pickCards(env, teamId, question);
+export async function liveTeamBatch(env, teamId, question, now) {
+    const { results } = await env.DB.prepare(
+        "SELECT question FROM card_batches WHERE group_id = ? AND played_card_id IS NOT NULL",
+    )
+        .bind(teamId)
+        .all();
+    const sent = new Set(results.map((r) => r.question));
+    let first = null;
+    let inHand = 0;
+    for (let q = 1; q <= question; q++) {
+        if (sent.has(q)) continue;
+        inHand++;
+        first ??= q;
+    }
+    const face = first ?? question;
+    const existing = await batchFor(env, teamId, face);
+    if (existing) return { batch: existing, inHand };
+    const cardIds = await pickCards(env, teamId, face);
     // remaining_ms / rate / rate_updated_at belong to the old variable-rate
     // timer and are not read any more, but databases migrated from it still
     // insist on a value.
-    await env.DB.batch([
-        env.DB.prepare(
-            `UPDATE card_batches SET closed = 1
-             WHERE group_id = ? AND closed = 0 AND (question IS NULL OR question < ?)`,
-        ).bind(teamId, question),
-        env.DB.prepare(
-            `INSERT OR IGNORE INTO card_batches
-                (group_id, card_ids, dealt_at, remaining_ms, rate, rate_updated_at, question)
-             VALUES (?, ?, ?, 0, 1.0, ?, ?)`,
-        ).bind(teamId, JSON.stringify(cardIds), now, now, question),
-    ]);
-    return batchFor(env, teamId, question);
+    await env.DB.prepare(
+        `INSERT OR IGNORE INTO card_batches
+            (group_id, card_ids, dealt_at, remaining_ms, rate, rate_updated_at, question)
+         VALUES (?, ?, ?, 0, 1.0, ?, ?)`,
+    )
+        .bind(teamId, JSON.stringify(cardIds), now, now, face)
+        .run();
+    return { batch: await batchFor(env, teamId, face), inHand };
 }
 
 /** Shape a batch for the stalker menu. */
@@ -104,7 +124,7 @@ export function publicBatch(batch) {
     };
 }
 
-/** Guard for /cards/pick: the card must be face up in the team's live batch. */
+/** Guard for /cards/pick: the card must be face up in the team's live batch, still unsent. */
 export function cardIsInBatch(batch, cardId) {
     if (!batch || batch.played_card_id) return false;
     if (!CARDS_BY_ID.has(cardId)) return false;

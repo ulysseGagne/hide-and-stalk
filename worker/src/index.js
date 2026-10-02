@@ -51,8 +51,8 @@ import {
 } from "./cards.js";
 import {
     cardIsInBatch,
+    liveTeamBatch,
     publicBatch,
-    syncTeamBatch,
 } from "./batches.js";
 import {
     adminTeamAction,
@@ -572,9 +572,10 @@ const PLAY_COLUMNS = `id, batch_id, card_id, question, asked_by, asked_by_name, 
 
 /**
  * The cards half of /state, scoped to the caller's role.
- *  - stalkers: the live batch, the play made from it (so they can watch the
- *    answer land), what the hider still owes them, and the answered geometry
- *    behind the Hints map filter.
+ *  - stalkers: the live batch, how many questions they have in hand (the
+ *    ones they let slip pile up), the play made from the live batch (so they
+ *    can watch the answer land), what the hider still owes them, and the
+ *    answered geometry behind the Hints map filter.
  *  - hiders: the questions they still have to answer, and the ones they have
  *    answered (they may correct those while the round is on).
  * Both get an unread count for the header bell. Once a round is over the
@@ -611,10 +612,10 @@ async function cardsForUser(env, team, me, now) {
     }
 
     const state = teamPhase(team, now);
-    const batchRow =
+    const { batch: batchRow, inHand } =
         live && state.phase === "hunting"
-            ? await syncTeamBatch(env, team.id, state.question, now)
-            : null;
+            ? await liveTeamBatch(env, team.id, state.question, now)
+            : { batch: null, inHand: 0 };
     const current = batchRow?.played_card_id
         ? plays.find((p) => p.batch_id === batchRow.id)
         : null;
@@ -622,6 +623,7 @@ async function cardsForUser(env, team, me, now) {
     return {
         role: "stalker",
         batch: batchRow ? publicBatch(batchRow) : null,
+        inHand,
         currentPlay: current ? publicPlay(current) : null,
         pending,
         historyCount: plays.length,
@@ -665,12 +667,14 @@ async function handleCardPick(request, env, user) {
     const card = CARDS_BY_ID.get(body?.cardId);
     if (!card) return error("Unknown card", 400, request, env);
 
-    const batch = await syncTeamBatch(env, team.id, state.question, now);
+    const { batch } = await liveTeamBatch(env, team.id, state.question, now);
     if (!cardIsInBatch(batch, card.id)) {
+        // Face down already: a teammate sent this question first. If the team
+        // has another question in hand, it is face up now.
         return error(
             batch.played_card_id
-                ? "Your team already sent a question — wait for the next one"
-                : "That card is not in the current batch",
+                ? "Your team already sent its question — wait for the next one"
+                : "A teammate sent that question first — here is the next one",
             409,
             request,
             env,
@@ -708,7 +712,7 @@ async function handleCardPick(request, env, user) {
         .bind(card.id, user.id, now, batch.id)
         .run();
     if (!claim.meta.changes) {
-        return error("Your team already sent a question — wait for the next one", 409, request, env);
+        return error("A teammate sent that question first", 409, request, env);
     }
 
     const inserted = await env.DB.prepare(
@@ -720,7 +724,7 @@ async function handleCardPick(request, env, user) {
             team.id,
             batch.id,
             card.id,
-            state.question,
+            batch.question,
             user.id,
             user.username,
             now,

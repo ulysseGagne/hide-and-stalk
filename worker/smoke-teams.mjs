@@ -3,10 +3,11 @@
 //   HNS_ADMIN_PASSWORD=... node smoke-teams.mjs
 //
 // Covers: making and editing teams (online or not), a team starting on its
-// own, the hiding countdown, one question per interval with no repeats, the
-// locked-in pick, answering and correcting an answer, catching the hider,
-// question 7 handing the win to the hider, Play again rotating the hider,
-// pausing, the settings, and that nothing leaks between teams.
+// own, the hiding countdown, one question per interval with no repeats,
+// unsent questions piling up and going out back to back, the locked-in pick,
+// answering and correcting an answer, catching the hider, question 7 handing
+// the win to the hider, Play again rotating the hider, pausing, the settings,
+// and that nothing leaks between teams.
 //
 // Time is moved by editing the local database (the team clock only stores
 // when it started), so the whole run takes seconds, not 40 minutes.
@@ -34,12 +35,14 @@ if (!/^http:\/\/(127\.0\.0\.1|localhost)/.test(BASE)) {
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const WRANGLER = join(HERE, "node_modules", "wrangler", "bin", "wrangler.js");
+// Where `wrangler dev --persist-to` keeps the local database, when it was started with one.
+const PERSIST = process.env.HNS_PERSIST_TO ? ["--persist-to", process.env.HNS_PERSIST_TO] : [];
 
 /** Run SQL on the local database behind `wrangler dev`. */
 function sql(command) {
     const out = execFileSync(
         process.execPath,
-        [WRANGLER, "d1", "execute", "hidenstalk", "--local", "--json", "--command", command],
+        [WRANGLER, "d1", "execute", "hidenstalk", "--local", ...PERSIST, "--json", "--command", command],
         { cwd: HERE, stdio: "pipe" },
     ).toString();
     return JSON.parse(out).at(-1)?.results ?? [];
@@ -352,7 +355,29 @@ check("debug mode starts a fast round", r.json.team?.hideMs === 60000 && r.json.
 await adminPost("/admin/settings", { debug: false });
 s = await call("/state", { token: tok(newHider) });
 check("turning debug off does not touch a running round", s.json.team.intervalMs === 60000);
-advance(teamA, 60000 + 6 * 60000 + 1000);
+
+// Questions the stalkers let slip pile up, and go out back to back.
+const sA2 = stalkersOf(teamA);
+for (const u of sA2) await place(tok(u));
+advance(teamA, 60000 + 2 * 60000 + 1000); // two minutes into the hunt: question 3
+s = await call("/state", { token: tok(sA2[0]) });
+check("three questions in, none sent: all three in hand", s.json.team.question === 3 && s.json.cards.inHand === 3, `question ${s.json.team.question}, in hand ${s.json.cards.inHand}`);
+check("the oldest one is face up", s.json.cards.batch?.question === 1 && s.json.cards.batch.playedCardId === null);
+const plainCard = (b) => b.cardIds.find((id) => !card(id).needsAsker) ?? b.cardIds[0];
+for (const [q, left] of [[1, 2], [2, 1]]) {
+    r = await call("/cards/pick", { method: "POST", token: tok(sA2[0]), body: { cardId: plainCard(s.json.cards.batch) } });
+    check(`question ${q} sent`, r.status === 200, JSON.stringify(r.json));
+    s = await call("/state", { token: tok(sA2.at(-1)) });
+    const b = s.json.cards.batch;
+    check(`no wait: question ${q + 1} is face up straight away`, b?.question === q + 1 && b.playedCardId === null && s.json.cards.inHand === left, `batch ${b?.question}, in hand ${s.json.cards.inHand}`);
+}
+r = await call("/cards/pick", { method: "POST", token: tok(sA2[0]), body: { cardId: plainCard(s.json.cards.batch) } });
+check("question 3 sent", r.status === 200, JSON.stringify(r.json));
+s = await call("/state", { token: tok(sA2.at(-1)) });
+check("all sent: the last one stays on screen", s.json.cards.inHand === 0 && s.json.cards.batch?.question === 3 && s.json.cards.batch.playedCardId !== null && s.json.cards.currentPlay?.question === 3);
+s = await call("/state", { token: tok(newHider) });
+check("the hider owes all three, numbered as they came", s.json.cards.pending.map((p) => p.question).join(",") === "1,2,3", s.json.cards.pending.map((p) => p.question).join(","));
+advance(teamA, 4 * 60000); // the rest of the way to question 7
 s = await call("/state", { token: tok(newHider) });
 check("question 7 never comes: the hider wins", s.json.team.phase === "ended" && s.json.team.outcome === "hider", JSON.stringify(s.json.team));
 check("a full hunt is exactly six questions long", s.json.team.huntMs === 6 * 60000, `${s.json.team.huntMs}`);

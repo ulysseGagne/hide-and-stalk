@@ -417,7 +417,10 @@ async function act(p, s) {
         const known = team.batchOfQuestion.get(batch.question);
         if (known === undefined) {
             team.batchOfQuestion.set(batch.question, batch.id);
-            check("the batch matches the question on the clock", batch.question === t.question, `batch ${batch.question} vs clock ${t.question}`);
+            // The oldest question in hand is face up: sends go oldest first, so
+            // what is in hand is always the last few the clock brought.
+            const faceUp = batch.playedCardId ? t.question : t.question - (s.cards.inHand ?? 1) + 1;
+            check("the batch is the oldest question in hand", batch.question === faceUp, `batch ${batch.question}, clock ${t.question}, in hand ${s.cards.inHand}`);
             for (const id of batch.cardIds) {
                 check("no card is offered twice in a round", !team.dealt.has(id), `team ${team.id}: ${id}`);
                 team.dealt.add(id);

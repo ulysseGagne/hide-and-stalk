@@ -29,7 +29,8 @@ presses **Start** on their phone.
 2. Then the hunt starts: **a new question every 5 minutes**. The stalkers get
    three questions face up, pick one and send it; it goes straight to the
    hider, who answers truthfully. The map's hints layer closes in with every
-   answer.
+   answer. A question the stalkers don't send in time isn't lost: questions
+   pile up, and the next one is face up the moment one is sent.
 3. The stalkers win by finding the hider (they scan the QR code on the hider's
    screen, or press **Hider has been found**). If question 7 would come first
    (30 minutes of hunting), the hider wins.
@@ -156,6 +157,10 @@ HNS_ADMIN_PASSWORD=... npm run smoke      # every rule, in seconds (moves the cl
 HNS_ADMIN_PASSWORD=... npm run simulate   # 6 teams of 6 playing at once, ~8 minutes
 ```
 
+To keep your local players, run them against a throwaway database instead:
+start the worker with `npx wrangler dev --persist-to <dir>` and give the smoke
+test the same folder in `HNS_PERSIST_TO` (it moves the clock through it).
+
 `simulate.mjs` plays whole rounds in real time (debug-mode timers): 36 phones
 syncing like the real client, stalkers racing each other to pick, hiders
 answering truthfully from where they really are, rounds ending by QR scan, by
@@ -235,8 +240,9 @@ its connection. A team keeps the timers it started with.
 | GET    | `/cards/history`  | ✓    | → `{plays}` for the caller's team |
 | GET    | `/cards/photo`    | ✓    | `?playId=` → `{photo}` (a data URL) |
 
-The `cards` block of `/state` differs by role: stalkers get the batch for the
-current question and the play made from it (so they watch the answer land);
+The `cards` block of `/state` differs by role: stalkers get the batch face up
+(the oldest question they have not sent), `inHand` (how many they can send
+right now) and the play made from that batch (so they watch the answer land);
 the hider gets the questions they still owe and the ones they have answered.
 Both get an `unread` count for the bell, and both get `hints` — the answered
 geometry behind the Hints map. A corrected answer rings the stalkers' bell
@@ -258,6 +264,11 @@ again and is marked as changed.
   many stalkers are hunting. Picking a card only marks it on that phone; Send
   is what plays it. Then the other two cards disappear and the sent one is
   stamped SENT · LOCKED IN until the hider's answer is written in.
+- **Unsent questions pile up.** A question nobody sent before the next one
+  arrived stays in hand. The oldest one in hand is face up, and the moment it
+  is sent the next one is face up too, with no waiting for the timer; each keeps
+  its own number and its own tier of cards. Whatever is still in hand when
+  question 7 would arrive is lost with the round.
 - **The deck has a running order.** Every card carries `tiers`: the question
   numbers it may be dealt as. Openers (`[1, 2]` — north/south, the named
   landmarks, the 500 m ring) cut the campus in half; closers (`[6]` — exact
