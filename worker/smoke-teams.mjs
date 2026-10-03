@@ -17,6 +17,7 @@
 // server it talks to. Local only.
 
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -38,6 +39,8 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const WRANGLER = join(HERE, "node_modules", "wrangler", "bin", "wrangler.js");
 // Where `wrangler dev --persist-to` keeps the local database, when it was started with one.
 const PERSIST = process.env.HNS_PERSIST_TO ? ["--persist-to", process.env.HNS_PERSIST_TO] : [];
+// The invite every phone gets until an admin saves another (DISCORD_URL in wrangler.toml).
+const CLUB_DISCORD = readFileSync(join(HERE, "wrangler.toml"), "utf8").match(/^DISCORD_URL\s*=\s*"([^"]*)"/m)?.[1] ?? null;
 
 /** Run SQL on the local database behind `wrangler dev`. */
 function sql(command) {
@@ -119,7 +122,7 @@ for (const name of names.filter((n) => n !== "frank")) await place(tokens[name])
 let s = await call("/state", { token: tokens.alice });
 check("unassigned player has no team", s.status === 200 && s.json.team === null, `status ${s.status}`);
 check("unassigned player sees no one", Array.isArray(s.json.users) && s.json.users.length === 0);
-check("settings reach players", s.json.settings?.debug === false && s.json.settings?.discordUrl === null);
+check("settings reach players, the club's Discord invite by default", s.json.settings?.debug === false && CLUB_DISCORD !== null && s.json.settings?.discordUrl === CLUB_DISCORD);
 
 // ---------------------------------------------------------------------------
 console.log("\nMaking teams");
@@ -519,7 +522,8 @@ check(
     r.status === 200 && a.json.users.find((u) => u.id === quitter.id).groupId === null && a.json.users.filter((u) => !u.isAdmin && u.id !== quitter.id).every((u) => u.groupId !== null),
     JSON.stringify(r.json),
 );
-await adminPost("/admin/settings", { discordUrl: "", todosDone: [] });
+r = await adminPost("/admin/settings", { discordUrl: "", todosDone: [] });
+check("a link saved empty goes back to the club's invite", r.json.settings.discordUrl === CLUB_DISCORD);
 await adminPost("/admin/clear");
 a = await call("/state", { token: at });
 check("clear: only admins are left", a.json.users.every((u) => u.isAdmin) && a.json.results.length === 0);

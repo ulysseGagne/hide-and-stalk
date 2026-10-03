@@ -11,3 +11,6 @@ database_id = "1c4ff3cf-15ab-4e38-853a-d6a92a9407be"
 # Comma-separated list of origins allowed to call this API.
 # Add your machine's LAN address here too when testing from a phone on the same Wi-Fi.
 ALLOWED_ORIGINS = "https://ulyssegagne.github.io,http://localhost:8080,http://127.0.0.1:8080,http://192.168.0.139:8080"
+# The invite every phone's "Join the Discord call" button opens (the club's
+# server, one voice channel per team), unless an admin saves another link.
+DISCORD_URL = "https://discord.gg/Hh3SaS32j"

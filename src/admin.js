@@ -18,11 +18,6 @@
             who: "Félix",
             text: "Create the Discord server: one voice channel per team, so the admins can hop into any team's call.",
         },
-        {
-            id: "discord-link",
-            who: "Félix",
-            text: "Paste the server's invite link under Settings below. Every phone then gets a “Join the Discord call” button.",
-        },
     ];
 
     let adminApi = null;

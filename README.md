@@ -163,6 +163,7 @@ Then:
 
 1. Put the Worker URL (`https://hidenstalk-api.<you>.workers.dev`) into `src/config.js` → `apiBase`.
 2. Add your GitHub Pages origin (`https://<you>.github.io`) to `ALLOWED_ORIGINS` in `worker/wrangler.toml` and redeploy.
+3. `DISCORD_URL` in the same file is the invite every phone's "Join the Discord call" button opens (the club's server), unless an admin saves another link on the admin board.
 
 > **Order matters.** Pushing to `main` deploys the frontend straight away
 > (GitHub Pages). A frontend that talks to an older worker breaks, so run
@@ -250,7 +251,7 @@ Admin-only routes (all `POST`):
 | `/admin/team`       | `{teamId, action}` | `start`, `pause`, `resume` or `reset` one team |
 | `/admin/disband`    | – | everyone back to no team (results are kept) |
 | `/admin/clear`      | – | deletes every non-admin account, team and result |
-| `/admin/settings`   | `{debug?, debugNoHide?, debugAllQuestions?, debugFakeLocation?, discordUrl?, todosDone?}` | debug mode and its options, the Discord invite, the to-do ticks |
+| `/admin/settings`   | `{debug?, debugNoHide?, debugAllQuestions?, debugFakeLocation?, discordUrl?, todosDone?}` | debug mode and its options, the Discord invite (saved empty: `DISCORD_URL` from `wrangler.toml`), the to-do ticks |
 
 Every team keeps exactly one hider: making someone the hider turns the old one
 into a stalker, and taking a team's hider away (or the hider leaving the game)

@@ -1,6 +1,7 @@
 // The admin's switches: debug mode and its own options, the Discord invite
-// link, and which of the game-day to-dos are ticked. One row per key in the
-// `settings` table.
+// link (the club server's, DISCORD_URL in wrangler.toml, until an admin saves
+// another), and which of the game-day to-dos are ticked. One row per key in
+// the `settings` table.
 
 const MAX_URL_LENGTH = 300;
 const MAX_TODO_ID_LENGTH = 40;
@@ -31,7 +32,7 @@ export async function getSettings(env) {
     return {
         debug: raw.debug === "1",
         ...Object.fromEntries(Object.entries(DEBUG_OPTIONS).map(([name, key]) => [name, raw[key] === "1"])),
-        discordUrl: raw.discord_url || null,
+        discordUrl: raw.discord_url || env.DISCORD_URL || null,
         todosDone,
     };
 }

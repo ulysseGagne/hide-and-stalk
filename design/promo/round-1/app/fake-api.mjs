@@ -135,7 +135,7 @@ const me = (name) => {
     return { ...u, isAdmin: false, groupId: 3, cardsSeenAt: 0 };
 };
 
-const settings = { debug: false, discordUrl: "https://discord.gg/hideandstalk" };
+const settings = { debug: false, discordUrl: "https://discord.gg/Hh3SaS32j" };
 
 /** Every screen: what the server says, and where the phone is. */
 export const SCREENS = {
