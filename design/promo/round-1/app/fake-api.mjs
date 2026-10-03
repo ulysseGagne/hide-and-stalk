@@ -16,7 +16,7 @@ const MIN = 60_000;
 export const HIDER = { lat: 46.7806, lng: -71.2789 }; // by the greenhouses
 const POS = {
     jules: { lat: 46.779163, lng: -71.2692303 }, // Pollack
-    noah: { lat: 46.7803276, lng: -71.2768114 }, // Vachon
+    felix: { lat: 46.7803276, lng: -71.2768114 }, // Vachon
     camille: { lat: 46.7814, lng: -71.2748 },
     theo: { lat: 46.7797, lng: -71.2731 },
 };
@@ -52,9 +52,9 @@ function truth(cardId, asker) {
 }
 
 const USERS = [
-    { id: 11, username: "maelle", role: "hider" },
+    { id: 11, username: "ulysse", role: "hider" },
     { id: 12, username: "jules", role: "stalker" },
-    { id: 13, username: "noah", role: "stalker" },
+    { id: 13, username: "felix", role: "stalker" },
     { id: 14, username: "camille", role: "stalker" },
     { id: 15, username: "theo", role: "stalker" },
 ];
@@ -64,8 +64,8 @@ const HUNT_START = NOW - 17 * MIN - 20_000; // 13:09:40 -> Q4 is live
 const ROUND = [
     { q: 1, cardIds: ["ns", "closer_church", "radius_500"], picked: "ns", by: "jules" },
     { q: 2, cardIds: ["radius_500", "walk_minutes", "nearest_velo"], picked: "radius_500", by: "jules" },
-    { q: 3, cardIds: ["nearest_cafe", "photo_window", "closer_outer_ring"], picked: "nearest_cafe", by: "noah" },
-    { q: 4, cardIds: ["closer_greenhouses", "nearest_building", "photo_below"], picked: "closer_greenhouses", by: "noah" },
+    { q: 3, cardIds: ["nearest_cafe", "photo_window", "closer_outer_ring"], picked: "nearest_cafe", by: "felix" },
+    { q: 4, cardIds: ["closer_greenhouses", "nearest_building", "photo_below"], picked: "closer_greenhouses", by: "felix" },
 ];
 
 function plays(upTo, { answerLast = true, extra = [] } = {}) {
@@ -114,7 +114,7 @@ function team(phase, o = {}) {
         huntMs: null,
         huntRemainingMs: null,
         outcome: null,
-        hiderName: "maelle",
+        hiderName: "ulysse",
         caughtByName: null,
         endedAt: null,
     };
@@ -163,7 +163,7 @@ export const SCREENS = {
     },
     hiding: {
         position: HIDER,
-        state: { serverNow: NOW, settings, me: { ...me("maelle"), catchCode: "HNS1:7f3a9c2e41" }, team: team("hiding", { hideRemainingMs: 8 * MIN + 41_000 }), users: users("maelle"), cards: { role: "hider", pending: [], answered: [], answeredCount: 0, unread: 0, hints: [] } },
+        state: { serverNow: NOW, settings, me: { ...me("ulysse"), catchCode: "HNS1:7f3a9c2e41" }, team: team("hiding", { hideRemainingMs: 8 * MIN + 41_000 }), users: users("ulysse"), cards: { role: "hider", pending: [], answered: [], answeredCount: 0, unread: 0, hints: [] } },
     },
     cards: {
         position: POS.jules,
@@ -197,30 +197,30 @@ export const SCREENS = {
     },
     // Sent, the hider hasn't answered yet: SENT · LOCKED IN.
     waiting: {
-        position: POS.noah,
+        position: POS.felix,
         state: (() => {
             const p = plays(3, { answerLast: false });
             return {
                 serverNow: NOW,
                 settings,
-                me: me("noah"),
+                me: me("felix"),
                 team: team("hunting", { question: 3, nextQuestionInMs: 3 * MIN + 31_000, huntMs: 11 * MIN + 29_000 }),
-                users: users("noah"),
+                users: users("felix"),
                 cards: { role: "stalker", batch: { id: 203, question: 3, cardIds: ROUND[2].cardIds, dealtAt: NOW - 90_000, playedCardId: "nearest_cafe", playedBy: 13, playedAt: NOW - 29_000 }, currentPlay: p[2], pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
             };
         })(),
     },
     // The answer is on screen, so it's read: no bell to point at.
     sent: {
-        position: POS.noah,
+        position: POS.felix,
         state: (() => {
             const p = plays(3);
             return {
                 serverNow: NOW,
                 settings,
-                me: me("noah"),
+                me: me("felix"),
                 team: team("hunting", { question: 3, nextQuestionInMs: 2 * MIN + 3_000, huntMs: 12 * MIN + 57_000 }),
-                users: users("noah"),
+                users: users("felix"),
                 cards: { role: "stalker", batch: { id: 203, question: 3, cardIds: ROUND[2].cardIds, dealtAt: NOW - 3 * MIN, playedCardId: "nearest_cafe", playedBy: 13, playedAt: NOW - 2 * MIN }, currentPlay: p[2], pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
             };
         })(),
@@ -250,9 +250,9 @@ export const SCREENS = {
             return {
                 serverNow: NOW,
                 settings,
-                me: { ...me("maelle"), catchCode: "HNS1:7f3a9c2e41" },
+                me: { ...me("ulysse"), catchCode: "HNS1:7f3a9c2e41" },
                 team: team("hunting", { question: 1, nextQuestionInMs: 4 * MIN + 31_000, huntMs: 29_000 }),
-                users: users("maelle"),
+                users: users("ulysse"),
                 cards: { role: "hider", pending: p.filter((x) => x.answer === null), answered: [], answeredCount: 0, unread: 1, hints: [] },
             };
         })(),
@@ -267,9 +267,9 @@ export const SCREENS = {
             return {
                 serverNow: NOW,
                 settings,
-                me: { ...me("maelle"), catchCode: "HNS1:7f3a9c2e41" },
+                me: { ...me("ulysse"), catchCode: "HNS1:7f3a9c2e41" },
                 team: team("hunting", { question: 5, nextQuestionInMs: 3 * MIN + 50_000, huntMs: 21 * MIN + 10_000 }),
-                users: users("maelle"),
+                users: users("ulysse"),
                 cards: { role: "hider", pending: p.filter((x) => x.answer === null), answered: p.filter((x) => x.answer !== null), answeredCount: 4, unread: 1, hints: hinted(p) },
             };
         })(),
@@ -283,9 +283,9 @@ export const SCREENS = {
             return {
                 serverNow: NOW,
                 settings,
-                me: { ...me("maelle"), catchCode: "HNS1:7f3a9c2e41" },
+                me: { ...me("ulysse"), catchCode: "HNS1:7f3a9c2e41" },
                 team: team("hunting", { question: 4, nextQuestionInMs: 2 * MIN + 40_000, huntMs: 17 * MIN + 20_000 }),
-                users: users("maelle"),
+                users: users("ulysse"),
                 cards: { role: "hider", pending: [], answered: p, answeredCount: 4, unread: 0, hints: hinted(p) },
             };
         })(),
@@ -346,9 +346,9 @@ export const SCREENS = {
             return {
                 serverNow: NOW,
                 settings,
-                me: me("maelle"),
+                me: me("ulysse"),
                 team: team("ended", { status: "ended", outcome: "hider", huntMs: 30 * MIN, endedAt: NOW - 20_000 }),
-                users: users("maelle", { hunting: false }),
+                users: users("ulysse", { hunting: false }),
                 cards: { role: "hider", pending: [], answered: [], answeredCount: 6, unread: 0, hints: hinted(p) },
             };
         })(),
@@ -365,8 +365,9 @@ export const SCREENS = {
 // For the how-to-play page's walkthrough (src/how-to-play/): question 1 from
 // the start, on a clock that agrees with itself. The screens above share one
 // NOW late in the round, so their question 1 was "asked 16m ago".
-// Three stalkers have a say (jules, noah, camille: theo is away), so every
-// question waits until all three have picked the same card.
+// Two stalkers have a say (jules, the phone shown, and felix; camille and
+// theo are away), so every question waits until both picked the same card.
+// The page names only ulysse and felix: questions reach the hider from felix.
 const q1Batch = (ago) => ({ id: 201, question: 1, cardIds: ROUND[0].cardIds, dealtAt: NOW - ago, playedCardId: null, playedBy: null, playedAt: null });
 const q1Cards = (ago, picks = []) => ({
     serverNow: NOW,
@@ -374,23 +375,20 @@ const q1Cards = (ago, picks = []) => ({
     me: me("jules"),
     team: team("hunting", { question: 1, nextQuestionInMs: 5 * MIN - ago, huntMs: ago }),
     users: users("jules"),
-    cards: { role: "stalker", batch: q1Batch(ago), picks, voterIds: [12, 13, 14], currentPlay: null, pending: [], historyCount: 0, unread: 0, hints: [] },
+    cards: { role: "stalker", batch: q1Batch(ago), picks, voterIds: [12, 13], currentPlay: null, pending: [], historyCount: 0, unread: 0, hints: [] },
 });
 // Dealt: three cards, nothing picked.
 SCREENS["demo-cards"] = { position: POS.jules, state: q1Cards(29_000) };
-// The first card picked (tools/shoot-app.mjs taps it), as noah did; camille
-// went for the 500 m one: Send waits for camille.
+// The first card picked (tools/shoot-app.mjs taps it); felix went for the
+// 500 m one: Send waits for felix.
 SCREENS["demo-picked"] = {
     position: POS.jules,
     // Far enough that the timer's digits are all under the tabs.
     scrollTo: "#card-row .card:nth-child(1)",
     scrollPad: 100,
-    state: q1Cards(36_000, [
-        { userId: 13, cardId: "ns" },
-        { userId: 14, cardId: "radius_500" },
-    ]),
+    state: q1Cards(36_000, [{ userId: 13, cardId: "radius_500" }]),
 };
-// Talked over in the call: all three on north or south. Send in black.
+// Talked over in the call: both on north or south. Send in black.
 SCREENS["demo-agreed"] = {
     position: POS.jules,
     scrollTo: "#card-row .card:nth-child(1)",
@@ -398,7 +396,6 @@ SCREENS["demo-agreed"] = {
     state: q1Cards(52_000, [
         { userId: 12, cardId: "ns" },
         { userId: 13, cardId: "ns" },
-        { userId: 14, cardId: "ns" },
     ]),
 };
 // The hider, a few seconds later: north or south, North ticked, not sent yet.
@@ -407,20 +404,46 @@ SCREENS["demo-question"] = {
     state: {
         serverNow: NOW,
         settings,
-        me: { ...me("maelle"), catchCode: "HNS1:7f3a9c2e41" },
+        me: { ...me("ulysse"), catchCode: "HNS1:7f3a9c2e41" },
         team: team("hunting", { question: 1, nextQuestionInMs: 4 * MIN + 12_000, huntMs: 48_000 }),
-        users: users("maelle"),
+        users: users("ulysse"),
         cards: {
             role: "hider",
-            pending: [{ id: 101, cardId: "ns", batchId: 201, question: 1, askedByName: "jules", askedAt: NOW - 8_000, askLat: POS.jules.lat, askLng: POS.jules.lng, answer: null, hasPhoto: false, answeredAt: null, editedAt: null }],
+            pending: [{ id: 101, cardId: "ns", batchId: 201, question: 1, askedByName: "felix", askedAt: NOW - 8_000, askLat: POS.felix.lat, askLng: POS.felix.lng, answer: null, hasPhoto: false, answeredAt: null, editedAt: null }],
             answered: [],
             answeredCount: 0,
-            unread: 1,
+            // Read: no NEW arrow at the bell, which on the page pointed away from the button to tap.
+            unread: 0,
             hints: [],
         },
     },
     select: "North",
 };
+// The page's questions carousel: one question each, as the hider gets it.
+// On the QUESTIONS tab, nothing ticked yet; question q of the round.
+const hiderAsked = (cardId, by, q, clock) => ({
+    position: HIDER,
+    scrollTo: "#hider-questions",
+    scrollPad: 18,
+    state: {
+        serverNow: NOW,
+        settings,
+        me: { ...me("ulysse"), catchCode: "HNS1:7f3a9c2e41" },
+        team: team("hunting", { question: q, nextQuestionInMs: clock, huntMs: q * 5 * MIN - clock }),
+        users: users("ulysse"),
+        cards: {
+            role: "hider",
+            pending: [{ id: 100 + q, cardId, batchId: 200 + q, question: q, askedByName: by, askedAt: NOW - 12_000, askLat: POS[by].lat, askLng: POS[by].lng, answer: null, hasPhoto: false, answeredAt: null, editedAt: null }],
+            answered: [],
+            answeredCount: q - 1,
+            unread: 0,
+            hints: [],
+        },
+    },
+});
+SCREENS["q-inside"] = hiderAsked("inside_outside", "felix", 2, 4 * MIN + 36_000);
+SCREENS["q-floor"] = hiderAsked("floor", "felix", 4, 4 * MIN + 41_000);
+SCREENS["q-door"] = hiderAsked("photo_door", "felix", 6, 4 * MIN + 38_000);
 // For the post: the three cards as dealt (S51's layout), one of them circled.
 SCREENS.cardspick = SCREENS.cards;
 // The home screen (W54.1b4): the app as it opens, before any tap.
@@ -444,7 +467,7 @@ function waiting(q, cardId, by, at) {
 }
 
 /** The hider's /state for one map screen. */
-function mapState({ me = "maelle", users: list, question, clock, answered, pending = [] }) {
+function mapState({ me = "ulysse", users: list, question, clock, answered, pending = [], unread = pending.length }) {
     const roster = list.map((u, i) => ({ id: 11 + i, username: u.name, role: u.role, isAdmin: false, groupId: 3, cardsSeenAt: 0, online: true, lat: u.at?.lat ?? null, lng: u.at?.lng ?? null, updatedAt: NOW - 3000 }));
     const meRow = roster.find((u) => u.username === me);
     return {
@@ -453,7 +476,7 @@ function mapState({ me = "maelle", users: list, question, clock, answered, pendi
         me: { id: meRow.id, username: me, role: "hider", isAdmin: false, groupId: 3, cardsSeenAt: 0, catchCode: "HNS1:7f3a9c2e41" },
         team: team("hunting", { question, nextQuestionInMs: clock, huntMs: (question - 1) * 5 * MIN + 5 * MIN - clock, hiderName: me }),
         users: roster,
-        cards: { role: "hider", pending, answered, answeredCount: answered.length, unread: pending.length, hints: hinted(answered) },
+        cards: { role: "hider", pending, answered, answeredCount: answered.length, unread, hints: hinted(answered) },
     };
 }
 
@@ -483,7 +506,7 @@ const GH = LAB.g9a;
 const greenhouseHints = (n) => plays(n);
 const stalkersAt = (pins) => [
     { name: "jules", role: "stalker" },
-    { name: "noah", role: "stalker", at: pins[0] },
+    { name: "felix", role: "stalker", at: pins[0] },
     { name: "camille", role: "stalker", at: pins[1] },
     { name: "theo", role: "stalker" },
 ];
@@ -516,38 +539,38 @@ const pubuPlays = () => {
 
 export const MAP_SCREENS = {
     // S61, the post's image 5: the hints layer between questions (two answers in).
-    g9a: { you: LAB.g9a.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.g9a.you }, ...stalkersAt(GH.pins)], question: 2, clock: 3 * MIN + 12_000, answered: greenhouseHints(2) }), setup: mapSetup(LAB.g9a) },
+    g9a: { you: LAB.g9a.you, state: mapState({ users: [{ name: "ulysse", role: "hider", at: LAB.g9a.you }, ...stalkersAt(GH.pins)], question: 2, clock: 3 * MIN + 12_000, answered: greenhouseHints(2) }), setup: mapSetup(LAB.g9a) },
     // S62: the same, camille's pin tapped: her name above it.
-    g10a: { you: LAB.g10a.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.g10a.you }, ...stalkersAt(LAB.g10a.pins)], question: 2, clock: 3 * MIN + 12_000, answered: greenhouseHints(2) }), setup: mapSetup(LAB.g10a, LAB.g10a.pins[1]) },
+    g10a: { you: LAB.g10a.you, state: mapState({ users: [{ name: "ulysse", role: "hider", at: LAB.g10a.you }, ...stalkersAt(LAB.g10a.pins)], question: 2, clock: 3 * MIN + 12_000, answered: greenhouseHints(2) }), setup: mapSetup(LAB.g10a, LAB.g10a.pins[1]) },
     // S68: the same moment, how far the closest stalker is scribbled in the box.
-    g11a: { you: LAB.g11a.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.g11a.you }, ...stalkersAt(LAB.g11a.pins)], question: 2, clock: 3 * MIN + 12_000, answered: greenhouseHints(2) }), setup: mapSetup(LAB.g11a) },
+    g11a: { you: LAB.g11a.you, state: mapState({ users: [{ name: "ulysse", role: "hider", at: LAB.g11a.you }, ...stalkersAt(LAB.g11a.pins)], question: 2, clock: 3 * MIN + 12_000, answered: greenhouseHints(2) }), setup: mapSetup(LAB.g11a) },
     // S63, the post's image 3: "Which àVélo station are you closest to?" waiting.
-    v2c: { you: LAB.v2c.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.v2c.you }, ...stalkersAt([null, null])], question: 3, clock: 62_000, answered: greenhouseHints(2), pending: [waiting(3, "nearest_velo", "noah", null)] }), setup: mapSetup(LAB.v2c) },
+    v2c: { you: LAB.v2c.you, state: mapState({ users: [{ name: "ulysse", role: "hider", at: LAB.v2c.you }, ...stalkersAt([null, null])], question: 3, clock: 62_000, answered: greenhouseHints(2), pending: [waiting(3, "nearest_velo", "felix", null)] }), setup: mapSetup(LAB.v2c) },
     // S64: the same, her station's pin tapped: its pop-up.
-    v8c: { you: LAB.v8c.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.v8c.you }, ...stalkersAt([null, null])], question: 3, clock: 62_000, answered: greenhouseHints(2), pending: [waiting(3, "nearest_velo", "noah", null)] }), setup: mapSetup(LAB.v8c, { lat: VELO_63.lat, lng: VELO_63.lng, dy: -24 }) },
+    v8c: { you: LAB.v8c.you, state: mapState({ users: [{ name: "ulysse", role: "hider", at: LAB.v8c.you }, ...stalkersAt([null, null])], question: 3, clock: 62_000, answered: greenhouseHints(2), pending: [waiting(3, "nearest_velo", "felix", null)] }), setup: mapSetup(LAB.v8c, { lat: VELO_63.lat, lng: VELO_63.lng, dy: -24 }) },
     // S69, the post's image 6: north or south, asked from the line.
-    n11d: { you: LAB.n11d.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.n11d.you }, { name: "jules", role: "stalker" }, { name: "noah", role: "stalker" }, { name: "camille", role: "stalker", at: LAB.n11d.asker }, { name: "theo", role: "stalker" }], question: 5, clock: 2 * MIN + 40_000, answered: greenhouseHints(4), pending: [waiting(5, "ns", "camille", LAB.n11d.asker)] }), setup: mapSetup(LAB.n11d) },
-    // S65: closer to the greenhouse than noah: the place's tag, no circle; the two stalkers' pins.
-    "N10.2": { you: LAB["N10.2"].you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB["N10.2"].you }, ...stalkersAt(LAB["N10.2"].pins)], question: 4, clock: 48_000, answered: greenhouseHints(3), pending: [waiting(4, "closer_greenhouses", "noah", POS.noah)] }), setup: mapSetup(LAB["N10.2"]) },
+    n11d: { you: LAB.n11d.you, state: mapState({ users: [{ name: "ulysse", role: "hider", at: LAB.n11d.you }, { name: "jules", role: "stalker" }, { name: "felix", role: "stalker" }, { name: "camille", role: "stalker", at: LAB.n11d.asker }, { name: "theo", role: "stalker" }], question: 5, clock: 2 * MIN + 40_000, answered: greenhouseHints(4), pending: [waiting(5, "ns", "camille", LAB.n11d.asker)] }), setup: mapSetup(LAB.n11d) },
+    // S65: closer to the greenhouse than felix: the place's tag, no circle; the two stalkers' pins.
+    "N10.2": { you: LAB["N10.2"].you, state: mapState({ users: [{ name: "ulysse", role: "hider", at: LAB["N10.2"].you }, ...stalkersAt(LAB["N10.2"].pins)], question: 4, clock: 48_000, answered: greenhouseHints(3), pending: [waiting(4, "closer_greenhouses", "felix", POS.felix)] }), setup: mapSetup(LAB["N10.2"]) },
     // S66: east or west of camille.
-    N12: { you: LAB.N12.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.N12.you }, { name: "jules", role: "stalker", at: POS.jules }, { name: "noah", role: "stalker", at: POS.noah }, { name: "camille", role: "stalker", at: POS.camille }, { name: "theo", role: "stalker", at: POS.theo }], question: 5, clock: 2 * MIN + 40_000, answered: greenhouseHints(4), pending: [waiting(5, "ew", "camille", POS.camille)] }), setup: mapSetup(LAB.N12) },
-    // The how-to-play page's call: late in the round, the hider's map up
-    // close, noah walking past 14 m away (scribbled in the box), camille near.
-    "demo-close": {
+    N12: { you: LAB.N12.you, state: mapState({ users: [{ name: "ulysse", role: "hider", at: LAB.N12.you }, { name: "jules", role: "stalker", at: POS.jules }, { name: "felix", role: "stalker", at: POS.felix }, { name: "camille", role: "stalker", at: POS.camille }, { name: "theo", role: "stalker", at: POS.theo }], question: 5, clock: 2 * MIN + 40_000, answered: greenhouseHints(4), pending: [waiting(5, "ew", "camille", POS.camille)] }), setup: mapSetup(LAB.N12) },
+    // The how-to-play page's questions carousel: each question waiting on the
+    // hider's map, as it draws it. Read: no NEW arrow over the question.
+    "q-ns": { you: LAB.n11d.you, state: mapState({ users: [{ name: "ulysse", role: "hider", at: LAB.n11d.you }, { name: "jules", role: "stalker" }, { name: "felix", role: "stalker", at: LAB.n11d.asker }, { name: "camille", role: "stalker" }, { name: "theo", role: "stalker" }], question: 5, clock: 2 * MIN + 40_000, answered: greenhouseHints(4), pending: [waiting(5, "ns", "felix", LAB.n11d.asker)], unread: 0 }), setup: mapSetup(LAB.n11d) },
+    "q-radius": {
         you: HIDER,
-        state: mapState({
-            users: [
-                { name: "maelle", role: "hider", at: HIDER },
-                { name: "jules", role: "stalker" },
-                { name: "noah", role: "stalker", at: { lat: 46.78062, lng: -71.27872 } },
-                { name: "camille", role: "stalker", at: { lat: 46.7811, lng: -71.2797 } },
-                { name: "theo", role: "stalker" },
-            ],
-            question: 5,
-            clock: MIN + 52_000,
-            answered: greenhouseHints(4),
-        }),
-        setup: mapSetup({ view: { lat: 46.78075, lng: -71.27885, zoom: 17.3 }, deg: 300 }),
+        state: mapState({ users: [{ name: "ulysse", role: "hider", at: HIDER }, ...stalkersAt([POS.felix, null])], question: 2, clock: 4 * MIN + 10_000, answered: greenhouseHints(1), pending: [waiting(2, "radius_200", "felix", POS.felix)], unread: 0 }),
+        setup: mapSetup({ view: { lat: POS.felix.lat - 0.0002, lng: POS.felix.lng + 0.0003, zoom: 16 }, deg: 80 }),
+    },
+    "q-closer": {
+        you: HIDER,
+        state: mapState({ users: [{ name: "ulysse", role: "hider", at: HIDER }, ...stalkersAt([POS.camille, null])], question: 1, clock: 4 * MIN + 25_000, answered: [], pending: [waiting(1, "closer_church", "felix", POS.camille)], unread: 0 }),
+        setup: mapSetup({ view: { lat: 46.7812, lng: -71.2748, zoom: 15.5 }, deg: 70 }),
+    },
+    "q-cafe": {
+        you: HIDER,
+        state: mapState({ users: [{ name: "ulysse", role: "hider", at: HIDER }, ...stalkersAt([null, null])], question: 3, clock: 4 * MIN + 20_000, answered: greenhouseHints(2), pending: [waiting(3, "nearest_cafe", "felix", null)], unread: 0 }),
+        setup: mapSetup({ view: { lat: 46.7801, lng: -71.2783, zoom: 16 }, deg: 20 }),
     },
     // S67: within 200 m of lea (the Pub U game).
     N14: { you: LAB.N14.you, state: mapState({ me: "olivier", users: [{ name: "olivier", role: "hider", at: LAB.N14.you }, ...Object.entries(PUBU.pos).map(([name, at]) => ({ name, role: "stalker", at: ll(at) }))], question: 4, clock: 4 * MIN + 5_000, answered: pubuPlays(), pending: [waiting(4, "radius_200", "lea", ll(PUBU.pos.lea))] }), setup: mapSetup(LAB.N14) },

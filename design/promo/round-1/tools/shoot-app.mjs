@@ -25,7 +25,7 @@ const ORDER = ["login", "loginfilled", "permask", "permasking", "permhalf", "per
 // Round 2's real app: the home screen first, the map screens last.
 // The how-to-play page's walkthrough: question 1, dealt, picked (one stalker
 // still on another card), agreed, at the hider.
-const DEMO = ["demo-cards", "demo-picked", "demo-agreed", "demo-question"];
+const DEMO = ["demo-cards", "demo-picked", "demo-agreed", "demo-question", "q-inside", "q-floor", "q-door"];
 const REAL_ORDER = ["home", ...ORDER, ...DEMO, ...Object.keys(MAP_SCREENS)];
 
 // A stand-in for the hider's photo, for the mock-up only: a sculpture on
@@ -117,12 +117,18 @@ const REAL_STEPS = {
 
 // The how-to-play page's tap targets (src/how-to-play/, .hot): where each
 // demo screen's button is, printed in percent of the shot after it is taken.
+// Where nothing is to be tapped in the app, what the page circles to skip ahead.
 const HOTSPOTS = {
     ready: "#team-start-btn",
+    hiding: "#status-timer",
     "demo-cards": "#card-row .card:nth-child(1)",
+    "demo-picked": "#send-btn",
     "demo-agreed": "#send-btn",
     "demo-question": "#hider-question-list .question-card button[type=submit]",
+    g9a: "#map-box",
+    sent: "#scan-open",
     tagcode: "#hider-qr-figure",
+    found: ".rc-hero",
 };
 
 async function shootReal(name) {

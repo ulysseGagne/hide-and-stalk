@@ -4,26 +4,33 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <title>How to Play Hide and Stalk</title>
-        <!-- The page to send people before they come: the goal, how long a
-             round takes, the team's call, one round tap by tap, how to win,
-             the eight rules with why each exists and their fine print
-             (design/game-design/ulaval-version/rules.md), and the questions
-             people ask. The app's rules card links to #rules.
+        <!-- The page to send people before they come: the goal, a round's
+             length, the team's call, a demo of one round, how to win, the
+             questions, the rules with why each exists and their fine print
+             (design/game-design/ulaval-version/rules.md), and the FAQ. The
+             app's rules card links to #rules.
              The screens in img/ are the real app, shot against the fake game
              server; in design/promo/round-1:
-               node tools/shoot-app.mjs real ready,hiding,demo-cards,demo-picked,demo-agreed,demo-question,g9a,sent,tagcode,found,win,demo-close
-             (it prints where each tap target is, for the .hot buttons), then
-             each shots/real/R-*.png cut to 24 colours, white, black and the
-             red kept exact (ImageMagick):
+               node tools/shoot-app.mjs real ready,hiding,demo-cards,demo-picked,demo-agreed,demo-question,g9a,sent,tagcode,found,win,q-ns,q-radius,q-closer,q-cafe,q-inside,q-floor,q-door
+             (it prints where each demo screen's tap target is, for data-tap),
+             then each shots/real/R-*.png cut to 24 colours, white, black and
+             the red kept exact (ImageMagick):
                convert R-x.png -strip -dither None -colors 24 -fuzz 1.5% -fill white -opaque white -fill '#000000' -opaque '#000000' -fill '#E7191F' -opaque '#E7191F' PNG8:x.png
+             img/dark/ is the hider's screens with white and black swapped and
+             the red kept, for the hider's phone in option B and C below:
+               convert x.png -color-matrix "0 -1 0 0 0 1  -1 0 0 0 0 1  -0.965 -0.035 0 0 0 1  0 0 0 1 0 0  0 0 0 0 1 0  0 0 0 0 0 1" (then the same cut)
              hero.png is the lockup cut from ../img/home.png; og.png is it on
-             1200 x 630 for link previews. -->
-        <meta name="description" content="Hide and seek on the whole Université Laval campus, with an app and one Discord call per team. 40 minutes at most per round. One round, tap by tap, and the eight rules." />
+             1200 x 630 for link previews.
+             Still to choose (data-nav and data-phones on <main>): the demo
+             moved on by a tap on the phone, or by Next; and the hider's
+             phone told from a stalker's by a black panel (a), a dark screen
+             (b), or both (c). -->
+        <meta name="description" content="Hide and seek on the whole Université Laval campus, with an app and one Discord call per team. 40 minutes at most per round. A demo, the questions and the rules." />
         <meta name="theme-color" content="#ffffff" />
         <!-- The link preview on Discord: absolute URLs, as the crawler wants them. -->
         <meta property="og:type" content="website" />
         <meta property="og:title" content="How to play Hide and Stalk" />
-        <meta property="og:description" content="Hide and seek on the whole campus, with an app and one Discord call per team. 40 minutes at most per round. Mon Oct 5, 1 PM, Grand Axe." />
+        <meta property="og:description" content="Hide and seek on the whole campus, with an app and one Discord call per team. Mon Oct 5, 13h, Grand Axe." />
         <meta property="og:url" content="https://ulyssegagne.github.io/hide-and-stalk/how-to-play/" />
         <meta property="og:image" content="https://ulyssegagne.github.io/hide-and-stalk/how-to-play/img/og.png" />
         <meta property="og:image:width" content="1200" />
@@ -52,8 +59,8 @@
 
             /* One column, like the app's MENU tab: black on white, one 3 px
                line, Arimo, uppercase labels. Red is never typeset: ink.js
-               draws it by hand (the lockup, two underlines, the demo's
-               circles). One look on purpose: the app is read in the sun. */
+               draws it by hand (the lockup, the underlines, the demo's taps).
+               One look on purpose: the app is read in the sun. */
             :root {
                 --paper: #fff;
                 --ink: #000;
@@ -143,6 +150,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                gap: 12px;
                 min-height: 58px;
                 padding: 10px 16px;
                 border: var(--rule) solid var(--ink);
@@ -158,12 +166,18 @@
             }
             .btn.now { background: var(--ink); color: var(--paper); }
             .btn:disabled { opacity: .35; cursor: default; }
+            /* An arrow drawn with borders, not typeset */
+            .go { position: relative; flex: none; width: 26px; height: 3px; background: currentColor; }
+            .go::after { content: ""; position: absolute; right: 1px; top: 50%; width: 12px; height: 12px; border-top: 3px solid; border-right: 3px solid; transform: translateY(-50%) rotate(45deg); }
+            .go.back { transform: scaleX(-1); }
+            .win-facts { margin-top: 18px; }
             .signup { margin-top: 22px; }
             .signup .note { margin: 8px 0 0; }
 
             /* The demo: one slide per screen, swiped or stepped */
             .demo { margin-top: 18px; }
-            .steps {
+            .steps,
+            .q-track {
                 display: flex;
                 margin: 0;
                 padding: 0;
@@ -173,22 +187,24 @@
                 scroll-snap-type: x mandatory;
                 scrollbar-width: none;
             }
-            .steps::-webkit-scrollbar { display: none; }
+            .steps::-webkit-scrollbar,
+            .q-track::-webkit-scrollbar { display: none; }
             .step {
                 flex: 0 0 100%;
                 min-width: 0;
+                padding: 14px;
                 scroll-snap-align: start;
                 scroll-snap-stop: always;
             }
             .step-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
             .badge {
                 display: inline-block;
-                padding: 5px 10px;
+                padding: 6px 12px;
                 background: var(--ink);
                 color: var(--paper);
-                font-size: 14px;
+                font-size: 17px;
                 font-weight: 700;
-                letter-spacing: .14em;
+                letter-spacing: .12em;
                 text-transform: uppercase;
             }
             .count { font-size: 14px; font-weight: 700; letter-spacing: .14em; font-variant-numeric: tabular-nums; }
@@ -196,12 +212,12 @@
                 margin: 10px 0 14px;
                 font-size: 18px;
                 line-height: 1.35;
-                min-height: calc(3 * 1.35em);
+                min-height: calc(2 * 1.35em);
             }
             .phone {
                 position: relative;
                 width: min(100%, 300px);
-                width: min(100%, clamp(220px, calc((100svh - 250px) * .4618), 330px));
+                width: min(100%, clamp(220px, calc((100svh - 290px) * .4618), 330px));
                 margin: 0 auto;
                 aspect-ratio: 375 / 812;
                 border: var(--rule) solid var(--ink);
@@ -211,10 +227,7 @@
             .phone .ink { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
             .hot {
                 position: absolute;
-                left: calc(var(--x) * 1%);
-                top: calc(var(--y) * 1%);
-                width: calc(var(--w) * 1%);
-                height: calc(var(--h) * 1%);
+                inset: 0;
                 padding: 0;
                 border: 0;
                 background: transparent;
@@ -235,18 +248,66 @@
             }
             .demo-nav .where { font-weight: 700; letter-spacing: .1em; font-variant-numeric: tabular-nums; }
 
-            /* The rules and the questions: rows like the app's rules card,
-               each opening on its fine print */
-            .goal-line { margin: 16px 0 6px; font-size: 21px; line-height: 1.3; font-weight: 700; }
+            /* Moved on by a tap on the phone (the red shows where), or by
+               Next, never both: data-nav on <main>. */
+            [data-nav="tap"] .next-only,
+            [data-nav="next"] .tap-only,
+            [data-nav="next"] .hot,
+            [data-nav="next"] .phone .ink { display: none; }
+            [data-nav="tap"] #demo-next { visibility: hidden; }
+            .tap-ring,
+            .tap-arrow { transform-box: fill-box; transform-origin: center; animation: throb 1.6s ease-in-out infinite; }
+            .tap-arrow { animation-name: nudge; }
+            @keyframes throb { 50% { transform: scale(1.05); } }
+            @keyframes nudge { 50% { transform: translate(-3%, -3%); } }
+
+            /* The hider's phone, told from a stalker's: data-phones on <main>.
+               a: on a black panel; b: its screen dark; c: both. */
+            .shot-dark { display: none; }
+            [data-phones="b"] .hider .shot-dark,
+            [data-phones="c"] .hider .shot-dark { display: block; }
+            [data-phones="b"] .hider .shot-dark ~ .shot,
+            [data-phones="c"] .hider .shot-dark ~ .shot { display: none; }
+            [data-phones="a"] .hider,
+            [data-phones="c"] .hider { background: var(--ink); color: var(--paper); }
+            [data-phones="a"] .hider .badge,
+            [data-phones="c"] .hider .badge { background: var(--paper); color: var(--ink); }
+            [data-phones="a"] .hider .phone,
+            [data-phones="c"] .hider .phone { border-color: var(--paper); }
+            [data-phones="b"] .hider .phone { background: var(--ink); }
+
+            /* The questions: one per slide, the next one showing at the edge */
+            .qs { margin-top: 18px; }
+            .q-track { gap: 14px; }
+            .q {
+                flex: 0 0 84%;
+                min-width: 0;
+                padding: 14px;
+                scroll-snap-align: start;
+            }
+            .q-text { margin: 0; font-size: 20px; line-height: 1.25; font-weight: 700; }
+            .q-note { margin: 6px 0 14px; min-height: calc(3 * 1.4em); line-height: 1.4; }
+            .q-note span { position: relative; display: inline-block; }
+            .q .phone { width: 100%; max-width: 280px; }
+            .q-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+            .q-nav .btn { min-height: 50px; min-width: 76px; }
+            .q-nav .where { font-weight: 700; letter-spacing: .1em; font-variant-numeric: tabular-nums; }
+
+            /* The rules: rows like the app's rules card, each opening on its
+               fine print */
+            .doubt { margin: 16px 0 0; font-size: 21px; line-height: 1.3; font-weight: 700; text-wrap: balance; }
+            .doubt span { position: relative; display: inline-block; }
+            .doubt-why { margin: 6px 0 8px; }
             .rows { margin: 0; padding: 0; list-style: none; counter-reset: r; }
             .rows > li { border-bottom: var(--rule) solid var(--ink); }
-            .rows summary {
+            .rows summary,
+            .rows .plain {
                 position: relative;
                 display: block;
                 padding: 13px 34px 13px 0;
-                cursor: pointer;
-                list-style: none;
             }
+            .rows .plain { margin: 0; }
+            .rows summary { cursor: pointer; list-style: none; }
             .rows summary::-webkit-details-marker { display: none; }
             /* + to open, a dash once open: drawn with borders, not typeset */
             .rows summary::after,
@@ -254,33 +315,18 @@
             .rows summary::before { transform: rotate(90deg); }
             .rows details[open] > summary::before { display: none; }
             .numbered > li { counter-increment: r; }
-            .numbered summary { padding-left: 34px; }
-            .numbered summary > .n::before { content: counter(r); position: absolute; left: 0; top: 13px; font-weight: 700; }
+            .numbered summary,
+            .numbered .plain { padding-left: 34px; }
+            .numbered .n::before { content: counter(r); position: absolute; left: 0; top: 13px; font-weight: 700; }
             .rows strong { position: relative; display: inline; }
+            .why { margin: 0 0 10px; padding-left: 34px; max-width: 36em; }
             .fine { margin: 0 0 16px; padding-left: 34px; list-style-type: "–  "; }
             .fine li { margin: 0 0 8px; padding-left: 2px; }
-            .faq .fine { padding-left: 20px; }
+            .fine span { position: relative; display: inline-block; }
             .faq .answer { margin: 0 0 16px; max-width: 36em; }
-
-            .why { margin: 0 0 10px; padding-left: 34px; max-width: 36em; }
-            .doubt { margin: 18px 0 0; font-size: 21px; line-height: 1.3; font-weight: 700; text-wrap: balance; }
-            .doubt span { position: relative; display: inline-block; }
-
-            /* The call: the hider's own map, and what the team is saying */
-            .win-facts { margin-top: 18px; }
-            .call-scene { display: grid; gap: 18px; margin-top: 18px; }
-            .call .phone { width: min(100%, 250px); }
-            .script { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 14px; align-content: start; }
-            .script dt { padding-top: 3px; font-size: 14px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
-            .script dd { margin: 0; font-size: 19px; line-height: 1.35; }
-            .script .hider { font-weight: 700; }
-            .call-note { margin: 12px 0 0; font-size: 15px; }
-            .call-text { margin: 18px 0 0; max-width: 36em; }
-            .call-ref { margin: 10px 0 0; max-width: 36em; font-size: 15px; }
 
             .ul { position: absolute; left: 0; bottom: -9px; height: 14px; overflow: visible; pointer-events: none; }
 
-            .end { text-align: left; }
             .end .when { margin: 0 0 14px; font-size: 21px; font-weight: 700; }
             .credit { margin: 22px 0 0; font-size: 15px; }
 
@@ -294,25 +340,23 @@
                 .step-head { grid-column: 2; grid-row: 1; margin-top: 8px; }
                 .caption { grid-column: 2; grid-row: 2; font-size: 22px; min-height: 0; }
                 .phone { grid-column: 1; grid-row: 1 / 3; width: 300px; margin: 0; }
-                .call-scene { grid-template-columns: 250px minmax(0, 1fr); column-gap: 32px; align-items: start; }
-                .call .phone { width: 250px; margin: 0; }
+                .q { flex-basis: 312px; }
             }
             @media (prefers-reduced-motion: reduce) {
-                .steps { scroll-behavior: auto; }
+                .steps,
+                .q-track { scroll-behavior: auto; }
+                .tap-ring,
+                .tap-arrow { animation: none; }
             }
         </style>
     </head>
     <body>
-        <main class="page">
+        <main class="page" data-nav="next" data-phones="c">
             <header class="hero">
                 <h1><img src="img/hero.png" width="786" height="921" alt="Hide and Stalk" /></h1>
                 <p class="label">How to play</p>
-                <p class="goal">The goal is simple: hide for 30&nbsp;minutes without being found.</p>
-                <p class="frame">
-                    One player hides somewhere on campus. The others, the stalkers,
-                    find them by asking questions on the app, and the hider has to
-                    answer truthfully.
-                </p>
+                <p class="goal">The goal: hide for 30&nbsp;minutes without being found.</p>
+                <p class="frame">One player hides somewhere on campus. The others find them by asking questions on the app. The hider has to answer truthfully.</p>
             </header>
 
             <section aria-label="At a glance">
@@ -321,168 +365,143 @@
                         <dt class="label">One round</dt>
                         <dd>
                             <b class="fact-value"><span class="mark" data-ink="underline">40&nbsp;min max</span></b>
-                            <span class="fact-text">10 to hide, 30 to find. Found sooner, done sooner.</span>
-                        </dd>
-                    </div>
-                    <div class="fact">
-                        <dt class="label">Stay</dt>
-                        <dd>
-                            <b class="fact-value">One round is enough</b>
-                            <span class="fact-text">Play one and go. Stay for more and everyone gets a turn to hide.</span>
+                            <span class="fact-text">10 to hide, 30 to find.</span>
                         </dd>
                     </div>
                     <div class="fact">
                         <dt class="label">Bring</dt>
-                        <dd>
-                            <b class="fact-value">Phone, earbuds, a warm layer</b>
-                            <span class="fact-text">Phone charged, location on, nothing to install. Earbuds for your team's Discord call. The hider sits still for up to 30 minutes.</span>
-                        </dd>
+                        <dd><b class="fact-value">A charged phone, warm clothes</b></dd>
                     </div>
                     <div class="fact">
                         <dt class="label">When</dt>
                         <dd>
-                            <b class="fact-value">Mon Oct 5, 1&nbsp;PM</b>
+                            <b class="fact-value">Mon Oct 5, 13h</b>
                             <span class="fact-text">On the Grand Axe. Teams are made on the spot.</span>
                         </dd>
                     </div>
                 </dl>
                 <div class="signup">
-                    <a class="btn now" href="https://discord.com/channels/1319861600387203173/1544016344608145489" target="_blank" rel="noopener">Sign up on Discord</a>
-                    <p class="note">In the sign-up channel, write “Je serai là”.</p>
+                    <a class="btn now" href="https://discord.gg/Hh3SaS32j" target="_blank" rel="noopener">Reserve your spot</a>
+                    <p class="note">Then write “Je serai là” in the <a href="https://discord.com/channels/1319861600387203173/1544016344608145489" target="_blank" rel="noopener">sign-up channel</a>.</p>
                 </div>
             </section>
 
-            <section id="call" class="call" aria-labelledby="call-title">
-                <p class="label">In the call</p>
-                <h2 id="call-title">Noah is 14&nbsp;m away. Only the hider knows.</h2>
-                <div class="call-scene">
-                    <div class="phone">
-                        <img src="img/call.png" width="750" height="1624" loading="lazy" alt="The hider's map, late in the round: a tight red line around the hider's arrow, a stalker's pin right next to it, and 14 M AWAY scrawled in red." />
-                    </div>
-                    <div class="script-wrap">
-                        <dl class="script">
-                            <dt>Camille</dt>
-                            <dd>The answer said closer to the greenhouse than Noah. Go round the back.</dd>
-                            <dt>Noah</dt>
-                            <dd>Nothing back here. A guy on a bench, a group studying…</dd>
-                            <dt>Maelle</dt>
-                            <dd class="hider">You're so cold right now.</dd>
-                            <dt>Noah</dt>
-                            <dd>Bluffing. I can hear the wind on your mic.</dd>
-                        </dl>
-                        <p class="call-note">An example: the real app, with made-up players.</p>
-                    </div>
-                </div>
-                <p class="call-text">
-                    Every team shares one Discord call for the whole round, the hider
-                    included. The hider watches the stalkers on their map but can't
-                    move; the stalkers hear everything around the hider. Say anything
-                    you like: only the answers in the app have to be true.
-                </p>
-                <p class="call-ref">
-                    The same setup as Dream's
-                    <a href="https://www.youtube.com/results?search_query=Minecraft+Speedrunner+VS+3+Hunters+GRAND+FINALE" target="_blank" rel="noopener">Minecraft Manhunt</a>,
-                    where the runner and the hunters share one call. Its grand finale
-                    passed 100 million views.
-                </p>
+            <section id="call" aria-labelledby="call-title">
+                <h2 id="call-title">In the call</h2>
+                <p class="frame">Every team shares one Discord call for the whole round, the hider included. The hider watches the stalkers on their map, but can't move.</p>
             </section>
 
             <section id="demo" aria-labelledby="demo-title">
-                <h2 id="demo-title">One round, tap by tap</h2>
-                <p class="sub">The real app, eleven screens. Tap where you would on your phone, or use Next.</p>
+                <h2 id="demo-title">Try our demo</h2>
                 <div class="demo" role="region" aria-roledescription="carousel" aria-label="One round, step by step">
                     <ol class="steps" id="steps" tabindex="0">
-                        <li class="step" aria-label="Step 1 of 11">
+                        <li class="step stalker" aria-label="Step 1 of 11">
                             <div class="step-head"><span class="badge">Stalker's phone</span><span class="count">1 / 11</span></div>
-                            <p class="caption">Teams of about 4 are made on the spot, and the app picks one hider. Everyone in the team's call? <b>Tap Start.</b></p>
+                            <p class="caption">The app picks a hider. Everyone in the team's call? <span class="tap-only"><b>Tap Start.</b></span><span class="next-only">Someone presses Start.</span></p>
                             <div class="phone">
-                                <img src="img/01-team.png" width="750" height="1624" alt="Stalker's phone: You're a stalker. When your whole team is in the Discord call, press Start: maelle gets 10 minutes to hide. A Start the game button." />
+                                <img class="shot" src="img/01-team.png" width="750" height="1624" alt="Stalker's phone: You're a stalker. When your whole team is in the Discord call, press Start: ulysse gets 10 minutes to hide. A Start the game button." />
                                 <svg class="ink" viewBox="0 0 750 1624" aria-hidden="true"></svg>
-                                <button type="button" class="hot" style="--x: 4.8; --y: 39.1; --w: 90.4; --h: 7.6" data-loop aria-label="Start the game, go to step 2"></button>
+                                <button type="button" class="hot" data-tap="4.8 39.1 90.4 7.6" aria-label="Start the game, go to step 2"></button>
                             </div>
                         </li>
-                        <li class="step" aria-label="Step 2 of 11">
+                        <li class="step hider" aria-label="Step 2 of 11">
                             <div class="step-head"><span class="badge">Hider's phone</span><span class="count">2 / 11</span></div>
-                            <p class="caption">The hider has 10 minutes to walk, not run, to a spot in plain sight. The stalkers wait where they are.</p>
+                            <p class="caption">The hider has 10 minutes to walk to a spot. The stalkers wait. <span class="tap-only"><b>Tap to skip ahead.</b></span></p>
                             <div class="phone">
-                                <img src="img/02-hide.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Go hide! 8:41 to hide. Walk, don't run: somewhere public, where anyone walking by can see you." />
+                                <img class="shot-dark" src="img/dark/02-hide.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Go hide! 8:41 to hide. Walk, don't run: somewhere public, where anyone walking by can see you." />
+                                <img class="shot" src="img/02-hide.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Go hide! 8:41 to hide. Walk, don't run: somewhere public, where anyone walking by can see you." />
+                                <svg class="ink" viewBox="0 0 750 1624" aria-hidden="true"></svg>
+                                <button type="button" class="hot" data-tap="4.8 27.2 70 15.7" aria-label="Skip the 10 minutes, go to step 3"></button>
                             </div>
                         </li>
-                        <li class="step" aria-label="Step 3 of 11">
+                        <li class="step stalker" aria-label="Step 3 of 11">
                             <div class="step-head"><span class="badge">Stalker's phone</span><span class="count">3 / 11</span></div>
-                            <p class="caption">Then the hunt. Every 5 minutes the stalkers get three questions, and each of them picks one. <b>Tap the first.</b></p>
+                            <p class="caption">Then, every 5 minutes, the stalkers get three questions. <span class="tap-only"><b>Tap the first.</b></span><span class="next-only">Each picks one.</span></p>
                             <div class="phone">
-                                <img src="img/03-pick.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: Question 1 of 6, three cards, and ALL 3: THE SAME ONE written above them: Are you north or south of me? Are you closer to the church than I am? Are you within 500 m of me?" />
+                                <img class="shot" src="img/03-pick.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: Question 1 of 6, three cards, and ALL STALKERS MUST AGREE written above them: Are you north or south of me? Are you closer to the church than I am? Are you within 500 m of me?" />
                                 <svg class="ink" viewBox="0 0 750 1624" aria-hidden="true"></svg>
-                                <button type="button" class="hot" style="--x: 4.8; --y: 51.9; --w: 90.4; --h: 17.8" data-loop aria-label="Pick: Are you north or south of me? Go to step 4"></button>
+                                <button type="button" class="hot" data-tap="4.8 51.9 90.4 17.8" aria-label="Pick: Are you north or south of me? Go to step 4"></button>
                             </div>
                         </li>
-                        <li class="step" aria-label="Step 4 of 11">
+                        <li class="step stalker" aria-label="Step 4 of 11">
                             <div class="step-head"><span class="badge">Stalker's phone</span><span class="count">4 / 11</span></div>
-                            <p class="caption">Noah picked it too; Camille wants the 500&nbsp;m one. Nothing goes out until all three pick the same card: settle it in the call.</p>
+                            <p class="caption">Felix picked another one. All stalkers must agree: settle it in the call. <span class="tap-only"><b>Tap to skip ahead.</b></span></p>
                             <div class="phone">
-                                <img src="img/04-wait.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: the first card boxed in red, YOU + NOAH written on it, CAMILLE written on the third. The button reads Waiting for camille." />
+                                <img class="shot" src="img/04-wait.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: the first card boxed in red, YOU written on it, FELIX written on the third. The button reads Waiting for felix." />
+                                <svg class="ink" viewBox="0 0 750 1624" aria-hidden="true"></svg>
+                                <button type="button" class="hot" data-tap="4.8 80.9 90.4 7.6" aria-label="Felix agrees, go to step 5"></button>
                             </div>
                         </li>
-                        <li class="step" aria-label="Step 5 of 11">
+                        <li class="step stalker" aria-label="Step 5 of 11">
                             <div class="step-head"><span class="badge">Stalker's phone</span><span class="count">5 / 11</span></div>
-                            <p class="caption">All three on the same card: any of them can send it now. <b>Tap Send.</b></p>
+                            <p class="caption">Everyone agrees. <span class="tap-only"><b>Tap Send.</b></span><span class="next-only">Any of them can send it.</span></p>
                             <div class="phone">
-                                <img src="img/05-send.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: YOU + NOAH + CAMILLE written on the first card, a black Send this question button, Not sent yet." />
+                                <img class="shot" src="img/05-send.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: YOU + FELIX written on the first card, a black Send this question button, Not sent yet." />
                                 <svg class="ink" viewBox="0 0 750 1624" aria-hidden="true"></svg>
-                                <button type="button" class="hot" style="--x: 4.8; --y: 80.9; --w: 90.4; --h: 7.6" data-loop aria-label="Send this question, go to step 6"></button>
+                                <button type="button" class="hot" data-tap="4.8 80.9 90.4 7.6" aria-label="Send this question, go to step 6"></button>
                             </div>
                         </li>
-                        <li class="step" aria-label="Step 6 of 11">
+                        <li class="step hider" aria-label="Step 6 of 11">
                             <div class="step-head"><span class="badge">Hider's phone</span><span class="count">6 / 11</span></div>
-                            <p class="caption">From now on the hider can't move, and answers right away, truthfully. <b>Tap Send answer.</b></p>
+                            <p class="caption">The hider answers right away, truthfully. <span class="tap-only"><b>Tap Send answer.</b></span></p>
                             <div class="phone">
-                                <img src="img/06-answer.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 1 from jules: Are you north or south of me? North is ticked. A Send answer button." />
+                                <img class="shot-dark" src="img/dark/06-answer.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 1 from felix: Are you north or south of me? North is ticked. A Send answer button." />
+                                <img class="shot" src="img/06-answer.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 1 from felix: Are you north or south of me? North is ticked. A Send answer button." />
                                 <svg class="ink" viewBox="0 0 750 1624" aria-hidden="true"></svg>
-                                <button type="button" class="hot" style="--x: 9.9; --y: 83.5; --w: 80.3; --h: 7.4" data-loop aria-label="Send answer, go to step 7"></button>
+                                <button type="button" class="hot" data-tap="9.9 83.5 80.3 7.4" aria-label="Send answer, go to step 7"></button>
                             </div>
                         </li>
-                        <li class="step" aria-label="Step 7 of 11">
-                            <div class="step-head"><span class="badge">Hider's map</span><span class="count">7 / 11</span></div>
-                            <p class="caption">Each answer rules out part of campus. Two answers in, the hider is somewhere inside the red line, and everyone sees it.</p>
+                        <li class="step hider" aria-label="Step 7 of 11">
+                            <div class="step-head"><span class="badge">Hider's phone</span><span class="count">7 / 11</span></div>
+                            <p class="caption">Each answer rules out part of campus. Everyone sees what's left, inside the red line. <span class="tap-only"><b>Tap to skip ahead.</b></span></p>
                             <div class="phone">
-                                <img src="img/07-map.png" width="750" height="1624" loading="lazy" alt="Hider's map: the whole campus, a red line around the half still possible, the hider's arrow inside it, two stalkers' pins outside, 763 M AWAY scrawled in red." />
+                                <img class="shot-dark" src="img/dark/07-map.png" width="750" height="1624" loading="lazy" alt="Hider's map: the whole campus, a red line around the half still possible, the hider's arrow inside it, two stalkers' pins outside, 763 M AWAY scrawled in red." />
+                                <img class="shot" src="img/07-map.png" width="750" height="1624" loading="lazy" alt="Hider's map: the whole campus, a red line around the half still possible, the hider's arrow inside it, two stalkers' pins outside, 763 M AWAY scrawled in red." />
+                                <svg class="ink" viewBox="0 0 750 1624" aria-hidden="true"></svg>
+                                <button type="button" class="hot" data-tap="3.2 14.3 93.6 8.5" aria-label="Skip to question 3, go to step 8"></button>
                             </div>
                         </li>
-                        <li class="step" aria-label="Step 8 of 11">
+                        <li class="step stalker" aria-label="Step 8 of 11">
                             <div class="step-head"><span class="badge">Stalker's phone</span><span class="count">8 / 11</span></div>
-                            <p class="caption">The questions get sharper as the hunt goes on: which café, what floor, a photo of the nearest door…</p>
+                            <p class="caption">The questions get sharper as the hunt goes on. <span class="tap-only">Found them? <b>Tap Scan.</b></span></p>
                             <div class="phone">
-                                <img src="img/08-sharper.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: Question 3 of 6. Which café are you closest to? P'tit Caaf, written in by maelle." />
+                                <img class="shot" src="img/08-sharper.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: Question 3 of 6. Which café are you closest to? P'tit Caaf, written in by ulysse." />
+                                <svg class="ink" viewBox="0 0 750 1624" aria-hidden="true"></svg>
+                                <button type="button" class="hot" data-tap="4.8 79.5 90.4 7.4" aria-label="Found them? Scan their code, go to step 9"></button>
                             </div>
                         </li>
-                        <li class="step" aria-label="Step 9 of 11">
+                        <li class="step hider" aria-label="Step 9 of 11">
                             <div class="step-head"><span class="badge">Hider's phone</span><span class="count">9 / 11</span></div>
-                            <p class="caption">Found? The hider shows their code…</p>
+                            <p class="caption">Found? The hider shows their code. <span class="tap-only"><b>Tap it</b> to scan it.</span></p>
                             <div class="phone">
-                                <img src="img/09-code.png" width="750" height="1624" loading="lazy" alt="Hider's phone: the tag code, a QR code. Show this to the stalker." />
-                                <button type="button" class="hot" style="--x: 4.8; --y: 36.1; --w: 90.4; --h: 41.7" aria-label="Scan the code, go to step 10"></button>
+                                <img class="shot-dark" src="img/dark/09-code.png" width="750" height="1624" loading="lazy" alt="Hider's phone: the tag code, a QR code. Show this to the stalker." />
+                                <img class="shot" src="img/09-code.png" width="750" height="1624" loading="lazy" alt="Hider's phone: the tag code, a QR code. Show this to the stalker." />
+                                <svg class="ink" viewBox="0 0 750 1624" aria-hidden="true"></svg>
+                                <button type="button" class="hot" data-tap="4.8 36.1 90.4 41.7" aria-label="Scan the code, go to step 10"></button>
                             </div>
                         </li>
-                        <li class="step" aria-label="Step 10 of 11">
+                        <li class="step stalker" aria-label="Step 10 of 11">
                             <div class="step-head"><span class="badge">Stalker's phone</span><span class="count">10 / 11</span></div>
-                            <p class="caption">…a stalker scans it, and the stalkers win the round.</p>
+                            <p class="caption">A stalker scans it. Stalkers win! <span class="tap-only"><b>Tap</b> for the other ending.</span></p>
                             <div class="phone">
-                                <img src="img/10-found.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: Gotcha. You found maelle! Found after 23:14 of hunting. The round's receipt." />
+                                <img class="shot" src="img/10-found.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: Gotcha. You found ulysse! Found after 23:14 of hunting. The round's receipt." />
+                                <svg class="ink" viewBox="0 0 750 1624" aria-hidden="true"></svg>
+                                <button type="button" class="hot" data-tap="10.4 71.6 79.2 13.7" aria-label="The other ending, go to step 11"></button>
                             </div>
                         </li>
-                        <li class="step" aria-label="Step 11 of 11">
+                        <li class="step hider" aria-label="Step 11 of 11">
                             <div class="step-head"><span class="badge">Hider's phone</span><span class="count">11 / 11</span></div>
-                            <p class="caption">Nobody found them in 30 minutes? The hider wins. Then Play again with someone else hiding, or Leave the game.</p>
+                            <p class="caption">Nobody found the hider in 30 minutes? Hider wins!</p>
                             <div class="phone">
-                                <img src="img/11-win.png" width="750" height="1624" loading="lazy" alt="Hider's phone: How about that. You win! Nobody found you in 6 questions (30:00). Play again and Leave the game buttons." />
+                                <img class="shot-dark" src="img/dark/11-win.png" width="750" height="1624" loading="lazy" alt="Hider's phone: How about that. Hider wins! Nobody found you in 6 questions (30:00). Play again and Leave the game buttons." />
+                                <img class="shot" src="img/11-win.png" width="750" height="1624" loading="lazy" alt="Hider's phone: How about that. Hider wins! Nobody found you in 6 questions (30:00). Play again and Leave the game buttons." />
                             </div>
                         </li>
                     </ol>
                     <div class="demo-nav">
                         <button type="button" class="btn" id="demo-back">Back</button>
                         <span class="where" id="demo-where" aria-live="polite">1 / 11</span>
-                        <button type="button" class="btn now" id="demo-next">Next</button>
+                        <button type="button" class="btn now" id="demo-next">Next <span class="go" aria-hidden="true"></span></button>
                     </div>
                 </div>
             </section>
@@ -494,71 +513,129 @@
                         <dt class="label">Stalkers</dt>
                         <dd>
                             <b class="fact-value">Choose the right questions</b>
-                            <span class="fact-text">Three on the table, one goes out. Cut the campus in half early; keep “What floor are you on?” for when you know the building.</span>
+                            <span class="fact-text">Every 5 minutes, you get three questions and send one.</span>
                         </dd>
                     </div>
                     <div class="fact">
                         <dt class="label">Hider</dt>
                         <dd>
-                            <b class="fact-value">Choose a spot the questions can't spoil</b>
-                            <span class="fact-text">Halfway between two cafés, “Which café are you closest to?” tells them next to nothing. Not a drawer: in plain sight, just hard to pin down.</span>
+                            <b class="fact-value">Choose the right spot</b>
+                            <span class="fact-text">One where the questions won't reveal much.</span>
                         </dd>
                     </div>
                 </dl>
             </section>
 
+            <section id="questions" aria-labelledby="q-title">
+                <h2 id="q-title">The questions</h2>
+                <p class="sub">A few of the 41, on the hider's phone.</p>
+                <div class="qs" role="region" aria-roledescription="carousel" aria-label="The questions">
+                    <ol class="q-track" id="q-track" tabindex="0">
+                        <li class="q hider" aria-label="Question 1 of 7">
+                            <p class="q-text">Are you north or south of&nbsp;me?</p>
+                            <p class="q-note">The line goes through where the stalker was <span data-ink="underline">when they sent it.</span></p>
+                            <div class="phone">
+                                <img class="shot-dark" src="img/dark/q1-ns.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 5 from felix, Are you north or south of me? A red dashed line across the map, NORTH above it, SOUTH below." />
+                                <img class="shot" src="img/q1-ns.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 5 from felix, Are you north or south of me? A red dashed line across the map, NORTH above it, SOUTH below." />
+                            </div>
+                        </li>
+                        <li class="q hider" aria-label="Question 2 of 7">
+                            <p class="q-text">Are you within 200&nbsp;m of&nbsp;me?</p>
+                            <p class="q-note">The circle is around where they were <span data-ink="underline">when they sent it.</span></p>
+                            <div class="phone">
+                                <img class="shot-dark" src="img/dark/q2-radius.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 2 from felix, Are you within 200 m of me? A red circle marked 200 M, the hider's arrow inside it." />
+                                <img class="shot" src="img/q2-radius.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 2 from felix, Are you within 200 m of me? A red circle marked 200 M, the hider's arrow inside it." />
+                            </div>
+                        </li>
+                        <li class="q hider" aria-label="Question 3 of 7">
+                            <p class="q-text">Are you closer to the church than I&nbsp;am?</p>
+                            <p class="q-note">Closer than they were <span data-ink="underline">when they sent it,</span> as the crow flies.</p>
+                            <div class="phone">
+                                <img class="shot-dark" src="img/dark/q3-closer.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 1 from felix, Are you closer to the church than I am? The church tagged on the map, a stalker's pin, the hider's arrow." />
+                                <img class="shot" src="img/q3-closer.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 1 from felix, Are you closer to the church than I am? The church tagged on the map, a stalker's pin, the hider's arrow." />
+                            </div>
+                        </li>
+                        <li class="q hider" aria-label="Question 4 of 7">
+                            <p class="q-text">Which café are you closest&nbsp;to?</p>
+                            <p class="q-note">As the crow flies. The app lists the nearest first.</p>
+                            <div class="phone">
+                                <img class="shot-dark" src="img/dark/q4-cafe.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 3 from felix, Which café are you closest to? Every café pinned in red around the hider's arrow." />
+                                <img class="shot" src="img/q4-cafe.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 3 from felix, Which café are you closest to? Every café pinned in red around the hider's arrow." />
+                            </div>
+                        </li>
+                        <li class="q hider" aria-label="Question 5 of 7">
+                            <p class="q-text">Are you inside a building or&nbsp;outside?</p>
+                            <p class="q-note">Inside means inside a building's walls. A covered walkway or a bus shelter is outside.</p>
+                            <div class="phone">
+                                <img class="shot-dark" src="img/dark/q5-inside.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 2 from felix, Are you inside a building or outside? Inside, Outside, and a Send answer button." />
+                                <img class="shot" src="img/q5-inside.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 2 from felix, Are you inside a building or outside? Inside, Outside, and a Send answer button." />
+                            </div>
+                        </li>
+                        <li class="q hider" aria-label="Question 6 of 7">
+                            <p class="q-text">What floor are you&nbsp;on?</p>
+                            <p class="q-note">Late in the hunt: the floor, then the room number.</p>
+                            <div class="phone">
+                                <img class="shot-dark" src="img/dark/q6-floor.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 4 from felix, What floor are you on? It is the first digit of the room numbers, ABC-1234. Outside? Answer N/A. A box to write it in." />
+                                <img class="shot" src="img/q6-floor.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 4 from felix, What floor are you on? It is the first digit of the room numbers, ABC-1234. Outside? Answer N/A. A box to write it in." />
+                            </div>
+                        </li>
+                        <li class="q hider" aria-label="Question 7 of 7">
+                            <p class="q-text">Send a photo of the nearest&nbsp;door.</p>
+                            <p class="q-note">Taken now, from your spot. Show as little as you like, but a door has to look like a door.</p>
+                            <div class="phone">
+                                <img class="shot-dark" src="img/dark/q7-door.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 6 from felix, Send a photo of the nearest door. A photo to choose, N/A (does not apply), and a Send answer button." />
+                                <img class="shot" src="img/q7-door.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 6 from felix, Send a photo of the nearest door. A photo to choose, N/A (does not apply), and a Send answer button." />
+                            </div>
+                        </li>
+                    </ol>
+                    <div class="q-nav">
+                        <button type="button" class="btn" id="q-back" aria-label="Previous question"><span class="go back" aria-hidden="true"></span></button>
+                        <span class="where" id="q-where" aria-live="polite">1 / 7</span>
+                        <button type="button" class="btn" id="q-next" aria-label="Next question"><span class="go" aria-hidden="true"></span></button>
+                    </div>
+                </div>
+            </section>
+
             <section id="rules" aria-labelledby="rules-title">
                 <h2 id="rules-title">The rules</h2>
-                <p class="sub">They're there to keep it fun for both sides. Eight, most important first, as the app shows them. Tap one for why, and the fine print.</p>
-                <p class="goal-line">Stalkers win if they find the hider within 30 minutes.</p>
+                <p class="doubt">When in doubt: would the other team call it <span data-ink="underline">clever, or annoying?</span></p>
+                <p class="doubt-why">The rules are there to make the game fun for your opponents.</p>
                 <ol class="rows numbered">
                     <li>
                         <details>
                             <summary><span class="n"></span><strong data-ink="underline">Hide in plain sight.</strong> In public, where anyone walking by can see you.</summary>
-                            <p class="why"><b>Why.</b> The game is about crossing campus, not about opening every locker on one floor. The questions bring the stalkers to the right corner of campus; their eyes do the last few metres.</p>
+                            <p class="why"><b>Why.</b> The game is about crossing campus, not about spending 15 minutes opening every locker on a floor to find the hider.</p>
                             <ul class="fine">
-                                <li><b>The test:</b> a stalker walking along a path would see you, and could walk right up to you, without opening, moving or climbing anything.</li>
-                                <li>A path is anywhere people walk to get around: sidewalks, trails, plazas, parking lots, hallways, atriums, lobbies. Stay within 20&nbsp;m of one.</li>
-                                <li>In public: somewhere you could sit for 40 minutes without anyone asking you to leave, or finding it odd. Cafés, cafeterias, atriums, hallway benches, lawns, bus shelters: yes.</li>
-                                <li>Not in a room, even with its door open: classrooms, offices, labs, washrooms, study rooms. Not in a library (you couldn't talk), a store, a residence, a stairwell or an elevator, or anywhere you need a key, a card or a ticket. Not on a roof or up a tree.</li>
-                                <li>Not behind or under anything that hides you: a bush, a pillar, a table, a parked car.</li>
-                                <li>Look like yourself: the clothes you started in, face uncovered. Blending into a crowd is clever; a disguise isn't.</li>
-                                <li>While you hide, the red line on your map is the edge of campus. Stay inside it.</li>
+                                <li><b>The test:</b> a stalker standing where people can walk could see you, without opening anything.</li>
+                                <li>Anywhere open to the public, within 20&nbsp;m of a path: cafés, hallways, a room with its door open, lawns, the woods by a trail.</li>
+                                <li>Stay on campus.</li>
                             </ul>
                         </details>
                     </li>
                     <li>
                         <details>
                             <summary><span class="n"></span><strong>No running while you hide.</strong> Stalkers can run.</summary>
-                            <p class="why"><b>Why.</b> Your spot has to be one the stalkers could walk to in the 10 minutes you had: if they knew where you were, a walk would get them there. Run farther and they spend the hunt jogging across campus in a straight line, which is no fun for anyone.</p>
+                            <p class="why"><b>Why.</b> So the stalkers don't spend 30 minutes walking in a straight line to catch up. That's not fun.</p>
                             <ul class="fine">
-                                <li>Walk: no running, no bike, scooter, bus or car. Stairs, escalators and elevators are fine.</li>
-                                <li>Change your mind as often as you like while the 10 minutes last.</li>
-                                <li>Stalkers: wait where the round started, and don't watch where the hider goes.</li>
-                                <li>Once the hunt starts, stalkers can run.</li>
+                                <li>Stalkers wait at the start, and don't watch the hider leave.</li>
                             </ul>
                         </details>
                     </li>
                     <li>
                         <details>
-                            <summary><span class="n"></span><strong data-ink="underline">Freeze.</strong> Once the hunt starts, stay put. A few steps to answer is fine.</summary>
-                            <p class="why"><b>Why.</b> Your answers draw the map. Move, and every answer you gave before lies: the stalkers search where you were, not where you are. That's no fun for them, and the game only works if they have a fair shot.</p>
+                            <summary><span class="n"></span><strong data-ink="underline">Hider: freeze.</strong> Once the hunt starts, stay put. A few steps to answer is fine.</summary>
+                            <p class="why"><b>Why.</b> Move, and the stalkers search where you were, not where you are. The game only works if they have a fair shot.</p>
                             <ul class="fine">
-                                <li>From question 1 to the end of the round, stay where you were when the hunt started. Sitting, standing, turning around: fine.</li>
-                                <li>A few steps to answer a question (to read a room number, to take a photo), then back to your spot.</li>
-                                <li>Not at your spot when the hunt starts? Where you are is your spot.</li>
-                                <li>You'll watch the stalkers come closer on your map. That's the best part: stay put.</li>
-                                <li>Have to move (a washroom, the cold, someone asks you to)? Say so in the call: an organizer pauses your team.</li>
+                                <li>Stop moving when the 10-minute timer ends.</li>
+                                <li>After a few steps to answer, go back to your spot.</li>
                             </ul>
                         </details>
                     </li>
                     <li>
                         <details>
-                            <summary><span class="n"></span><strong>Nothing underground.</strong> No tunnels, no basements, for anyone.</summary>
-                            <p class="why"><b>Why.</b> GPS doesn't work underground, and the app runs on it: the stalkers' positions draw the questions on the map, and the hider's give the coordinates and the heatmap. Underground, the map would be wrong for both sides.</p>
+                            <summary><span class="n"></span><strong>Don't hide underground.</strong> No tunnels, no basements.</summary>
+                            <p class="why"><b>Why.</b> GPS doesn't work underground, and the app runs on it.</p>
                             <ul class="fine">
-                                <li>That means the tunnels between pavilions, basement floors and underground parking.</li>
-                                <li>Stalkers too: no shortcuts through the tunnels.</li>
                                 <li>Not sure if it counts? Go up a floor.</li>
                             </ul>
                         </details>
@@ -566,103 +643,64 @@
                     <li>
                         <details>
                             <summary><span class="n"></span><strong>Answer truthfully.</strong> The way a stalker next to you would.</summary>
-                            <p class="why"><b>Why.</b> The answers are the whole game. An answer that is only technically true isn't clever, it's annoying. Clever is a spot where honest answers don't help much.</p>
+                            <p class="why"><b>Why.</b> The answers are the whole game. An answer that is only technically true isn't clever, it's annoying. To be clever, hide where honest answers don't help them.</p>
                             <ul class="fine">
-                                <li>Not sure? Give your honest best answer. Got one wrong? Fix it with Change, right away; never later, to throw them off.</li>
-                                <li>“North or south of me?”, “Within 200&nbsp;m of me?”, “Closer to … than I am?”: go by the line, the circle or the place drawn on your map. It's drawn from where the stalker was when they sent the question.</li>
-                                <li>“Which … are you closest to?”: as the crow flies, from your spot. The app lists the nearest first.</li>
-                                <li>Inside means inside a building's walls. A covered walkway or a bus shelter is outside.</li>
-                                <li>Photos: taken now, from your spot. Frame them to give away as little as you can, but what the question asks for has to be in the picture, clear enough to recognize. Nothing like it around? Answer N/A.</li>
-                                <li>In the call, say anything you like. Only the app's answers have to be true.</li>
+                                <li>Not sure? Say so in the call, and give your best honest answer. Got one wrong? Fix it with Change, right away; never later, to throw them off.</li>
+                                <li>“…of me?” and “…than I am?”: go by what your map draws. It's drawn from where the stalker was <span data-ink="underline">when they sent the question.</span></li>
                             </ul>
                         </details>
                     </li>
                     <li>
                         <details>
                             <summary><span class="n"></span><strong>Answer fast.</strong> As fast as you reasonably can.</summary>
-                            <p class="why"><b>Why.</b> A question only lasts 5 minutes. Every minute you stall comes out of the stalkers' time, and winning by stalling isn't winning.</p>
+                            <p class="why"><b>Why.</b> Every minute you stall comes out of the stalkers' 5. Winning by stalling isn't winning.</p>
                             <ul class="fine">
                                 <li>About a minute; two for a photo.</li>
-                                <li>No signal? Answer the moment it's back.</li>
                             </ul>
                         </details>
                     </li>
                     <li>
-                        <details>
-                            <summary><span class="n"></span><strong>Found?</strong> Show your code. Stalkers win.</summary>
-                            <p class="why"><b>Why.</b> The catch is face to face: a stalker has to reach you, so a bad GPS fix can never end a round.</p>
-                            <ul class="fine">
-                                <li>A stalker has to come up to you and scan the code on your phone (it's on your QUESTIONS tab). Seeing you from far away doesn't count.</li>
-                                <li>Spotted? Don't run, and don't hide your screen: show your code.</li>
-                                <li>The scan won't work? The stalker presses “Hider has been found”, inside the scanner, standing next to you.</li>
-                                <li>Spotted another team's hider? Walk on and say nothing.</li>
-                                <li>30 minutes of hunting and nobody has scanned you: you win.</li>
-                            </ul>
-                        </details>
+                        <p class="plain"><span class="n"></span><strong>Found?</strong> Show your code. Stalkers win.</p>
                     </li>
                     <li>
                         <details>
-                            <summary><span class="n"></span><strong>Everyone talks.</strong> One Discord call per team, hider included.</summary>
-                            <p class="why"><b>Why.</b> Hide and seek alone is boring: the hider sits by themselves for half an hour. In one call, the hider watches the stalkers on their map while hearing them argue about where they are, and everyone can tease everyone. Freezing makes it fair: the hider hears every plan and can't use it.</p>
+                            <summary><span class="n"></span><strong>Everyone on the Discord call.</strong> One call per team, hider included.</summary>
                             <ul class="fine">
-                                <li>Each team has its own voice channel. Everyone joins it before pressing Start and stays in it, unmuted, the whole round. The hider too.</li>
+                                <li>Each team has its own voice channel. Everyone joins it before pressing Start and stays the whole round, the hider too.</li>
                                 <li>Talk all you want: tease, bluff, trash-talk. Only the app's answers count.</li>
-                                <li>Stalkers agree on every question: the app sends one only once every stalker has picked the same card.</li>
-                                <li>What you hear is fair game: the noise around the hider, your own voice coming back through their mic.</li>
-                                <li>Find the hider with the app, the call and your eyes. No outside help: no Snap Map, no Find My, no asking people, no calling or texting the hider.</li>
-                                <li>Earbuds help. One in is enough.</li>
                             </ul>
                         </details>
                     </li>
                 </ol>
-                <p class="doubt">When in doubt: would the other team call it <span data-ink="underline">clever, or annoying?</span></p>
             </section>
 
-            <section id="questions" class="faq" aria-labelledby="faq-title">
-                <h2 id="faq-title">Questions people ask</h2>
+            <section id="faq" class="faq" aria-labelledby="faq-title">
+                <h2 id="faq-title">FAQ</h2>
                 <ul class="rows">
                     <li>
                         <details>
                             <summary><strong>Can I leave after one round?</strong></summary>
-                            <p class="answer">Yes. When the round ends, tap Leave the game. It takes you off your team, so the app won't pick you to hide next.</p>
-                        </details>
-                    </li>
-                    <li>
-                        <details>
-                            <summary><strong>Do I need to know Jet Lag: The Game?</strong></summary>
-                            <p class="answer">No. If you do: this is its Hide + Seek on one campus, on foot. No cards, no curses. The hider freezes, so the whole game is the endgame.</p>
+                            <p class="answer">Yes. When the round ends, tap Leave the game, so the app won't pick you to hide next.</p>
                         </details>
                     </li>
                     <li>
                         <details>
                             <summary><strong>Can I hide inside?</strong></summary>
-                            <p class="answer">Yes, in public areas: hallways, atriums, cafés, cafeterias. Not in a room (a classroom, an office, a washroom), even with its door open, not in a library, and nothing underground.</p>
-                        </details>
-                    </li>
-                    <li>
-                        <details>
-                            <summary><strong>What kind of questions?</strong></summary>
-                            <p class="answer">41 of them, made for this campus. North or south of me? Within 500&nbsp;m of me? Which café are you closest to? What floor are you on? A photo of the nearest door. Every 5 minutes, three of them; the stalkers agree on one and send it.</p>
+                            <p class="answer">Yes, anywhere open to the public: hallways, atriums, cafés, a room with its door open. Not underground.</p>
                         </details>
                     </li>
                     <li>
                         <details>
                             <summary><strong>Can't the stalkers just see the hider on the map?</strong></summary>
-                            <p class="answer">No. The stalkers see each other, never the hider: all they get are the answers. The hider sees the stalkers coming.</p>
-                        </details>
-                    </li>
-                    <li>
-                        <details>
-                            <summary><strong>Who wins?</strong></summary>
-                            <p class="answer">Each round: the stalkers if they scan the hider's code within 30 minutes, the hider otherwise. Over the day: the longest hide.</p>
+                            <p class="answer">No. The stalkers only see each other. The hider sees them coming.</p>
                         </details>
                     </li>
                 </ul>
             </section>
 
             <section class="end" aria-label="Sign up">
-                <p class="when">Monday, October 5 · 1&nbsp;PM · Grand Axe</p>
-                <a class="btn now" href="https://discord.com/channels/1319861600387203173/1544016344608145489" target="_blank" rel="noopener">Sign up on Discord</a>
+                <p class="when">Monday, October 5 · 13h · Grand Axe</p>
+                <a class="btn now" href="https://discord.gg/Hh3SaS32j" target="_blank" rel="noopener">Reserve your spot</a>
                 <p class="credit">Inspired by Jet Lag: The Game's Hide + Seek.</p>
             </section>
         </main>
@@ -670,55 +708,70 @@
         <script src="../vendor/perfect-freehand.js"></script>
         <script src="../ink.js"></script>
         <script>
-            // The demo: a row of slides that scroll-snap. Back and Next step
-            // through them; a tap where the app would take one goes on.
-            (() => {
-                const track = document.getElementById("steps");
+            // A row of slides that scroll-snap, stepped by its buttons and the
+            // arrow keys. Returns go(i), and calls onShow(i) when it lands.
+            function carousel(track, back, next, where, onShow) {
                 const slides = [...track.children];
-                const back = document.getElementById("demo-back");
-                const next = document.getElementById("demo-next");
-                const where = document.getElementById("demo-where");
-                const demo = track.parentElement;
                 const still = matchMedia("(prefers-reduced-motion: reduce)");
                 let current = 0;
-
                 const show = (i) => {
                     current = Math.max(0, Math.min(slides.length - 1, i));
                     where.textContent = `${current + 1} / ${slides.length}`;
                     back.disabled = current === 0;
-                    next.textContent = current === slides.length - 1 ? "Rules" : "Next";
+                    next.disabled = current === slides.length - 1;
+                    onShow?.(current);
                 };
                 const go = (i) => {
                     const to = Math.max(0, Math.min(slides.length - 1, i));
                     track.scrollTo({ left: slides[to].offsetLeft - slides[0].offsetLeft, behavior: still.matches ? "auto" : "smooth" });
                     show(to);
-                    // The caption is above the phone: bring it back into view.
-                    const box = demo.getBoundingClientRect();
-                    if (box.top < 0 || box.bottom > innerHeight) demo.scrollIntoView({ block: "start", behavior: still.matches ? "auto" : "smooth" });
                 };
-
                 let frame = null;
                 track.addEventListener("scroll", () => {
                     if (frame) return;
                     frame = requestAnimationFrame(() => {
                         frame = null;
-                        show(Math.round(track.scrollLeft / track.clientWidth));
+                        // The slide whose left edge is nearest the track's.
+                        const left = track.scrollLeft + slides[0].offsetLeft;
+                        let best = 0;
+                        slides.forEach((s, i) => {
+                            if (Math.abs(s.offsetLeft - left) < Math.abs(slides[best].offsetLeft - left)) best = i;
+                        });
+                        // At the very end, the last slide (it may never reach the left edge).
+                        if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 2) best = slides.length - 1;
+                        show(best);
                     });
                 });
                 back.addEventListener("click", () => go(current - 1));
-                next.addEventListener("click", () => {
-                    if (current === slides.length - 1) {
-                        document.getElementById("rules").scrollIntoView({ block: "start", behavior: still.matches ? "auto" : "smooth" });
-                    } else go(current + 1);
-                });
+                next.addEventListener("click", () => go(current + 1));
                 track.addEventListener("keydown", (e) => {
                     if (e.key === "ArrowRight") { e.preventDefault(); go(current + 1); }
                     if (e.key === "ArrowLeft") { e.preventDefault(); go(current - 1); }
                 });
-                for (const hot of track.querySelectorAll(".hot")) {
-                    hot.addEventListener("click", () => go(slides.indexOf(hot.closest(".step")) + 1));
-                }
                 show(0);
+                return { go, slides, now: () => current };
+            }
+
+            // The demo: in tap mode a tap anywhere on the phone goes on (the
+            // red shows where the app's button is); else only Next does.
+            (() => {
+                const track = document.getElementById("steps");
+                const demo = track.parentElement;
+                const still = matchMedia("(prefers-reduced-motion: reduce)");
+                const c = carousel(track, document.getElementById("demo-back"), document.getElementById("demo-next"), document.getElementById("demo-where"));
+                const go = (i) => {
+                    c.go(i);
+                    // The caption is above the phone: bring it back into view.
+                    const box = demo.getBoundingClientRect();
+                    if (box.top < 0 || box.bottom > innerHeight) demo.scrollIntoView({ block: "start", behavior: still.matches ? "auto" : "smooth" });
+                };
+                for (const hot of track.querySelectorAll(".hot")) {
+                    hot.addEventListener("click", () => go(c.slides.indexOf(hot.closest(".step")) + 1));
+                }
+            })();
+
+            (() => {
+                carousel(document.getElementById("q-track"), document.getElementById("q-back"), document.getElementById("q-next"), document.getElementById("q-where"));
             })();
 
             // The red: drawn by hand, like on the app's own screens.
@@ -726,18 +779,29 @@
                 if (!window.Ink) return;
                 const W3 = "http://www.w3.org/2000/svg";
 
-                // The demo: the button to tap, circled (in the screenshot's own pixels).
-                for (const hot of document.querySelectorAll(".hot[data-loop]")) {
+                // Tap mode: what to tap, circled, and an arrow to it, both
+                // throbbing (in the screenshot's own pixels, 750 x 1624). No
+                // words: the caption says what the tap does.
+                for (const hot of document.querySelectorAll(".hot[data-tap]")) {
                     const svg = hot.parentElement.querySelector("svg.ink");
-                    const px = (v, of) => (parseFloat(hot.style.getPropertyValue(v)) / 100) * of;
-                    const x = px("--x", 750);
-                    const y = px("--y", 1624);
-                    const w = px("--w", 750);
-                    const h = px("--h", 1624);
-                    svg.innerHTML = Ink.circle(x + w / 2, y + h / 2, w / 2 + 2, h / 2 + 20, { seed: `tap${Math.round(y)}`, weight: 9, tilt: 1.2, turns: 1.12 });
+                    const [x, y, w, h] = hot.dataset.tap.split(" ").map((v, i) => (Number(v) / 100) * (i % 2 ? 1624 : 750));
+                    const seed = `tap${Math.round(y)}`;
+                    const cx = x + w / 2;
+                    const cy = y + h / 2;
+                    const rx = w / 2 + 6;
+                    const ry = h / 2 + 20;
+                    // From below and to the right where there's room, else from above.
+                    const below = cy + ry + 150 < 1624;
+                    const tipX = cx + rx * 0.45;
+                    const tipY = below ? cy + ry * 0.92 + 10 : cy - ry * 0.92 - 10;
+                    const tail = [Math.min(720, tipX + 110), below ? tipY + 120 : tipY - 120];
+                    svg.innerHTML =
+                        `<g class="tap-ring">${Ink.circle(cx, cy, rx, ry, { seed, weight: 10, tilt: 1.2, turns: 1.12 })}</g>` +
+                        `<g class="tap-arrow">${Ink.handArrow(tail[0], tail[1], tipX, tipY, { seed: `${seed}a`, weight: 8, head: 30 })}</g>`;
                 }
 
-                // Underlines: under the round's length, the two rules that matter most, and clever or annoying.
+                // Underlines: under the round's length, the two rules that
+                // matter most, clever or annoying, and when they sent it.
                 const underline = () => {
                     for (const el of document.querySelectorAll('[data-ink="underline"]')) {
                         el.querySelector(":scope > svg.ul")?.remove();
@@ -755,6 +819,8 @@
                 };
                 const ready = document.fonts?.ready ?? Promise.resolve();
                 ready.then(underline);
+                // A rule opened: its fine print's underlines now have a width.
+                for (const d of document.querySelectorAll("details")) d.addEventListener("toggle", underline);
                 let last = innerWidth;
                 addEventListener("resize", () => {
                     if (innerWidth === last) return;
