@@ -67,10 +67,9 @@ Not a rule any more: the page says it in its own section, right after the
 facts and before the demo, word for word:
 
 > **Everyone is on the Discord call, the hider too.** Talk all you want:
-> tease, bluff, trash-talk. Only the app's answers count.
->
-> Each team has its own voice channel. Join it before pressing Start, and
-> stay the whole round.
+> tease, bluff, trash-talk. Only the app's answers count. Teams are made on
+> the spot, each with its own voice channel. Join yours before pressing
+> Start, and stay the whole round.
 
 Rulings: nobody has to stay unmuted; a team may find one open mic among the
 stalkers is enough. No rule on outside help (Snap Map, calling the hider):
@@ -143,7 +142,7 @@ On the page:
 - Not sure? Say so in the call, and give your best honest answer. Got one wrong? Fix it with Change, right away; never later, to throw them off.
 - "…of me?" and "…than I am?": go by what your map draws. It's drawn from where the stalker was **when they sent the question**.
 
-The questions carousel on the page shows fifteen of them, each with a line:
+The questions carousel on the page shows thirteen of them, each with a line:
 
 - North or south of me? The line goes through where the stalker was when they sent it.
 - What is the second digit of the nearest room number? The number by the nearest door. Outside? Answer N/A.
@@ -157,9 +156,7 @@ The questions carousel on the page shows fifteen of them, each with a line:
 - In what part of Vachon are you? The stalkers name the building; your map splits it into parts.
 - What kind of path are you closest to? The rules keep you within 20 m of one.
 - Minutes of walk, on Google Maps? From where they asked: the app gives you their position.
-- A photo of the nearest door: no door in sight? Answer N/A.
 - A photo of the nearest sculpture: taken now, from your spot. Show as little as you like, but a sculpture has to look like a sculpture. (The sculpture is the mock-up's card, not one of the 41; the deck asks for the nearest door, seat, window, sign…)
-- A screenshot of your blue dot in Google Maps, zoomed in to street level: only ever the last question; it shows them almost exactly where you are.
 
 Rulings: nothing of the kind to photograph? Answer N/A. The hider owes
 nothing in the call: only the app's answers have to be true.
@@ -202,7 +199,7 @@ nothing.
 - Rule 4 is for the hider only: stalkers may use the tunnels.
 - Rule 8 ("Everyone on the Discord call") left the rules: the page's "A social game" says it, before the demo, so seven rules remain. Gone: unmuted, earbuds, what you hear is fair game, no outside help.
 - Gone from the page, kept here as rulings: walking means no bike, pausing to move, no signal, how a catch works.
-- The photo, inside/outside and "which … closest to?" fine print moved to the page's questions carousel, fifteen questions now, the heatmap among them.
+- The photo, inside/outside and "which … closest to?" fine print moved to the page's questions carousel, thirteen questions now, the heatmap among them.
 
 ## Still open
 

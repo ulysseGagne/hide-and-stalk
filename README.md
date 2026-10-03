@@ -110,7 +110,7 @@ typeface (Arimo, self-hosted in `fonts/`), and red only ever drawn by hand.
   (`https://ulyssegagne.github.io/hide-and-stalk/how-to-play/`): the goal,
   how long a round takes, why it's a social game (one Discord call per
   team), a demo of one round on the real app's screens, how to win, the
-  seven rules with their fine print, fifteen of the questions, and a short
+  seven rules with their fine print, thirteen of the questions, and a short
   FAQ. The rules card links to it. How its screens are re-shot is in the
   comment at its top
 

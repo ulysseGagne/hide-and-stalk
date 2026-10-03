@@ -448,9 +448,6 @@ SCREENS["q-road"] = hiderAsked("street_distance", "felix", 4, 4 * MIN + 30_000);
 SCREENS["q-cafe"] = hiderAsked("nearest_cafe", "felix", 3, 4 * MIN + 20_000);
 SCREENS["q-path"] = hiderAsked("terrain", "felix", 3, 4 * MIN + 44_000);
 SCREENS["q-walk"] = hiderAsked("walk_minutes", "felix", 2, 4 * MIN + 27_000);
-SCREENS["q-door"] = hiderAsked("photo_door", "felix", 5, 4 * MIN + 38_000);
-// An end-game card: question 6, the last one.
-SCREENS["q-gmaps"] = hiderAsked("screenshot_map", "felix", 6, 4 * MIN + 39_000);
 // The sculpture photo, as the stalkers get it (the mock-up's card), read: no NEW arrow.
 SCREENS["q-photo"] = { ...SCREENS.photo, scrollTo: "#sent-card", scrollPad: 24, state: { ...SCREENS.photo.state, cards: { ...SCREENS.photo.state.cards, unread: 0 } } };
 // For the post: the three cards as dealt (S51's layout), one of them circled.
