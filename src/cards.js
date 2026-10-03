@@ -305,7 +305,7 @@ function renderPick() {
     }
     const rowShown = !el.cardRow.hidden;
     el.cardRow.classList.toggle("team", team);
-    el.cardRow.dataset.note = !team ? "PICK JUST ONE" : voterIds.length === 2 ? "BOTH: THE SAME ONE" : `ALL ${voterIds.length}: THE SAME ONE`;
+    el.cardRow.dataset.note = team ? "ALL STALKERS MUST AGREE" : "PICK JUST ONE";
     const needsTarget = rowShown && cardById(pickedCardId)?.target === "building";
     const waitingFor = rowShown && pickedCardId ? holdouts() : [];
     const agreed = Boolean(pickedCardId) && waitingFor.length === 0;

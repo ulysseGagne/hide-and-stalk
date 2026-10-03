@@ -1,31 +1,34 @@
 # Hide and Stalk: the rules
 
-Second draft of Oct 3, 2026, for the event on Monday Oct 5. Three places show
-these rules, and they have to say the same thing:
+Third draft of Oct 3, 2026, for the event on Monday Oct 5 (13h, Grand Axe).
+Three places show these rules, and they have to say the same thing:
 
 | Where | What it shows |
 | --- | --- |
-| The app's rules card (`src/index.html`, `#rules-card`) | The goal line, the eight one-liners and the line under them |
-| The how-to-play page (`src/how-to-play/`) | The same, each with why it exists and its fine print, plus a walkthrough of one round |
+| The app's rules card (`src/index.html`, `#rules-card`) | The goal line, the line behind the rules, the eight one-liners |
+| The how-to-play page (`src/how-to-play/`) | The same, each rule with why it exists and its fine print, plus a demo of one round and the questions |
 | This file | All of it, plus the organizers' rulings and what is still open |
+
+The page says only what a player needs. The edge cases the organizers have
+decided are here, under each rule, for when someone asks on the day.
 
 How players could break the game, and which rule stops each way, is in
 [`red-team.md`](red-team.md).
 
 ## The rule behind the rules
 
-The rules are there to make the game fun, for both sides. Winning by blocking
-the game isn't winning. Anything the rules don't cover comes down to one
-question: **would the other team call it clever, or annoying?**
+It comes first, before the eight rules, in the app and on the page:
 
-Clever: a spot where every honest answer is useless; three questions that cut
-the campus down to one café; a bluff in the call. Annoying: a spot nobody could
-find without opening every locker on a floor; an answer that is only
-technically true; two minutes to answer a yes or no.
+> **When in doubt: would the other team call it clever, or annoying?**
+> The rules are there to make the game fun for your opponents.
+
+Clever: a spot where honest answers tell the stalkers little; three questions
+that cut the campus down to one café; a bluff in the call. Annoying: a spot
+nobody could find without opening every locker on a floor; an answer that is
+only technically true; two minutes to answer a yes or no.
 
 The whole strategy is two choices. The stalkers choose the right questions.
-The hider chooses a spot the questions won't spoil. Nobody wins by crawling
-into a drawer.
+The hider chooses the right spot: one the questions won't reveal much about.
 
 ## A round
 
@@ -34,134 +37,145 @@ into a drawer.
 | Start | Anyone on the team presses Start, once the whole team is in its Discord call |
 | 0:00 to 10:00 | The hider walks to a spot. The stalkers wait where the round started |
 | 10:00 | The hunt starts: question 1. The hider freezes |
-| Every 5 min | A new question: three cards. Every stalker picks the same one, one of them sends it, the hider answers |
+| Every 5 min | A new question: three cards. All stalkers pick the same one, one of them sends it, the hider answers |
 | Up to 40:00 | Question 7 would come: the hider wins. A scan of the hider's code before that: the stalkers win |
 
-A round is **40 minutes at most**: 10 to hide, 30 to find. It ends sooner when
-the hider is found. Everyone takes a turn hiding (Play again picks whoever has
-hidden least); the longest hide of the day wins.
+A round is **40 minutes at most**: 10 to hide, 30 to find. Everyone takes a
+turn hiding (Play again picks whoever has hidden least); the longest hide of
+the day wins.
 
 ## The eight rules, as the app shows them
 
 **Stalkers win if they find the hider within 30 minutes.**
 
+*When in doubt: would the other team call it clever, or annoying? The rules
+are there to make the game fun for your opponents.*
+
 1. **Hide in plain sight.** In public, where anyone walking by can see you.
 2. **No running while you hide.** Stalkers can run.
-3. **Freeze.** Once the hunt starts, stay put. A few steps to answer is fine.
-4. **Nothing underground.** No tunnels, no basements, for anyone.
+3. **Hider: freeze.** Once the hunt starts, stay put. A few steps to answer is fine.
+4. **Don't hide underground.** No tunnels, no basements.
 5. **Answer truthfully.** The way a stalker next to you would.
 6. **Answer fast.** As fast as you reasonably can.
 7. **Found?** Show your code. Stalkers win.
-8. **Everyone talks.** One Discord call per team, hider included.
-
-*When in doubt: would the other team call it clever, or annoying?*
+8. **Everyone on the Discord call.** One call per team, hider included.
 
 Most important first. The two the app underlines in red: 1 and 3.
 
-## Each rule: why, then the fine print
+## Each rule: the page, then the rulings
 
-What a player sees when they tap a rule on the how-to-play page. The why comes
-first: a player who knows why a rule exists can settle its edge cases alone.
+"On the page" is word for word what a player sees when they open the rule on
+the how-to-play page. "Rulings" is for the organizers.
 
 ### 1. Hide in plain sight
 
-**Why.** The game is about crossing campus, not about opening every locker on
-one floor. The questions bring the stalkers to the right corner of campus; their
-eyes do the last few metres. A spot that only a search could uncover turns the
-end of the round into fifteen minutes in the same ten square metres.
+On the page:
 
-- **The test:** a stalker walking along a path would see you, and could walk right up to you, without opening, moving or climbing anything.
-- A path is anywhere people walk to get around: sidewalks, trails, plazas, parking lots, hallways, atriums, lobbies. Stay within 20 m of one.
-- In public: somewhere you could sit for 40 minutes without anyone asking you to leave, or finding it odd. Cafés, cafeterias, atriums, hallway benches, lawns, bus shelters: yes.
-- Not in a room, even with its door open: classrooms, offices, labs, washrooms, study rooms. Not in a library (you couldn't talk), a store, a residence, a stairwell or an elevator, or anywhere you need a key, a card or a ticket. Not on a roof or up a tree.
-- Not behind or under anything that hides you: a bush, a pillar, a table, a parked car.
-- Look like yourself: the clothes you started in, face uncovered. Blending into a crowd is clever; a disguise isn't.
-- While you hide, the red line on your map is the edge of campus. Stay inside it.
+- **Why.** The game is about crossing campus, not about spending 15 minutes opening every locker on a floor to find the hider.
+- **The test:** a stalker standing where people can walk could see you, without opening anything.
+- Anywhere open to the public, within 20 m of a path: cafés, hallways, a room with its door open, lawns, the woods by a trail.
+- Stay on campus.
+
+Rulings:
+
+- **A room with its door open: fine.** Nothing to open. If someone closes the door during the round, the stalkers may open it.
+- **Behind or under something** (a bush, a pillar, a table): fine as long as a stalker can see you from ground people can walk on. Behind a bush in the middle of a lawn: fine, the lawn is walkable.
+- **Up a tree:** fine if you can be seen from the ground.
+- **Libraries, stores, stairwells:** fine if they pass the test.
+- **Residences:** only the parts open to the public.
+- **Elevators:** out, by the test: the doors close.
+- **Roofs, and anywhere that needs a key, a card or a ticket:** out, by the test and by "open to the public". Not named on the page: nobody needs telling.
+- **Disguises:** no rule. Clever or annoying decides.
+- **The woods:** within 20 m of a path, and seen from it.
 
 ### 2. No running while you hide
 
-**Why.** Your spot has to be one the stalkers could walk to in the 10 minutes
-you had: if they knew where you were, a walk would get them there. Run farther
-and they spend the hunt jogging across campus in a straight line, which is no
-fun for anyone.
+On the page:
 
-- Walk: no running, no bike, scooter, bus or car. Stairs, escalators and elevators are fine.
-- Change your mind as often as you like while the 10 minutes last.
-- Stalkers: wait where the round started, and don't watch where the hider goes.
-- Once the hunt starts, stalkers can run.
+- **Why.** So the stalkers don't spend 30 minutes walking in a straight line to catch up. That's not fun.
+- Stalkers wait at the start, and don't watch the hider leave.
 
-### 3. Freeze
+Rulings: walking means no bike, scooter, bus or car either (not on the page:
+it goes without saying). Stairs, escalators and elevators are fine.
 
-**Why.** Your answers draw the map. Move, and every answer you gave before
-lies: the stalkers search where you were, not where you are. That's no fun for
-them, and the game only works if they have a fair shot.
+### 3. Hider: freeze
 
-- From question 1 to the end of the round, stay where you were when the hunt started. Sitting, standing, turning around: fine.
-- A few steps to answer a question (to read a room number, to take a photo), then back to your spot.
-- Not at your spot when the hunt starts? Where you are is your spot.
-- You'll watch the stalkers come closer on your map. That's the best part: stay put.
-- Have to move (a washroom, the cold, someone asks you to)? Say so in the call: an organizer pauses your team.
+On the page:
 
-### 4. Nothing underground
+- **Why.** Move, and the stalkers search where you were, not where you are. The game only works if they have a fair shot.
+- Stop moving when the 10-minute timer ends.
+- After a few steps to answer, go back to your spot.
 
-**Why.** GPS doesn't work underground, and the app runs on it: the stalkers'
-positions draw the questions on the map, and the hider's give the coordinates
-and the heatmap. Underground, the map would be wrong for both sides.
+Rulings: a hider who has to move (a washroom, the cold, someone asks them
+to) says so in the call, and an organizer pauses the team from the admin
+board.
 
-- That means the tunnels between pavilions, basement floors and underground parking.
-- Stalkers too: no shortcuts through the tunnels.
+### 4. Don't hide underground
+
+On the page:
+
+- **Why.** GPS doesn't work underground, and the app runs on it.
 - Not sure if it counts? Go up a floor.
+
+Rulings: underground means the tunnels between pavilions, basement floors and
+underground parking. **Stalkers may use the tunnels.** A "…than me?"
+question sent from down there uses a bad position, which is their problem.
 
 ### 5. Answer truthfully
 
-**Why.** The answers are the whole game. An answer that is only technically
-true isn't clever, it's annoying. Clever is a spot where honest answers don't
-help much.
+On the page:
 
-- Not sure? Give your honest best answer. Got one wrong? Fix it with Change, right away; never later, to throw them off.
-- “North or south of me?”, “Within 200 m of me?”, “Closer to … than I am?”: go by the line, the circle or the place drawn on your map. It's drawn from where the stalker was when they sent the question.
-- “Which … are you closest to?”: as the crow flies, from your spot. The app lists the nearest first.
-- Inside means inside a building's walls. A covered walkway or a bus shelter is outside.
-- Photos: taken now, from your spot. Frame them to give away as little as you can, but what the question asks for has to be in the picture, clear enough to recognize. Nothing like it around? Answer N/A.
-- In the call, say anything you like. Only the app's answers have to be true.
+- **Why.** The answers are the whole game. An answer that is only technically true isn't clever, it's annoying. To be clever, hide where honest answers don't help them.
+- Not sure? Say so in the call, and give your best honest answer. Got one wrong? Fix it with Change, right away; never later, to throw them off.
+- "…of me?" and "…than I am?": go by what your map draws. It's drawn from where the stalker was **when they sent the question**.
+
+The questions carousel on the page adds, one per question:
+
+- North or south of me? The line goes through where the stalker was when they sent it.
+- Within 200 m of me? The circle is around where they were when they sent it.
+- Closer to the church than I am? Closer than they were when they sent it, as the crow flies.
+- Which café are you closest to? As the crow flies. The app lists the nearest first.
+- Inside a building or outside? Inside means inside a building's walls. A covered walkway or a bus shelter is outside.
+- What floor are you on? Late in the hunt: the floor, then the room number.
+- A photo of the nearest door: taken now, from your spot. Show as little as you like, but a door has to look like a door.
+
+Rulings: nothing of the kind to photograph? Answer N/A. The hider owes
+nothing in the call: only the app's answers have to be true.
 
 ### 6. Answer fast
 
-**Why.** A question only lasts 5 minutes. Every minute you stall comes out of
-the stalkers' time, and winning by stalling isn't winning.
+On the page:
 
+- **Why.** Every minute you stall comes out of the stalkers' 5. Winning by stalling isn't winning.
 - About a minute; two for a photo.
-- No signal? Answer the moment it's back.
+
+Rulings: no signal? Answer the moment it's back.
 
 ### 7. Found? Show your code
 
-**Why.** The catch is face to face: a stalker has to reach you, so a bad GPS fix
-can never end a round.
+Nothing to open on the page: the one-liner says it all.
 
-- A stalker has to come up to you and scan the code on your phone (it's on your QUESTIONS tab). Seeing you from far away doesn't count.
-- Spotted? Don't run, and don't hide your screen: show your code.
-- The scan won't work? The stalker presses “Hider has been found”, inside the scanner, standing next to you.
-- Spotted another team's hider? Walk on and say nothing.
-- 30 minutes of hunting and nobody has scanned you: you win.
+Rulings: a stalker has to come up to the hider and scan the code on the
+hider's phone (QUESTIONS tab); seeing them from far away doesn't count. If
+the scan won't work, the stalker presses "Hider has been found" in the
+scanner, standing next to the hider. Another team's hider: walk on and say
+nothing.
 
-### 8. Everyone talks
+### 8. Everyone on the Discord call
 
-**Why.** Hide and seek alone is boring: the hider sits by themselves for half an
-hour. In one call, the hider watches the stalkers on their map while hearing
-them argue about where they are, and everyone can tease everyone. That's the
-game. Freezing makes it fair: the hider hears every plan and can't use it.
+On the page:
 
-- Each team has its own voice channel. Everyone joins it before pressing Start and stays in it, unmuted, the whole round. The hider too.
+- Each team has its own voice channel. Everyone joins it before pressing Start and stays the whole round, the hider too.
 - Talk all you want: tease, bluff, trash-talk. Only the app's answers count.
-- Stalkers agree on every question: the app sends one only once every stalker has picked the same card.
-- What you hear is fair game: the noise around the hider, your own voice coming back through their mic.
-- Find the hider with the app, the call and your eyes. No outside help: no Snap Map, no Find My, no asking people, no calling or texting the hider.
-- Earbuds help. One in is enough.
+
+Rulings: nobody has to stay unmuted; a team may find one open mic among the
+stalkers is enough. No rule on outside help (Snap Map, calling the hider):
+clever or annoying decides, and it's worth a word at the briefing.
 
 ## Rulings, for the organizers
 
 - **Clever or annoying.** A player asks whether something is allowed and the rules don't say: ask them which the other team would call it. Still unclear? The organizer's call, and the call holds for everyone the rest of the day. Note it here afterwards.
-- **A rule broken by mistake** (the hider in a room they thought was a hallway, an answer that was wrong): fix it and keep playing. If it decided the round, the round doesn't count for longest hide; play it again.
+- **A rule broken by mistake** (a hider in a room they thought was open, an answer that was wrong): fix it and keep playing. If it decided the round, the round doesn't count for longest hide; play it again.
 - **An answer disputed.** After the round, everyone sees where the hider was: go and look together. Wrong, and it decided the round? Play it again.
 - **Pause.** From the admin board: an emergency, a washroom, a lost player. Players can't pause.
 - **A stalker's phone dies, or they wander off.** The others can still send questions: the app only waits for stalkers who have had it open in the last 2 minutes.
@@ -169,22 +183,19 @@ game. Freezing makes it fair: the hider hears every plan and can't use it.
 - **Someone leaves.** At the end of a round they tap Leave the game: off their team, logged out, and left out of Make teams until they log in again. Mid-round the app refuses; if they really have to go, reset their team on the admin board and take them off it.
 - **Ties for longest hide.** Every hider who lasted the full 30:00 shares it. (The results list puts the first one to finish on top; that order means nothing.)
 
-## Changed from the first draft
+## Changed from the second draft
 
-- Touch nothing is gone. What matters is that the *stalkers* never have to open, move or climb anything: that is now rule 1's test.
-- Walk, then freeze is two rules: no running while you hide, and freeze, with a few steps allowed to answer.
-- Stalkers can run is part of rule 2; "indoors, everyone walks" is gone.
-- Answer truthfully is two rules: truthfully, and fast.
-- Everyone talks, the hider included. It was "Hider: on mute."
-- Every rule says why it exists, and the rule behind the rules (clever, or annoying?) closes the list.
-- New in the fine print: no rooms even with the door open; no libraries, stores, stairwells or elevators; no disguise; no outside help; no calling the hider; a stalker's voice through the hider's mic is fair game.
-- New in the app: every stalker picks the same card before a question can go out.
+- The line behind the rules comes first, with why the rules exist: to make the game fun for your opponents.
+- Rule 1's test: seen from where people walk, without opening anything. Rooms with an open door, libraries, stores, stairwells and trees are allowed when they pass it. The "40 minutes without anyone finding it odd" test and the no-disguise line are gone.
+- Rule 3 says who: "Hider: freeze."
+- Rule 4 is for the hider only: stalkers may use the tunnels.
+- Rule 8 is "Everyone on the Discord call". Gone: unmuted, earbuds, what you hear is fair game, no outside help.
+- Gone from the page, kept here as rulings: walking means no bike, pausing to move, no signal, how a catch works.
+- The photo, inside/outside and "which … closest to?" fine print moved to the page's questions carousel.
 
 ## Still open
 
-- **Libraries.** Out, because the hider couldn't talk there (and it keeps thirty people from running through them). Too strict?
-- **Stairwells and stores.** Out as hideouts: nobody sits in a stairwell for 40 minutes. OK?
 - **Upper floors.** Allowed. The deck has floor and room-number cards to find them. If playtests show building searches dragging on, the fix is "indoors, only on a floor with a door to the outside".
-- **Your voice through their mic** (shouting, then listening for it in the call): fair game. Fun, or too strong?
 - **Basements.** "No tunnels" was the rule; basements are added because many pavilions' basement hallways are the tunnels. Too strict for some buildings?
+- **Away after 2 minutes.** A stalker whose app hasn't checked in for 2 minutes stops counting for the agreement. Right length?
 - **Ties** for longest hide: share it, or break it (fewest questions asked? who was closest to being found?).

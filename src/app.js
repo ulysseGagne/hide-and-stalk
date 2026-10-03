@@ -632,7 +632,7 @@ function statusView(team, me, users) {
             ? `${team.caughtByName ?? "A stalker"} found you after ${huntTime} of hunting.`
             : `Found after ${huntTime} of hunting.`;
     } else {
-        title = isHider ? "You win!" : `${hider} wins`;
+        title = isHider ? "Hider wins!" : `${hider} wins`;
         text = isHider
             ? `Nobody found you in ${team.maxQuestions} questions (${huntTime}).`
             : `Question ${team.maxQuestions + 1} never came: ${hider} stayed hidden.`;

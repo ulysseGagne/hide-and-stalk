@@ -216,14 +216,19 @@
             if (cards.length) {
                 // Between the rule and the first card (UNTIL QUESTION stays
                 // readable), curling up. It stays once a card is picked, as in
-                // the post (image 2). With teammates: ALL 3: THE SAME ONE.
+                // the post (image 2). With teammates: ALL STALKERS MUST AGREE.
                 const first = box(cards[0]);
                 const text = $("#card-row").dataset.note || "PICK JUST ONE";
                 if (text === "PICK JUST ONE") {
                     specs.push({ t: "write", text, x: first.x + 96, y: first.y - 10, o: { size: 32, weight: 5.6, spacing: 0.3, seed: "pick1", tilt: -5, maxWidth: first.w - 98, importance: "key" } });
                 } else {
-                    // Longer, and over a taller gap (styles.css): flatter, so it stays under the line.
-                    specs.push({ t: "write", text, x: first.x + 40, y: first.y - 12, o: { size: 26, weight: 26 * 0.18, spacing: 0.3, seed: "pick1", tilt: -2, maxWidth: first.w - 48, importance: "key" } });
+                    // Longer, and over a taller gap (styles.css): flatter, and
+                    // shrunk to fit, so it never curls up into the line above.
+                    const room = first.w - 28;
+                    const o = { size: 26, spacing: 0.3, seed: "pick1", tilt: -1.5, importance: "key" };
+                    while (o.size > 14 && Ink.write(text, { x: 0, y: 0, ...o }).width > room) o.size -= 1;
+                    o.weight = 4.8;
+                    specs.push({ t: "write", text, x: first.x + 14, y: first.y - 12, o: { ...o, maxWidth: room } });
                 }
             }
             // Who picked each card, signed at its foot (cards.js keeps the
