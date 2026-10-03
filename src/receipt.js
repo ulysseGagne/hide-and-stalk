@@ -141,6 +141,8 @@
     let drawn = null; // what the map was last printed with: { canvas, region, w, h }
     async function printMap(canvas, region) {
         await HNSMapDraw.ready;
+        // Logged out (or left the game) while the map data loaded: no slip to print on.
+        if (!canvas?.isConnected) return;
         const holder = canvas.parentElement;
         const w = holder.clientWidth;
         const h = holder.clientHeight;
@@ -230,6 +232,10 @@
         },
         reset() {
             renderedKey = null;
+            // As when the round's receipt is put away: the emptied box would
+            // still fire its resize watcher.
+            mapObserver?.disconnect();
+            drawn = null;
             const node = el();
             if (node) {
                 node.hidden = true;
