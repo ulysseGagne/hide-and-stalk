@@ -11,7 +11,7 @@
              questions, and the FAQ. The app's rules card links to #rules.
              The screens in img/ are the real app, shot against the fake game
              server; in design/promo/round-1:
-               node tools/shoot-app.mjs real ready,hiding,demo-cards,demo-picked,demo-agreed,demo-question,demo-line,g9a,sent,demo-cafes,tagcode,found,win,q-ew,q-floor,q-radius,q-heat,q-closer,q-road,q-velo,q-inside,q-section,q-path,q-walk,q-photo,q-coords
+               node tools/shoot-app.mjs real ready,hiding,demo-cards,demo-picked,demo-agreed,demo-question,demo-line,g9a,sent,demo-cafes,tagcode,found,win,q-ns,q-room,q-radius,q-heat,q-closer,q-road,q-velo,q-cafe,q-inside,q-section,q-path,q-walk,q-door,q-photo,q-gmaps
              then each shots/real/R-*.png cut to 24 colours, white, black and
              the red kept exact (ImageMagick):
                convert R-x.png -strip -dither None -colors 24 -fuzz 1.5% -fill white -opaque white -fill '#000000' -opaque '#000000' -fill '#E7191F' -opaque '#E7191F' PNG8:x.png
@@ -109,7 +109,7 @@
 
             /* Hero: the app's own lockup (its home screen), then the goal */
             .hero h1 { margin: 0; }
-            .hero h1 img { width: 230px; }
+            .hero h1 img { width: 230px; margin-inline: auto; }
             .hero .label { margin-top: 26px; }
             .goal {
                 margin: 8px 0 0;
@@ -524,75 +524,85 @@
                 <p class="sub">A few of the <span data-ink="underline">41 questions</span>.</p>
                 <div class="qs" role="region" aria-roledescription="carousel" aria-label="The questions">
                     <ol class="q-track" id="q-track" tabindex="0">
-                        <li class="q" aria-label="Question 1 of 13">
-                            <p class="q-text">Are you east or west of&nbsp;me?</p>
+                        <li class="q" aria-label="Question 1 of 15">
+                            <p class="q-text">Are you north or south of&nbsp;me?</p>
                             <p class="q-note">The line goes through where the stalker was <span data-ink="underline">when they sent it.</span></p>
-                            <div class="phone"><img src="img/q01-ew.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 5 from felix, Are you east or west of me? A red dashed line down the campus, WEST and EAST on either side." /></div>
+                            <div class="phone"><img src="img/q01-ns.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 5 from felix, Are you north or south of me? A red dashed line across the map, NORTH above it, SOUTH below." /></div>
                         </li>
-                        <li class="q" aria-label="Question 2 of 13">
-                            <p class="q-text">What floor are you&nbsp;on?</p>
-                            <p class="q-note">Late in the hunt: the floor, then the room number.</p>
-                            <div class="phone"><img src="img/q02-floor.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 4 from felix, What floor are you on? It is the first digit of the room numbers, ABC-1234. Outside? Answer N/A. A box to write it in." /></div>
+                        <li class="q" aria-label="Question 2 of 15">
+                            <p class="q-text">What is the second digit of the nearest room&nbsp;number?</p>
+                            <p class="q-note">The number by the nearest door. Outside? Answer N/A.</p>
+                            <div class="phone"><img src="img/q02-room.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 4 from felix, What is the second digit of the nearest room number? ABC-1234, the 2 boxed in red. Outside? Answer N/A. A box to write it in." /></div>
                         </li>
-                        <li class="q" aria-label="Question 3 of 13">
+                        <li class="q" aria-label="Question 3 of 15">
                             <p class="q-text">Are you within 200&nbsp;m of&nbsp;me?</p>
                             <p class="q-note">The circle is around where they were <span data-ink="underline">when they sent it.</span></p>
                             <div class="phone"><img src="img/q03-radius.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 2 from felix, Are you within 200 m of me? A red circle marked 200 M, the hider's arrow inside it." /></div>
                         </li>
-                        <li class="q" aria-label="Question 4 of 13">
+                        <li class="q" aria-label="Question 4 of 15">
                             <p class="q-text">Send the heatmap around&nbsp;you.</p>
-                            <p class="q-note">Your phone draws the heat around you. The stalkers find the match on their map.</p>
-                            <div class="phone"><img src="img/q04-heat.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 3 from felix, Send the heatmap around you. The square drawn: bands of grey, darker toward one corner." /></div>
+                            <p class="q-note">Darker means busier. Your phone sends the heat around you. The stalkers find the match on their map.</p>
+                            <div class="phone"><img src="img/q04-heat.png" width="750" height="1624" loading="lazy" alt="Hider's map, the heatmap switched on: Question 3 from felix, Send the heatmap around you. The whole campus in greys, darker where it's busier, the hider's arrow on it." /></div>
                         </li>
-                        <li class="q" aria-label="Question 5 of 13">
+                        <li class="q" aria-label="Question 5 of 15">
                             <p class="q-text">Are you closer to the church than I&nbsp;am?</p>
                             <p class="q-note">Closer than they were <span data-ink="underline">when they sent it,</span> as the crow flies.</p>
                             <div class="phone"><img src="img/q05-closer.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 1 from felix, Are you closer to the church than I am? The church tagged on the map, a stalker's pin, the hider's arrow." /></div>
                         </li>
-                        <li class="q" aria-label="Question 6 of 13">
+                        <li class="q" aria-label="Question 6 of 15">
                             <p class="q-text">How far is the nearest road open to&nbsp;cars?</p>
                             <p class="q-note">Judging by eye is fine.</p>
                             <div class="phone"><img src="img/q06-road.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 4 from felix, How far is the nearest road open to cars? Under 20 m, 20-50 m, 50-100 m, Over 100 m." /></div>
                         </li>
-                        <li class="q" aria-label="Question 7 of 13">
+                        <li class="q" aria-label="Question 7 of 15">
                             <p class="q-text">Which àVélo station are you closest&nbsp;to?</p>
-                            <p class="q-note">As the crow flies. The app lists the nearest first.</p>
+                            <p class="q-note">Your map pins every station. Closest as the crow flies.</p>
                             <div class="phone"><img src="img/q07-velo.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 3 from felix, Which àVélo station are you closest to? The stations pinned in red." /></div>
                         </li>
-                        <li class="q" aria-label="Question 8 of 13">
+                        <li class="q" aria-label="Question 8 of 15">
+                            <p class="q-text">Which café are you closest&nbsp;to?</p>
+                            <p class="q-note">As the crow flies. The app lists the nearest first.</p>
+                            <div class="phone"><img src="img/q08-cafe.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 3 from felix, Which café are you closest to? The cafés listed nearest first: P'tit CAAF (ABP) 50 m, Snak (VCH) 145 m, Café L'Interprox (MDE) 230 m, and on." /></div>
+                        </li>
+                        <li class="q" aria-label="Question 9 of 15">
                             <p class="q-text">Are you inside a building or&nbsp;outside?</p>
                             <p class="q-note">Inside means inside a building's walls. A covered walkway or a bus shelter is outside.</p>
-                            <div class="phone"><img src="img/q08-inside.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 2 from felix, Are you inside a building or outside? Inside, Outside, and a Send answer button." /></div>
+                            <div class="phone"><img src="img/q09-inside.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 2 from felix, Are you inside a building or outside? Inside, Outside, and a Send answer button." /></div>
                         </li>
-                        <li class="q" aria-label="Question 9 of 13">
+                        <li class="q" aria-label="Question 10 of 15">
                             <p class="q-text">In what part of Vachon are&nbsp;you?</p>
                             <p class="q-note">The stalkers name the building; your map splits it into parts.</p>
-                            <div class="phone"><img src="img/q09-section.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 5 from felix, In what part of Pavillon Alexandre-Vachon (VCH) are you? The building outlined in red, cut into A, B, C and D." /></div>
+                            <div class="phone"><img src="img/q10-section.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 5 from felix, In what part of Pavillon Alexandre-Vachon (VCH) are you? The building outlined in red, cut into A, B, C and D." /></div>
                         </li>
-                        <li class="q" aria-label="Question 10 of 13">
+                        <li class="q" aria-label="Question 11 of 15">
                             <p class="q-text">What kind of path are you closest&nbsp;to?</p>
                             <p class="q-note">The rules keep you within 20&nbsp;m of one.</p>
-                            <div class="phone"><img src="img/q10-path.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 3 from felix, What kind of path are you closest to? Sidewalk, Bike path, Indoor hallway, Forest trail, Plaza or courtyard, Parking lot." /></div>
+                            <div class="phone"><img src="img/q11-path.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 3 from felix, What kind of path are you closest to? Sidewalk, Bike path, Indoor hallway, Forest trail, Plaza or courtyard, Parking lot." /></div>
                         </li>
-                        <li class="q" aria-label="Question 11 of 13">
+                        <li class="q" aria-label="Question 12 of 15">
                             <p class="q-text">How many minutes is my walk to you, on Google&nbsp;Maps?</p>
                             <p class="q-note">From where they asked: the app gives you their position.</p>
-                            <div class="phone"><img src="img/q11-walk.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 2 from felix, According to Google Maps, how many minutes is my walk to you? They asked from 46.78033, -71.27681, with buttons to copy it or open Google Maps." /></div>
+                            <div class="phone"><img src="img/q12-walk.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 2 from felix, According to Google Maps, how many minutes is my walk to you? They asked from 46.78033, -71.27681, with buttons to copy it or open Google Maps." /></div>
                         </li>
-                        <li class="q" aria-label="Question 12 of 13">
+                        <li class="q" aria-label="Question 13 of 15">
+                            <p class="q-text">Send a photo of the nearest&nbsp;door.</p>
+                            <p class="q-note">No door in sight? Answer N/A.</p>
+                            <div class="phone"><img src="img/q13-door.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 5 from felix, Send a photo of the nearest door. A photo to choose, N/A (does not apply), and a Send answer button." /></div>
+                        </li>
+                        <li class="q" aria-label="Question 14 of 15">
                             <p class="q-text">Send a photo of the nearest&nbsp;sculpture.</p>
                             <p class="q-note">Taken now, from your spot. Show as little as you like, but a sculpture has to look like a sculpture.</p>
-                            <div class="phone"><img src="img/q12-photo.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: Send a photo of the nearest sculpture, and the hider's photo: a sculpture, close up, from below." /></div>
+                            <div class="phone"><img src="img/q14-photo.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: Send a photo of the nearest sculpture, and the hider's photo: a sculpture, close up, from below." /></div>
                         </li>
-                        <li class="q" aria-label="Question 13 of 13">
-                            <p class="q-text">Send your exact coordinates.</p>
-                            <p class="q-note">Only ever the last question: it pins you to within 30&nbsp;m.</p>
-                            <div class="phone"><img src="img/q13-coords.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 6 from felix, Send your exact coordinates. A Use my current location button." /></div>
+                        <li class="q" aria-label="Question 15 of 15">
+                            <p class="q-text">Send a screenshot of your blue dot in Google&nbsp;Maps.</p>
+                            <p class="q-note">Only ever the last question: it shows them almost exactly where you are.</p>
+                            <div class="phone"><img src="img/q15-gmaps.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 6 from felix, Send a screenshot of your blue dot in Google Maps. Zoom in to street level. A screenshot to choose and a Send answer button." /></div>
                         </li>
                     </ol>
                     <div class="q-nav">
                         <button type="button" class="btn" id="q-back" aria-label="Previous question"><span class="go back" aria-hidden="true"></span></button>
-                        <span class="where" id="q-where" aria-live="polite">1 / 13</span>
+                        <span class="where" id="q-where" aria-live="polite">1 / 15</span>
                         <button type="button" class="btn" id="q-next" aria-label="Next question"><span class="go" aria-hidden="true"></span></button>
                     </div>
                 </div>

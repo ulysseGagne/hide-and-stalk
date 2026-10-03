@@ -442,13 +442,15 @@ const hiderAsked = (cardId, by, q, clock, at = HIDER) => ({
     },
 });
 SCREENS["q-inside"] = hiderAsked("inside_outside", "felix", 2, 4 * MIN + 36_000);
-SCREENS["q-floor"] = hiderAsked("floor", "felix", 4, 4 * MIN + 41_000);
-// Where the heat around the hider varies most (by the church), so the square shows it.
-SCREENS["q-heat"] = hiderAsked("heatmap", "felix", 3, 4 * MIN + 22_000, { lat: 46.7835, lng: -71.2701 });
+SCREENS["q-room"] = hiderAsked("room_digit", "felix", 4, 4 * MIN + 41_000);
 SCREENS["q-road"] = hiderAsked("street_distance", "felix", 4, 4 * MIN + 30_000);
+// Which café: the hider's list, nearest first (the demo shows the map).
+SCREENS["q-cafe"] = hiderAsked("nearest_cafe", "felix", 3, 4 * MIN + 20_000);
 SCREENS["q-path"] = hiderAsked("terrain", "felix", 3, 4 * MIN + 44_000);
 SCREENS["q-walk"] = hiderAsked("walk_minutes", "felix", 2, 4 * MIN + 27_000);
-SCREENS["q-coords"] = hiderAsked("exact_coordinates", "felix", 6, 4 * MIN + 39_000);
+SCREENS["q-door"] = hiderAsked("photo_door", "felix", 5, 4 * MIN + 38_000);
+// An end-game card: question 6, the last one.
+SCREENS["q-gmaps"] = hiderAsked("screenshot_map", "felix", 6, 4 * MIN + 39_000);
 // The sculpture photo, as the stalkers get it (the mock-up's card), read: no NEW arrow.
 SCREENS["q-photo"] = { ...SCREENS.photo, scrollTo: "#sent-card", scrollPad: 24, state: { ...SCREENS.photo.state, cards: { ...SCREENS.photo.state.cards, unread: 0 } } };
 // For the post: the three cards as dealt (S51's layout), one of them circled.
@@ -518,6 +520,8 @@ const stalkersAt = (pins) => [
     { name: "theo", role: "stalker" },
 ];
 const VELO_63 = LANDMARK_GROUPS.velo.places.find((p) => p.id === "velo_63");
+// Where the heat around the hider varies most (by the church).
+const HEAT_SPOT = { lat: 46.7835, lng: -71.2701 };
 
 // The Pub U game (lab/maps.js GAMES.pubu): olivier hides; three answers in.
 const PUBU = LAB.pubu;
@@ -576,7 +580,7 @@ export const MAP_SCREENS = {
     },
     // The page's questions carousel: each question waiting on the hider's
     // map, as it draws it. Read: no NEW arrow over the question.
-    "q-ew": { you: LAB.N12.you, state: mapState({ users: [{ name: "ulysse", role: "hider", at: LAB.N12.you }, { name: "jules", role: "stalker" }, { name: "felix", role: "stalker", at: POS.camille }, { name: "camille", role: "stalker" }, { name: "theo", role: "stalker" }], question: 5, clock: 2 * MIN + 40_000, answered: greenhouseHints(4), pending: [waiting(5, "ew", "felix", POS.camille)], unread: 0 }), setup: mapSetup(LAB.N12) },
+    "q-ns": { you: LAB.n11d.you, state: mapState({ users: [{ name: "ulysse", role: "hider", at: LAB.n11d.you }, { name: "jules", role: "stalker" }, { name: "felix", role: "stalker", at: LAB.n11d.asker }, { name: "camille", role: "stalker" }, { name: "theo", role: "stalker" }], question: 5, clock: 2 * MIN + 40_000, answered: greenhouseHints(4), pending: [waiting(5, "ns", "felix", LAB.n11d.asker)], unread: 0 }), setup: mapSetup(LAB.n11d) },
     "q-radius": {
         you: HIDER,
         state: mapState({ users: [{ name: "ulysse", role: "hider", at: HIDER }, ...stalkersAt([POS.felix, null])], question: 2, clock: 4 * MIN + 10_000, answered: greenhouseHints(1), pending: [waiting(2, "radius_200", "felix", POS.felix)], unread: 0 }),
@@ -593,6 +597,21 @@ export const MAP_SCREENS = {
         you: { lat: 46.78062, lng: -71.27712 },
         state: mapState({ users: [{ name: "ulysse", role: "hider", at: { lat: 46.78062, lng: -71.27712 } }, ...stalkersAt([null, null])], question: 5, clock: 3 * MIN + 5_000, answered: [], pending: [{ ...waiting(5, "building_section", "felix", null), target: "pav_vch" }], unread: 0 }),
         setup: mapSetup({ view: { lat: 46.78035, lng: -71.2769, zoom: 17.6 }, deg: 40 }),
+    },
+    // The heatmap question: the hider's map, the whole campus, the heatmap
+    // switch on (it is there once the question has been asked). No answers
+    // yet, so nothing covers the heat.
+    "q-heat": {
+        you: HEAT_SPOT,
+        state: (() => {
+            const s = mapState({ users: [{ name: "ulysse", role: "hider", at: HEAT_SPOT }, ...stalkersAt([null, null])], question: 3, clock: 4 * MIN + 22_000, answered: [], pending: [waiting(3, "heatmap", "felix", null)], unread: 0 });
+            return { ...s, cards: { ...s.cards, askedCardIds: ["heatmap"] } };
+        })(),
+        setup: async (page) => {
+            await mapSetup({ view: { lat: 46.7821, lng: -71.2747, zoom: 14.55 }, deg: 20 })(page);
+            await page.click("#heat-switch");
+            await page.waitForTimeout(1500);
+        },
     },
     // S67: within 200 m of lea (the Pub U game).
     N14: { you: LAB.N14.you, state: mapState({ me: "olivier", users: [{ name: "olivier", role: "hider", at: LAB.N14.you }, ...Object.entries(PUBU.pos).map(([name, at]) => ({ name, role: "stalker", at: ll(at) }))], question: 4, clock: 4 * MIN + 5_000, answered: pubuPlays(), pending: [waiting(4, "radius_200", "lea", ll(PUBU.pos.lea))] }), setup: mapSetup(LAB.N14) },

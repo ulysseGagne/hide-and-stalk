@@ -25,7 +25,7 @@ const ORDER = ["login", "loginfilled", "permask", "permasking", "permhalf", "per
 // Round 2's real app: the home screen first, the map screens last.
 // The how-to-play page's walkthrough: question 1, dealt, picked (one stalker
 // still on another card), agreed, at the hider.
-const DEMO = ["demo-cards", "demo-picked", "demo-agreed", "demo-question", "q-floor", "q-heat", "q-road", "q-inside", "q-path", "q-walk", "q-photo", "q-coords"];
+const DEMO = ["demo-cards", "demo-picked", "demo-agreed", "demo-question", "q-room", "q-road", "q-cafe", "q-inside", "q-path", "q-walk", "q-door", "q-photo", "q-gmaps"];
 const REAL_ORDER = ["home", ...ORDER, ...DEMO, ...Object.keys(MAP_SCREENS)];
 
 // A stand-in for the hider's photo, for the mock-up only: a sculpture on
@@ -108,11 +108,6 @@ const REAL_STEPS = {
     },
     "demo-picked": async (page) => {
         await page.click("#card-row .card:nth-child(1)");
-    },
-    // The heatmap question: the hider's square, drawn.
-    "q-heat": async (page) => {
-        await page.click("#hider-question-list button.admin-btn");
-        await page.waitForSelector("#hider-question-list .answer-preview:not([hidden])", { timeout: 30000 });
     },
     // Every answer so far: under the stalker's cards (the RESULTS tab is gone).
     history: async (page) => {
