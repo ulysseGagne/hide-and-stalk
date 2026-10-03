@@ -43,7 +43,7 @@ Most important first. The two the app underlines in red: 1 and 2.
 What a player sees when they tap a rule on the how-to-play page.
 
 **1. Hide in plain sight.**
-- Campus is what the app's map shows. Everything past its edge is out: Place Sainte-Foy, Place Laurier, the streets across the boulevards.
+- While you hide, the red line on your map is the edge of campus. Past it is out: Place Sainte-Foy, Place Laurier, the streets across the boulevards.
 - A path is anywhere people walk: a sidewalk, a trail, a plaza, a parking lot, a hallway, an atrium.
 - In plain sight: someone walking along that path would see you at some point. Sit, stand, blend into a crowd. Not inside, under or behind anything that hides you: a bush, a closed door, a stall, a coat over your head.
 - Public places only: anywhere you can walk into without a key, a card or a ticket. Not classrooms, offices, labs, washrooms, residences, rooftops or construction sites. A locked building is not public.
@@ -96,7 +96,7 @@ What a player sees when they tap a rule on the how-to-play page.
 
 - **A rule broken by mistake** (the hider 30 m from a path, an answer that was wrong): fix it and keep playing. If it decided the round, the round doesn't count for longest hide; play it again.
 - **Pause.** From the admin board: an emergency, a washroom, a lost player. Players can't pause.
-- **Someone leaves.** Take them off the team on the admin board, so Play again never picks them to hide.
+- **Someone leaves.** At the end of a round they tap Leave the game: off their team, logged out, and left out of Make teams until they log in again. Mid-round the app refuses; if they really have to go, reset their team on the admin board and take them off it.
 - **Ties for longest hide.** Every hider who lasted the full 30:00 shares it. (The results list puts the first one to finish on top; that order means nothing.)
 - **Questions the app can't settle** (is this a path? is this a basement?): the organizer's call, and the call holds for everyone the rest of the day. Note it here afterwards.
 
