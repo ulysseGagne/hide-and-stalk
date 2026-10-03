@@ -4,8 +4,9 @@
 //
 // Covers: making and editing teams (online or not), a team starting on its
 // own, the hiding countdown, one question per interval with no repeats,
-// unsent questions piling up and going out back to back, the locked-in pick,
-// answering and correcting an answer, catching the hider, question 7 handing
+// unsent questions piling up and going out back to back, every stalker picking
+// the same card before it can go out (the absent ones excepted), the locked-in
+// pick, answering and correcting an answer, catching the hider, question 7 handing
 // the win to the hider, Play again rotating the hider, leaving the game
 // between rounds, pausing, the settings, and that nothing leaks between teams.
 //
@@ -164,6 +165,17 @@ const sA = stalkersOf(teamA);
 const hB = hiderOf(teamB);
 const sB = stalkersOf(teamB);
 const tok = (u) => tokens[u.username];
+// A question goes out once every stalker has picked it: they all pick, then one sends.
+const pick = (u, batch, cardId) =>
+    call("/cards/pick", { method: "POST", token: tok(u), body: { batchId: batch.id, cardId } });
+const send = (u, body) => call("/cards/send", { method: "POST", token: tok(u), body });
+async function pickAll(stalkers, batch, cardId) {
+    for (const u of stalkers) {
+        const r = await pick(u, batch, cardId);
+        if (r.status !== 200) return r;
+    }
+    return { status: 200 };
+}
 await place(tok(hA), 0.002, 0.001); // the hider, ~250 m north-east
 for (const u of [...sA, ...sB, hB]) await place(tok(u));
 
@@ -193,8 +205,10 @@ check("ready hider has no catch code yet", !s.json.me.catchCode);
 
 // ---------------------------------------------------------------------------
 console.log("\nStart, hiding");
-r = await call("/cards/pick", { method: "POST", token: tok(sA[0]), body: { cardId: "ns" } });
+r = await call("/cards/pick", { method: "POST", token: tok(sA[0]), body: { batchId: 0, cardId: "ns" } });
 check("no picking before the team starts", r.status === 409);
+r = await send(sA[0], { cardId: "ns" });
+check("no sending before the team starts", r.status === 409);
 r = await call("/team/start", { method: "POST", token: tok(sA[0]) });
 check("a stalker starts the team", r.status === 200 && r.json.team.phase === "hiding", JSON.stringify(r.json));
 check("real timers when debug is off", r.json.team?.hideMs === 600000 && r.json.team?.intervalMs === 300000);
@@ -208,12 +222,14 @@ s = await call("/state", { token: tok(sB[0]) });
 check("the other team did not start", s.json.team.phase === "ready");
 r = await call("/found", { method: "POST", token: tok(sA[0]) });
 check("no catching while the hider is still hiding", r.status === 409);
-r = await call("/cards/pick", { method: "POST", token: tok(sA[0]), body: { cardId: "ns" } });
+r = await call("/cards/pick", { method: "POST", token: tok(sA[0]), body: { batchId: 0, cardId: "ns" } });
 check("no picking while the hider is hiding", r.status === 409);
 
 // ---------------------------------------------------------------------------
 console.log("\nHunting");
 advance(teamA, 600000);
+// Every stalker freshly seen: only those seen in the last 2 minutes have a say.
+for (const u of sA) await place(tok(u));
 s = await call("/state", { token: tok(sA[0]) });
 check("after 10 minutes the hunt is on, question 1", s.json.team.phase === "hunting" && s.json.team.question === 1, JSON.stringify(s.json.team));
 const batch1 = s.json.cards.batch;
@@ -228,23 +244,50 @@ check("hider does not get the batch", (await call("/state", { token: tok(hA) }))
 
 // Prefer a card relative to the asker, to exercise the snapshot.
 const pickId = batch1.cardIds.find((id) => card(id).needsAsker) ?? batch1.cardIds[0];
+const otherId = batch1.cardIds.find((id) => id !== pickId);
+check("team A hunts with at least two stalkers", sA.length >= 2, sA.map((u) => u.username).join(","));
+r = await pick(sA[0], batch1, pickId);
+check("a stalker picks a card", r.status === 200, JSON.stringify(r.json));
+s = await call("/state", { token: tok(sA[1]) });
+check("teammates see who picked what", s.json.cards.picks.length === 1 && s.json.cards.picks[0].userId === sA[0].id && s.json.cards.picks[0].cardId === pickId, JSON.stringify(s.json.cards.picks));
+check("every stalker on the team has a say", sA.every((u) => s.json.cards.voterIds.includes(u.id)) && s.json.cards.voterIds.length === sA.length, JSON.stringify(s.json.cards.voterIds));
+r = await send(sA[0], { cardId: pickId });
+check("one pick is not enough to send", r.status === 409 && r.json.error.includes(sA[1].username), r.json.error);
+r = await pick(sA[1], { id: batch1.id + 1000 }, pickId);
+check("a pick on a batch that is not face up is refused", r.status === 409, r.json.error);
+r = await pick(sA[1], batch1, "radius_99");
+check("a card that is not on the table is refused", r.status === 400, r.json.error);
+for (const u of sA.slice(1)) await pick(u, batch1, pickId);
+r = await pick(sA[1], batch1, otherId);
+check("a stalker changes their pick", r.status === 200);
+r = await send(sA[0], { cardId: pickId });
+check("not the same card: still no sending", r.status === 409 && r.json.error.includes(sA[1].username) && !r.json.error.includes(sA[0].username), r.json.error);
+r = await pick(sA[1], batch1, null);
+s = await call("/state", { token: tok(sA[0]) });
+check("a pick can be taken back", r.status === 200 && !s.json.cards.picks.some((p) => p.userId === sA[1].id));
+// A stalker who has not had the app open for a while does not hold the others up.
+sql(`UPDATE users SET last_seen_at = last_seen_at - 300000 WHERE username = '${sA[1].username}'`);
+s = await call("/state", { token: tok(sA[0]) });
+check("a stalker who is away has no say", !s.json.cards.voterIds.includes(sA[1].id) && s.json.cards.voterIds.includes(sA[0].id));
 sql(`UPDATE users SET location_updated_at = location_updated_at - 300000 WHERE username = '${sA[0].username}'`);
 if (card(pickId).needsAsker) {
-    r = await call("/cards/pick", { method: "POST", token: tok(sA[0]), body: { cardId: pickId } });
+    r = await send(sA[0], { cardId: pickId });
     check("an asker-relative card needs a fresh position", r.status === 409, r.json.error);
 }
 await place(tok(sA[0]));
-r = await call("/cards/pick", { method: "POST", token: tok(sA[0]), body: { cardId: pickId } });
-check("stalker picks a card", r.status === 200, JSON.stringify(r.json));
+r = await send(sA[0], { cardId: pickId });
+check("everyone there picked it: it goes out", r.status === 200, JSON.stringify(r.json));
 const playId = r.json.playId;
-r = await call("/cards/pick", {
-    method: "POST",
-    token: tok(sA[1]),
-    body: { cardId: batch1.cardIds.find((id) => id !== pickId) },
-});
+await place(tok(sA[1]));
+r = await pick(sA[1], batch1, otherId);
+check("no picking once it is sent", r.status === 409);
+r = await send(sA[1], { cardId: otherId });
 check("the batch is burnt for the teammate", r.status === 409);
 s = await call("/state", { token: tok(sA[1]) });
 check("teammate sees the sent card, locked in", s.json.cards.currentPlay?.id === playId && s.json.cards.currentPlay.answer === null);
+check("once sent, no picks are shown", s.json.cards.picks.length === 0 && s.json.cards.voterIds.length === 0);
+s = await call("/state", { token: tok(hA) });
+check("the question is asked by whoever sent it", s.json.cards.pending[0]?.askedByName === sA[0].username);
 
 s = await call("/state", { token: tok(hA) });
 check("hider has one question pending", s.json.cards.pending.length === 1 && s.json.cards.unread === 1);
@@ -310,7 +353,7 @@ await adminPost("/admin/team", { teamId: teamA, action: "pause" });
 s = await call("/state", { token: tok(sA[0]) });
 const frozen = s.json.team.nextQuestionInMs;
 check("paused team says so", s.json.team.paused === true);
-r = await call("/cards/pick", { method: "POST", token: tok(sA[0]), body: { cardId: batch2.cardIds[0] } });
+r = await pick(sA[0], batch2, batch2.cardIds[0]);
 check("no picking while paused", r.status === 409);
 await new Promise((res) => setTimeout(res, 1500));
 s = await call("/state", { token: tok(sA[0]) });
@@ -367,7 +410,9 @@ check("three questions in, none sent: all three in hand", s.json.team.question =
 check("the oldest one is face up", s.json.cards.batch?.question === 1 && s.json.cards.batch.playedCardId === null);
 const plainCard = (b) => b.cardIds.find((id) => !card(id).needsAsker) ?? b.cardIds[0];
 for (const [q, left] of [[1, 2], [2, 1]]) {
-    r = await call("/cards/pick", { method: "POST", token: tok(sA2[0]), body: { cardId: plainCard(s.json.cards.batch) } });
+    const id = plainCard(s.json.cards.batch);
+    await pickAll(sA2, s.json.cards.batch, id);
+    r = await send(sA2[0], { cardId: id });
     check(`question ${q} sent`, r.status === 200, JSON.stringify(r.json));
     s = await call("/state", { token: tok(sA2.at(-1)) });
     const b = s.json.cards.batch;
@@ -375,11 +420,14 @@ for (const [q, left] of [[1, 2], [2, 1]]) {
 }
 // Question 3 is "which part of <building>?": sent with a building, answered with a letter.
 sql(`UPDATE card_batches SET card_ids = '["building_section","ns","ew"]' WHERE group_id = ${teamA} AND question = 3`);
-r = await call("/cards/pick", { method: "POST", token: tok(sA2[0]), body: { cardId: "building_section" } });
+s = await call("/state", { token: tok(sA2[0]) });
+r = await pickAll(sA2, s.json.cards.batch, "building_section");
+check("every stalker picks the building question", r.status === 200, JSON.stringify(r.json));
+r = await send(sA2[0], { cardId: "building_section" });
 check("a building question needs its building", r.status === 400, r.json.error);
-r = await call("/cards/pick", { method: "POST", token: tok(sA2[0]), body: { cardId: "building_section", target: "pav_nowhere" } });
+r = await send(sA2[0], { cardId: "building_section", target: "pav_nowhere" });
 check("and a building that exists", r.status === 400, r.json.error);
-r = await call("/cards/pick", { method: "POST", token: tok(sA2[0]), body: { cardId: "building_section", target: "pav_plt" } });
+r = await send(sA2[0], { cardId: "building_section", target: "pav_plt" });
 check("question 3 sent, about Pouliot", r.status === 200, JSON.stringify(r.json));
 const sectionPlay = r.json.playId;
 s = await call("/state", { token: tok(sA2.at(-1)) });

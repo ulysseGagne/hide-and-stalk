@@ -39,8 +39,11 @@
 //
 // Cards:
 //   GET  /cards/catalog       the deck + landmarks + play area (see cards.js)
-//   POST /cards/pick          (stalker) { cardId, target? } play one card from the live batch
-//                             (target: the building of "which part of <building>?")
+//   POST /cards/pick          (stalker) { batchId, cardId } pick a card from the live batch,
+//                             for the whole team to see; cardId null takes the pick back
+//   POST /cards/send          (stalker) { cardId, target? } send it, once every stalker who
+//                             counts has picked it (target: the building of "which part
+//                             of <building>?")
 //   POST /cards/answer        (hider)   { playId, answer } answer truthfully; sending
 //                             it again for an answered card corrects it
 //   POST /cards/seen          clear this user's bell
@@ -57,6 +60,7 @@ import { BUILDINGS } from "./locations.js";
 import {
     cardIsInBatch,
     liveTeamBatch,
+    picksOn,
     publicBatch,
 } from "./batches.js";
 import {
@@ -586,9 +590,31 @@ const PLAY_COLUMNS = `id, batch_id, card_id, question, asked_by, asked_by_name, 
                       photo IS NOT NULL AS photo_present`;
 
 /**
+ * The stalkers whose pick counts: a question goes out only once all of them
+ * have picked the same card. Those who have had the app open in the last
+ * LOCATION_STALE_MS, so a phone that died or a stalker who wandered off never
+ * holds the others up; the one asking always counts.
+ */
+async function teamVoters(env, teamId, now, userId) {
+    const { results } = await env.DB.prepare(
+        `SELECT id, username, last_seen_at FROM users
+         WHERE group_id = ? AND role = 'stalker' AND is_admin = 0 ORDER BY id`,
+    )
+        .bind(teamId)
+        .all();
+    return results.filter((row) => row.id === userId || isOnline(row, now));
+}
+
+/** "jules", "jules and sam", "jules, sam and alex". */
+function nameList(names) {
+    return names.length < 2 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
+/**
  * The cards half of /state, scoped to the caller's role.
  *  - stalkers: the live batch, how many questions they have in hand (the
- *    ones they let slip pile up), the play made from the live batch (so they
+ *    ones they let slip pile up), who has picked which card and whose pick
+ *    counts (until it is sent), the play made from the live batch (so they
  *    can watch the answer land), what the hider still owes them, and the
  *    answered geometry behind the Hints map filter.
  *  - hiders: the questions they still have to answer, and the ones they have
@@ -638,11 +664,24 @@ async function cardsForUser(env, team, me, now, settings) {
     const current = batchRow?.played_card_id
         ? plays.find((p) => p.batch_id === batchRow.id)
         : null;
+    // Until it is sent: who picked what, and who still has to agree.
+    let picks = [];
+    let voterIds = [];
+    if (batchRow && !batchRow.played_card_id) {
+        const [byUser, voters] = await Promise.all([
+            picksOn(env, batchRow.id),
+            teamVoters(env, team.id, now, me.id),
+        ]);
+        picks = [...byUser].map(([userId, cardId]) => ({ userId, cardId }));
+        voterIds = voters.map((v) => v.id);
+    }
     const seenAt = me.cardsSeenAt ?? 0;
     return {
         role: "stalker",
         batch: batchRow ? publicBatch(batchRow) : null,
         inHand,
+        picks,
+        voterIds,
         currentPlay: current ? publicPlay(current) : null,
         pending,
         historyCount: plays.length,
@@ -674,7 +713,56 @@ async function huntingTeam(env, user, now) {
     return { team, state };
 }
 
+/**
+ * A stalker's pick on the face-up batch, for the whole team to see, or with
+ * cardId null, taken back. Nothing goes out: that is /cards/send, once every
+ * stalker who counts has picked the same card. `batchId` is the batch the
+ * stalker was looking at, so a pick never lands on the next question.
+ */
 async function handleCardPick(request, env, user) {
+    const now = Date.now();
+    if (user.role !== "stalker" || !user.group_id) {
+        return error("Only stalkers can pick cards", 403, request, env);
+    }
+    const { team, state } = await huntingTeam(env, user, now);
+    if (team.paused_at) {
+        return error("The admin has paused your team", 409, request, env);
+    }
+    const body = await readJson(request);
+    const settings = await getSettings(env);
+    const { batch } = await liveTeamBatch(env, team.id, allQuestionsAtOnce(settings) ? MAX_QUESTIONS : state.question, now);
+    if (batch.played_card_id || Number(body?.batchId) !== batch.id) {
+        return error(
+            batch.played_card_id
+                ? "Your team already sent its question — wait for the next one"
+                : "A teammate sent that question — here is the next one",
+            409,
+            request,
+            env,
+        );
+    }
+    const cardId = body?.cardId ?? null;
+    if (cardId === null) {
+        await env.DB.prepare("DELETE FROM card_picks WHERE batch_id = ? AND user_id = ?")
+            .bind(batch.id, user.id)
+            .run();
+        return json({ ok: true }, 200, request, env);
+    }
+    if (!cardIsInBatch(batch, cardId)) return error("Unknown card", 400, request, env);
+    await env.DB.prepare(
+        `INSERT INTO card_picks (batch_id, user_id, card_id, picked_at) VALUES (?, ?, ?, ?)
+         ON CONFLICT (batch_id, user_id) DO UPDATE SET card_id = excluded.card_id, picked_at = excluded.picked_at`,
+    )
+        .bind(batch.id, user.id, cardId, now)
+        .run();
+    return json({ ok: true }, 200, request, env);
+}
+
+/**
+ * Send the card every stalker who counts has picked (teamVoters): any one of
+ * them can, and a "...than me?" question is about whoever does.
+ */
+async function handleCardSend(request, env, user) {
     const now = Date.now();
     if (user.role !== "stalker" || !user.group_id) {
         return error("Only stalkers can play cards", 403, request, env);
@@ -706,6 +794,15 @@ async function handleCardPick(request, env, user) {
             request,
             env,
         );
+    }
+
+    // Every stalker who counts has picked this very card, the sender included.
+    const voters = await teamVoters(env, team.id, now, user.id);
+    const picks = await picksOn(env, batch.id);
+    const holdouts = voters.filter((v) => picks.get(v.id) !== card.id);
+    if (holdouts.length) {
+        const names = holdouts.map((v) => (v.id === user.id ? "you" : v.username));
+        return error(`Every stalker has to pick this card first. Still to pick it: ${nameList(names)}.`, 409, request, env);
     }
 
     // "...than me?" cards are anchored to where the stalker stands right now,
@@ -1015,6 +1112,7 @@ async function handleAdminClear(request, env) {
         env.DB.prepare(
             "DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE is_admin = 0)",
         ),
+        env.DB.prepare("DELETE FROM card_picks"),
         env.DB.prepare("DELETE FROM card_plays"),
         env.DB.prepare("DELETE FROM card_batches"),
         env.DB.prepare("DELETE FROM users WHERE is_admin = 0"),
@@ -1103,6 +1201,8 @@ export default {
                     switch (pathname) {
                         case "/cards/pick":
                             return await handleCardPick(request, env, user);
+                        case "/cards/send":
+                            return await handleCardSend(request, env, user);
                         case "/cards/answer":
                             return await handleCardAnswer(request, env, user);
                         case "/cards/seen":

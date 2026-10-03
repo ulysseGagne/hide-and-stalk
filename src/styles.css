@@ -205,6 +205,11 @@ button:disabled { cursor: default; }
 .card-row { display: grid; grid-template-columns: 1fr; gap: 12px; }
 /* Room above the first card for PICK JUST ONE. */
 .card-row.with-note { margin-top: 34px; }
+/* With teammates, room at the foot of every card for who picked it (marks.js
+   writes the names), whether anyone has yet or not: nothing jumps when they do. */
+.card-row.team .card { padding-bottom: 46px; }
+/* ALL 3: THE SAME ONE is longer than PICK JUST ONE: it gets the line to itself. */
+.card-row.team.with-note { margin-top: 52px; }
 .card {
     position: relative; display: flex; flex-direction: column; gap: 10px; padding: 14px 16px;
     text-align: left; background: var(--paper); color: var(--ink); border: 3px solid var(--ink); border-radius: 0; font: inherit;
@@ -214,6 +219,8 @@ button:disabled { cursor: default; }
 .card-count { font-weight: 700; }
 .card-prompt { font-size: 22px; line-height: 1.2; font-weight: 700; letter-spacing: -.01em; }
 .send-btn { margin-top: 18px; }
+/* Not everyone has picked this card yet: white, and who it waits for, at full strength. */
+.send-btn.waiting:disabled { opacity: 1; }
 /* "Which part of <building>?": the building, picked before Send. */
 .target-picker { margin-top: 22px; }
 /* Under the A to D of "in what part of <building>?": the rule from outside. */

@@ -27,10 +27,13 @@ presses **Start** on their phone.
 1. The hider has **10 minutes** to hide. Everyone on the team sees the same
    countdown.
 2. Then the hunt starts: **a new question every 5 minutes**. The stalkers get
-   three questions face up, pick one and send it; it goes straight to the
-   hider, who answers truthfully. The map's hints layer closes in with every
-   answer. A question the stalkers don't send in time isn't lost: questions
-   pile up, and the next one is face up the moment one is sent.
+   three questions face up, and each of them picks one; everyone on the team
+   sees who picked what. Once every stalker picks the same card, any of them
+   can send it (only stalkers whose app checked in within 2 minutes count, so
+   a dead phone holds nobody up). It goes straight to the hider, who answers
+   truthfully. The map's hints layer closes in with every answer. A question
+   the stalkers don't send in time isn't lost: questions pile up, and the next
+   one is face up the moment one is sent.
 3. The stalkers win by finding the hider (they scan the QR code on the hider's
    screen, or press **Hider has been found**). If question 7 would come first
    (30 minutes of hunting), the hider wins.
@@ -182,7 +185,7 @@ start the worker with `npx wrangler dev --persist-to <dir>` and give the smoke
 test the same folder in `HNS_PERSIST_TO` (it moves the clock through it).
 
 `simulate.mjs` plays whole rounds in real time (debug-mode timers): 36 phones
-syncing like the real client, stalkers racing each other to pick, hiders
+syncing like the real client, stalkers agreeing on a card then racing to send it, hiders
 answering truthfully from where they really are, rounds ending by QR scan, by
 the button, by question 7, with a pause, and with Play again. It checks that no
 team ever sees another, that teammates always get the same cards, that the
@@ -266,7 +269,8 @@ only in force while it is on:
 | Method | Path              | Auth | Body / Result |
 |--------|-------------------|------|---------------|
 | GET    | `/cards/catalog`  | ✓    | → the deck, landmarks and play area |
-| POST   | `/cards/pick`     | stalker | `{cardId, target?}` → `{playId}`; `target` is the building of "which part of …?" |
+| POST   | `/cards/pick`     | stalker | `{batchId, cardId}` → `{ok}`: this stalker's pick, seen by the whole team; `cardId: null` takes it back |
+| POST   | `/cards/send`     | stalker | `{cardId, target?}` → `{playId}`, once every stalker who counts has picked `cardId` (409 naming who hasn't); `target` is the building of "which part of …?" |
 | POST   | `/cards/answer`   | hider | `{playId, answer}` → `{ok, edited}`; sending it again for an answered card corrects it |
 | POST   | `/cards/seen`     | ✓    | clears this user's bell |
 | GET    | `/cards/history`  | ✓    | → `{plays}` for the caller's team |
@@ -274,7 +278,9 @@ only in force while it is on:
 
 The `cards` block of `/state` differs by role: stalkers get the batch face up
 (the oldest question they have not sent), `inHand` (how many they can send
-right now) and the play made from that batch (so they watch the answer land);
+right now), until it is sent `picks` (who picked which card) and `voterIds`
+(the stalkers whose pick counts: those seen in the last 2 minutes), and the
+play made from that batch (so they watch the answer land);
 the hider gets the questions they still owe and the ones they have answered.
 Both get an `unread` count for the bell, and both get `hints` — the answered
 geometry behind the Hints map. A corrected answer rings the stalkers' bell

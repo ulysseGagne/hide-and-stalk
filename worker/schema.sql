@@ -145,6 +145,16 @@ CREATE TABLE IF NOT EXISTS card_plays (
 
 CREATE INDEX IF NOT EXISTS idx_plays_group ON card_plays(group_id, asked_at);
 
+-- Each stalker's pick on a batch. A question goes out only once every stalker
+-- on the team has picked the same card (POST /cards/send).
+CREATE TABLE IF NOT EXISTS card_picks (
+    batch_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    card_id TEXT NOT NULL,
+    picked_at INTEGER NOT NULL,
+    PRIMARY KEY (batch_id, user_id)
+);
+
 -- Permanent admin account (username "admin"). PBKDF2-SHA256, 100k iterations.
 INSERT OR IGNORE INTO users (username, password_hash, salt, created_at, is_admin)
 VALUES (

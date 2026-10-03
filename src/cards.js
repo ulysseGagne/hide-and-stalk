@@ -1,8 +1,8 @@
 /* global HNSHints, HNSMap, HNSMapDraw, HNSMarks, L */
 
-// Card UI: the stalkers' batch of three (pick one, then send it, then watch
-// the answer land, and every answer so far under them), the hider's questions
-// and answers, and the header bell.
+// Card UI: the stalkers' batch of three (every stalker picks the same one,
+// then one of them sends it, then they watch the answer land, and every answer
+// so far under them), the hider's questions and answers, and the header bell.
 //
 // The server owns every rule (what is dealt, who may pick, when the next
 // question comes). This file only draws it and posts the actions back. The
@@ -35,11 +35,21 @@ let cardsState = null; // /state -> cards
 let teamState = null; // /state -> team
 let hiderName = null;
 let sending = false;
-// The card this stalker has picked from the current batch, not sent yet.
-// Picking is this phone's own business: nothing reaches the server (or the
-// teammates) until Send.
+// The card this stalker has picked from the current batch, not sent yet. The
+// whole team sees every pick (/cards/pick), and a question goes out only once
+// every stalker who counts (voterIds) has picked the same card; then any of
+// them can send it.
 let pickedCardId = null;
-let pickedBatchId = null;
+// A tap not yet reflected in /state: it wins over what the server last said,
+// until the server says the same. Taps go out one after the other (pickChain),
+// so the server ends up with the last one.
+let pendingPick = null; // { batchId, cardId, inFlight }
+let pickChain = Promise.resolve();
+// From /state: who picked what on the face-up batch, and whose pick counts.
+let teamPicks = []; // [{ userId, cardId }]
+let voterIds = [];
+let meId = null;
+let usersById = new Map();
 // For a card about a building the stalker names ("which part of <building>?"):
 // the building picked, and what the list was last drawn for.
 let pickedTarget = null;
@@ -212,10 +222,12 @@ function makeCardFace(card, index, count, { disabled }) {
     node.dataset.cardId = card.id;
     node.disabled = disabled;
     node.setAttribute("aria-pressed", "false");
-    // Numbered, so you can tell there are three.
+    // Numbered, so you can tell there are three. Who picked it is written on
+    // it by hand (marks.js); the words are for screen readers.
     node.innerHTML = `
         <span class="card-category"><span>${escapeCardHtml(CATEGORY_LABELS[card.category] ?? card.category)}</span><span class="card-count">${index + 1} OF ${count}</span></span>
-        <span class="card-prompt">${promptHtml(promptOf(card))}</span>`;
+        <span class="card-prompt">${promptHtml(promptOf(card))}</span>
+        <span class="sr-only card-pickers"></span>`;
     return node;
 }
 
@@ -265,18 +277,45 @@ function renderTargets(show) {
     }
 }
 
-/** Show the pick on the cards (marks.js draws its box) and the Send button. */
+const nameOf = (id) => usersById.get(id)?.username ?? "a teammate";
+const listNames = (names) =>
+    names.length < 2 ? (names[0] ?? "") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+/** The card a teammate has picked; this stalker's own is pickedCardId. */
+const pickOf = (userId) => (userId === meId ? pickedCardId : (teamPicks.find((p) => p.userId === userId)?.cardId ?? null));
+/** The teammates whose pick counts and is not this stalker's card (yet). */
+const holdouts = () => voterIds.filter((id) => id !== meId && pickOf(id) !== pickedCardId);
+
+/**
+ * Show the picks on the cards (marks.js draws this stalker's box and writes
+ * everyone's names) and the Send button: black once every stalker who counts
+ * has picked this stalker's card, white with who it waits for until then.
+ */
 function renderPick() {
+    // With teammates, every card says who picked it: YOU first, then the others.
+    const team = voterIds.length > 1;
     for (const node of el.cardRow.querySelectorAll(".card")) {
-        const picked = node.dataset.cardId === pickedCardId;
+        const id = node.dataset.cardId;
+        const picked = id === pickedCardId;
         node.classList.toggle("picked", picked);
         node.setAttribute("aria-pressed", String(picked));
+        const who = team ? voterIds.filter((u) => pickOf(u) === id).sort((a, b) => (b === meId) - (a === meId)) : [];
+        node.dataset.pickers = who.map((u) => (u === meId ? "YOU" : nameOf(u).toUpperCase())).join(" + ");
+        const words = node.querySelector(".card-pickers");
+        if (words) words.textContent = who.length ? `Picked by ${listNames(who.map((u) => (u === meId ? "you" : nameOf(u))))}.` : "";
     }
     const rowShown = !el.cardRow.hidden;
+    el.cardRow.classList.toggle("team", team);
+    el.cardRow.dataset.note = !team ? "PICK JUST ONE" : voterIds.length === 2 ? "BOTH: THE SAME ONE" : `ALL ${voterIds.length}: THE SAME ONE`;
     const needsTarget = rowShown && cardById(pickedCardId)?.target === "building";
-    renderTargets(needsTarget);
-    el.sendBtn.hidden = !(rowShown && pickedCardId && (!needsTarget || pickedTarget));
-    el.sendBtn.disabled = sending || Boolean(teamState?.paused);
+    const waitingFor = rowShown && pickedCardId ? holdouts() : [];
+    const agreed = Boolean(pickedCardId) && waitingFor.length === 0;
+    // The building only matters once everyone agrees on the card that needs it.
+    renderTargets(needsTarget && agreed);
+    el.sendBtn.hidden = !(rowShown && pickedCardId && (!agreed || !needsTarget || pickedTarget));
+    el.sendBtn.classList.toggle("cta", agreed);
+    el.sendBtn.classList.toggle("waiting", !agreed);
+    el.sendBtn.textContent = agreed ? "Send this question" : `Waiting for ${listNames(waitingFor.map(nameOf))}`;
+    el.sendBtn.disabled = !agreed || sending || Boolean(teamState?.paused);
     // Room above the first card for PICK JUST ONE.
     el.cardRow.classList.toggle("with-note", rowShown);
     onRender();
@@ -294,6 +333,9 @@ function renderStalker(cards) {
         renderedBatchKey = null;
         renderedSentKey = null;
         pickedCardId = null;
+        pendingPick = null;
+        teamPicks = [];
+        voterIds = [];
         el.cardNote.textContent = "";
         renderPick();
         return;
@@ -306,10 +348,16 @@ function renderStalker(cards) {
         el.sentCard.hidden = true;
         renderedSentKey = null;
         el.cardRow.hidden = false;
-        if (pickedBatchId !== batch.id) {
-            pickedCardId = null;
-            pickedBatchId = batch.id;
+        teamPicks = cards.picks ?? [];
+        voterIds = cards.voterIds?.length ? cards.voterIds : [meId];
+        // This stalker's own pick: the server's, unless a tap has not reached it yet.
+        const serverPick = teamPicks.find((p) => p.userId === meId)?.cardId ?? null;
+        if (pendingPick && (pendingPick.batchId !== batch.id || (!pendingPick.inFlight && pendingPick.cardId === serverPick))) {
+            pendingPick = null;
         }
+        const before = pickedCardId;
+        pickedCardId = pendingPick ? pendingPick.cardId : serverPick;
+        if (pickedCardId !== before) pickedTarget = null;
         const key = `${batch.id}:${paused}`;
         if (key !== renderedBatchKey) {
             renderedBatchKey = key;
@@ -332,6 +380,9 @@ function renderStalker(cards) {
     // SENT · LOCKED IN until the hider answers; then the answer is written in.
     renderedBatchKey = null;
     pickedCardId = null;
+    pendingPick = null;
+    teamPicks = [];
+    voterIds = [];
     el.cardRow.hidden = true;
     el.cardRow.innerHTML = "";
     el.sentCard.hidden = false;
@@ -1107,7 +1158,7 @@ function checkCue(cards) {
     if (previous === null || key === null || key === previous) return;
     if (cards.role === "stalker" && cards.batch) {
         const [, batchBefore, inHandBefore] = previous.split(":");
-        if (String(cards.batch.id) !== batchBefore) onCue("New question! Pick one.");
+        if (String(cards.batch.id) !== batchBefore) onCue((cards.voterIds?.length ?? 1) > 1 ? "New question! Pick one, all of you." : "New question! Pick one.");
         else if ((cards.inHand ?? 0) > Number(inHandBefore)) onCue(`Another question! You have ${cards.inHand} to send.`);
     } else if (cards.role === "hider") {
         const before = new Set(previous.slice(2).split(",").filter(Boolean));
@@ -1129,14 +1180,13 @@ window.HNSCards = {
         goToView = options.showView ?? (() => {});
         cacheElements();
         el.bell.addEventListener("click", bellClicked);
-        // A tap picks (or, on the picked card, un-picks); nothing is sent yet.
+        // A tap picks (or, on the picked card, un-picks), for the whole team
+        // to see; nothing is sent yet.
         el.cardRow.addEventListener("click", (e) => {
             const node = e.target.closest?.(".card[data-card-id]");
-            if (!node || node.disabled) return;
-            pickedCardId = pickedCardId === node.dataset.cardId ? null : node.dataset.cardId;
-            pickedTarget = null;
-            el.cardError.textContent = "";
-            renderPick();
+            const batch = cardsState?.batch;
+            if (!node || node.disabled || !batch || batch.playedCardId) return;
+            pickCard(batch.id, pickedCardId === node.dataset.cardId ? null : node.dataset.cardId);
         });
         el.sendBtn.addEventListener("click", sendPicked);
         HNSHints.onStatus(renderHintStatus);
@@ -1147,6 +1197,8 @@ window.HNSCards = {
         const cards = state?.cards ?? null;
         cardsState = cards;
         teamState = state?.team ?? null;
+        meId = state?.me?.id ?? null;
+        usersById = new Map((state?.users ?? []).map((u) => [u.id, u]));
         hiderName = state?.users?.find((u) => u.role === "hider")?.username ?? null;
         // Nothing to show a stalker until the hunt starts.
         el.stalkerCards.hidden = !(cards?.role === "stalker" && teamState?.phase === "hunting");
@@ -1221,7 +1273,9 @@ window.HNSCards = {
         renderedAnswersKey = null;
         editingPlayId = null;
         pickedCardId = null;
-        pickedBatchId = null;
+        pendingPick = null;
+        teamPicks = [];
+        voterIds = [];
         cueKey = null;
         historyKey = null;
         historyPlays = [];
@@ -1239,7 +1293,32 @@ window.HNSCards = {
     },
 };
 
-/** Send the picked card: the one action that reaches the server. */
+/**
+ * Pick a card (or, with null, take the pick back) for the whole team to see.
+ * Shown at once; the server hears every tap in order.
+ */
+function pickCard(batchId, cardId) {
+    pendingPick = { batchId, cardId, inFlight: true };
+    pickedCardId = cardId;
+    pickedTarget = null;
+    el.cardError.textContent = "";
+    renderPick();
+    const mine = pendingPick;
+    pickChain = pickChain
+        .then(() => cardsApi("/cards/pick", { method: "POST", body: { batchId, cardId } }))
+        .then(
+            () => {
+                mine.inFlight = false;
+            },
+            (err) => {
+                if (pendingPick === mine) pendingPick = null;
+                el.cardError.textContent = err.status === undefined ? "Could not reach the server" : err.message;
+            },
+        )
+        .finally(() => onChanged());
+}
+
+/** Send the card everyone picked: any stalker can, and "...than me?" is about them. */
 async function sendPicked() {
     const cardId = pickedCardId;
     if (sending || !cardId) return;
@@ -1248,8 +1327,10 @@ async function sendPicked() {
     el.sendBtn.disabled = true;
     for (const node of el.cardRow.querySelectorAll(".card")) node.disabled = true;
     try {
+        // Every tap has reached the server first.
+        await pickChain;
         const target = cardById(cardId)?.target === "building" ? pickedTarget : undefined;
-        await cardsApi("/cards/pick", { method: "POST", body: { cardId, target } });
+        await cardsApi("/cards/send", { method: "POST", body: { cardId, target } });
     } catch (err) {
         el.cardError.textContent =
             err.status === undefined ? "Could not reach the server" : err.message;

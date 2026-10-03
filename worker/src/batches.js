@@ -1,9 +1,10 @@
 // Card batches: three cards per question, one question every interval.
 //
 // The team clock (teams.js) says how many questions have arrived; this file
-// deals them. A batch belongs to the team, not to one stalker: the first
-// stalker to pick burns it for everyone, so the hider answers one question per
-// interval no matter how many stalkers are hunting them.
+// deals them. A batch belongs to the team, not to one stalker: every stalker
+// picks a card, and the question goes out once they have all picked the same
+// one (index.js, /cards/send), so the hider answers one question per interval
+// no matter how many stalkers are hunting them.
 //
 // A question the stalkers let slip is not lost: it stays in hand, and the
 // questions pile up until they are sent. The oldest one in hand is the one
@@ -137,7 +138,15 @@ export function publicBatch(batch) {
     };
 }
 
-/** Guard for /cards/pick: the card must be face up in the team's live batch, still unsent. */
+/** Each stalker's pick on a batch: user id -> card id. */
+export async function picksOn(env, batchId) {
+    const { results } = await env.DB.prepare("SELECT user_id, card_id FROM card_picks WHERE batch_id = ?")
+        .bind(batchId)
+        .all();
+    return new Map(results.map((r) => [r.user_id, r.card_id]));
+}
+
+/** Guard for /cards/pick and /cards/send: the card must be face up in the team's live batch, still unsent. */
 export function cardIsInBatch(batch, cardId) {
     if (!batch || batch.played_card_id) return false;
     if (!CARDS_BY_ID.has(cardId)) return false;

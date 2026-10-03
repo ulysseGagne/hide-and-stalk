@@ -6,15 +6,17 @@
 //
 // Every simulated phone behaves like the real client: it syncs every 5 s
 // (POST /state with its position), asks again the moment a timer runs out,
-// stalkers race each other to pick a card, the hider answers truthfully from
+// stalkers each pick a card, agree on one and race to send it, the hider
+// answers truthfully from
 // where it really is, and rounds end every way they can: a QR scan, the
 // "Hider has been found" button, question 7, a paused team, Play again.
 // Debug mode is switched on so a round takes 7 minutes instead of 40.
 //
 // Alongside, it checks what must always hold:
 //   - nobody ever sees another team, or the hider's position mid-round;
-//   - teammates always see the same three cards, one pick per question, no
-//     card offered twice in a round, openers first;
+//   - teammates always see the same three cards, nothing goes out before every
+//     stalker picked it, one send per question, no card offered twice in a
+//     round, openers first;
 //   - the Hints map (the real src/hints.js, run here) always still contains the
 //     hider, and the hider's shortened answer lists always offer the true one;
 //   - every round ends with the right winner and the right time.
@@ -450,21 +452,34 @@ async function act(p, s) {
         } else {
             check("teammates see the same batch", known === batch.id, `team ${team.id} q${batch.question}: ${known} vs ${batch.id}`);
         }
-        // Everyone on the team goes for a card at once: exactly one may win.
+        // Everyone on the team picks at once, each their own card at first:
+        // nothing may go out until they agree. Then they all pick the same one
+        // and all press Send: exactly one send may win.
         if (!batch.playedCardId && !t.paused && !team.racing?.has(batch.id)) {
             team.racing ??= new Set();
             team.racing.add(batch.id);
             await sleep(rand(2000, 8000));
+            const pickAs = (st, cardId) =>
+                call("/cards/pick", { method: "POST", token: st.token, body: { batchId: batch.id, cardId } });
+            await Promise.all(team.stalkers.map((st, i) => pickAs(st, batch.cardIds[i % 3])));
+            if (team.stalkers.length > 1) {
+                const early = await call("/cards/send", {
+                    method: "POST",
+                    token: team.stalkers[0].token,
+                    body: { cardId: batch.cardIds[0], target: randomBuilding() },
+                });
+                check("nothing goes out before every stalker picked it", early.status === 409, `team ${team.id} q${batch.question}: ${early.status}`);
+            }
             // A "which X are you closest to?" card, when there is one, is what
-            // everyone goes for (it is the one whose shortened list gets
-            // checked); otherwise they each grab a different card.
-            const wanted = batch.cardIds.find((id) => cardOf.get(id).answer.type === "choice");
+            // they agree on (it is the one whose shortened list gets checked).
+            const wanted = batch.cardIds.find((id) => cardOf.get(id).answer.type === "choice") ?? batch.cardIds[0];
+            await Promise.all(team.stalkers.map((st) => pickAs(st, wanted)));
             const results = await Promise.all(
-                team.stalkers.map((st, i) =>
-                    call("/cards/pick", {
+                team.stalkers.map((st) =>
+                    call("/cards/send", {
                         method: "POST",
                         token: st.token,
-                        body: { cardId: wanted ?? batch.cardIds[i % 3], target: randomBuilding() },
+                        body: { cardId: wanted, target: randomBuilding() },
                     }),
                 ),
             );
@@ -474,7 +489,7 @@ async function act(p, s) {
                 team.racing.delete(batch.id);
                 count("picks refused while paused");
             } else {
-                check("exactly one pick per question, however many race", won === 1, `team ${team.id} q${batch.question}: ${won} won, statuses ${results.map((x) => x.status).join(",")}`);
+                check("exactly one send per question, however many race", won === 1, `team ${team.id} q${batch.question}: ${won} won, statuses ${results.map((x) => x.status).join(",")}`);
                 count("picks raced");
             }
         }
@@ -552,7 +567,7 @@ async function pauseTest(team) {
     const picked = await call("/cards/pick", {
         method: "POST",
         token: team.stalkers[0].token,
-        body: { cardId: "ns" },
+        body: { batchId: 0, cardId: "ns" },
     });
     check("nobody can pick while paused", picked.status === 409);
     team.pausedFor = 8000;

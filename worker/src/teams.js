@@ -199,6 +199,7 @@ export async function loadTeams(env, now) {
 // A team's own buttons: Start and Play again
 // ---------------------------------------------------------------------------
 const clearTeamCards = (env, teamId) => [
+    env.DB.prepare("DELETE FROM card_picks WHERE batch_id IN (SELECT id FROM card_batches WHERE group_id = ?)").bind(teamId),
     env.DB.prepare("DELETE FROM card_plays WHERE group_id = ?").bind(teamId),
     env.DB.prepare("DELETE FROM card_batches WHERE group_id = ?").bind(teamId),
 ];
@@ -517,6 +518,7 @@ export async function disbandTeams(env) {
         env.DB.prepare(
             "UPDATE users SET group_id = NULL, role = CASE WHEN role = 'left' THEN 'left' END, cards_seen_at = 0",
         ),
+        env.DB.prepare("DELETE FROM card_picks"),
         env.DB.prepare("DELETE FROM card_plays"),
         env.DB.prepare("DELETE FROM card_batches"),
         env.DB.prepare("DELETE FROM teams"),

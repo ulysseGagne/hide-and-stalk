@@ -216,15 +216,37 @@
             if (cards.length) {
                 // Between the rule and the first card (UNTIL QUESTION stays
                 // readable), curling up. It stays once a card is picked, as in
-                // the post (image 2).
+                // the post (image 2). With teammates: ALL 3: THE SAME ONE.
                 const first = box(cards[0]);
-                specs.push({ t: "write", text: "PICK JUST ONE", x: first.x + 96, y: first.y - 10, o: { size: 32, weight: 5.6, spacing: 0.3, seed: "pick1", tilt: -5, maxWidth: first.w - 98, importance: "key" } });
+                const text = $("#card-row").dataset.note || "PICK JUST ONE";
+                if (text === "PICK JUST ONE") {
+                    specs.push({ t: "write", text, x: first.x + 96, y: first.y - 10, o: { size: 32, weight: 5.6, spacing: 0.3, seed: "pick1", tilt: -5, maxWidth: first.w - 98, importance: "key" } });
+                } else {
+                    // Longer, and over a taller gap (styles.css): flatter, so it stays under the line.
+                    specs.push({ t: "write", text, x: first.x + 40, y: first.y - 12, o: { size: 26, weight: 26 * 0.18, spacing: 0.3, seed: "pick1", tilt: -2, maxWidth: first.w - 48, importance: "key" } });
+                }
+            }
+            // Who picked each card, signed at its foot (cards.js keeps the
+            // room): YOU + NOAH. Shrunk to fit a long list.
+            for (const c of cards) {
+                const who = c.dataset.pickers;
+                if (!who) continue;
+                const b = box(c);
+                const room = b.w - 36;
+                const o = { size: 21, weight: 21 * 0.2, seed: `who${who}`, tilt: -2, importance: "key" };
+                const w = Ink.write(who, { x: 0, y: 0, ...o }).width;
+                if (w > room) {
+                    o.size = Math.max(13, Math.floor((o.size * room) / w));
+                    o.weight = o.size * 0.2;
+                }
+                specs.push({ t: "write", text: who, x: b.x + 16, y: b.y + b.h - 15, o: { ...o, maxWidth: room } });
             }
             if (picked) {
                 const c = box(picked);
                 specs.push({ t: "box", x: c.x - 4, y: c.y - 4, w: c.w + 8, h: c.h + 8, seed: "pick", weight: 5.5, jitter: 4 });
+                // Only once everyone agrees: until then Send is white and says who it waits for.
                 const send = $("#send-btn");
-                if (visible(send)) {
+                if (visible(send) && send.classList.contains("cta")) {
                     const b = box(send);
                     specs.push({ t: "note", text: "NOT SENT YET", x: b.x + b.w - 250, y: b.y + b.h + 44, o: { size: 34, maxWidth: 270, tilt: -5, importance: "key", weight: 6.5 } });
                 }
