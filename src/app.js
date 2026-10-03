@@ -509,6 +509,7 @@ const statusTimer = document.getElementById("status-timer");
 const statusText = document.getElementById("status-text");
 const teamStartBtn = document.getElementById("team-start-btn");
 const teamAgainBtn = document.getElementById("team-again-btn");
+const teamLeaveBtn = document.getElementById("team-leave-btn");
 const teamError = document.getElementById("team-error");
 const discordBtn = document.getElementById("discord-btn");
 const rulesCard = document.getElementById("rules-card");
@@ -564,6 +565,7 @@ function statusView(team, me, users) {
         text: "",
         start: false,
         again: false,
+        leave: false,
         ending: null,
     };
 
@@ -642,6 +644,7 @@ function statusView(team, me, users) {
         // those who have hidden least, at random.
         text: `${text} Play again to pick a new hider.`,
         again: true,
+        leave: true,
         // The winners' line, by hand: GOTCHA for the stalkers who found the
         // hider, HOW ABOUT THAT. for the hider nobody found.
         ending: stalkersWon && !isHider ? "gotcha" : !stalkersWon && isHider ? "howabout" : null,
@@ -678,6 +681,7 @@ function renderHome() {
     statusText.hidden = !view.text;
     teamStartBtn.hidden = !view.start;
     teamAgainBtn.hidden = !view.again;
+    teamLeaveBtn.hidden = !view.leave;
 
     const phase = team?.phase ?? "none";
     hiderPanel.hidden = !(team && me.role === "hider" && (phase === "hiding" || phase === "hunting"));
@@ -727,6 +731,24 @@ teamStartBtn.addEventListener("click", async () => {
     } finally {
         teamStartBtn.disabled = false;
     }
+});
+
+// Leaving between rounds: off the team on the server, then logged out here.
+teamLeaveBtn.addEventListener("click", async () => {
+    if (!confirm("Leave the game? You'll be taken off your team and logged out. Your rounds stay in the results.")) {
+        return;
+    }
+    teamError.textContent = "";
+    teamLeaveBtn.disabled = true;
+    try {
+        await api("/team/leave", { method: "POST" });
+    } catch (err) {
+        teamError.textContent = errorText(err);
+        return;
+    } finally {
+        teamLeaveBtn.disabled = false;
+    }
+    logoutBtn.click();
 });
 
 teamAgainBtn.addEventListener("click", async () => {

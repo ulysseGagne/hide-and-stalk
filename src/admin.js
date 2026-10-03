@@ -272,7 +272,8 @@
         fresh.classList.add("new-group");
         el.board.appendChild(fresh);
 
-        const unassigned = players.filter((u) => !u.groupId);
+        // Those who left the game are gone until they log in again.
+        const unassigned = players.filter((u) => !u.groupId && u.role !== "left");
         const pool = boardColumn({
             key: "none",
             title: `Not in a team (${unassigned.length})`,
@@ -485,12 +486,14 @@
     }
 
     function renderSummary() {
-        const players = state.users.filter((u) => !u.isAdmin);
+        const players = state.users.filter((u) => !u.isAdmin && u.role !== "left");
+        const left = state.users.filter((u) => u.role === "left").length;
         const playing = state.teams.filter((t) => t.status === "playing").length;
         const parts = [
             `${players.length} player${players.length === 1 ? "" : "s"}`,
             `${state.teams.length} team${state.teams.length === 1 ? "" : "s"} (${playing} playing)`,
         ];
+        if (left) parts.push(`${left} left the game`);
         if (state.settings?.debug) parts.push("DEBUG MODE ON");
         el.summary.textContent = parts.join(" · ");
         el.summary.dataset.debug = state.settings?.debug ? "on" : "off";

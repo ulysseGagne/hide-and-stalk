@@ -138,6 +138,11 @@
                             <button type="button" id="team-again-btn" class="big-btn cta" hidden>
                                 Play again
                             </button>
+                            <!-- After a round: off the team (so Play again
+                                 can't pick you to hide), then logged out. -->
+                            <button type="button" id="team-leave-btn" class="big-btn" hidden>
+                                Leave the game
+                            </button>
                             <p id="team-error" class="auth-error" role="alert"></p>
                             <!-- The round, as a till receipt (receipt.js). -->
                             <div id="receipt" class="receipt" hidden></div>

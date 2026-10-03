@@ -336,8 +336,9 @@ export async function makeTeams(env, now, size = TARGET_TEAM_SIZE) {
             400,
         );
     }
+    // Not those who left the game (leaveTeam): they are back once they log in.
     const { results } = await env.DB.prepare(
-        "SELECT id FROM users WHERE is_admin = 0 AND group_id IS NULL",
+        "SELECT id FROM users WHERE is_admin = 0 AND group_id IS NULL AND role IS NOT 'left'",
     ).all();
     const ids = shuffle(results.map((r) => r.id));
     if (ids.length < MIN_TEAM_SIZE) {
@@ -418,11 +419,18 @@ export async function assignPlayer(env, now, { userId, teamId, role }) {
     );
     await env.DB.batch(statements);
 
-    // Every team keeps exactly one hider: the one they joined (a first player
-    // dropped on a brand-new team's stalker slot is still its only player) and
-    // the one they left. A team left with nobody on it goes away.
-    const touched = new Set([destination, target.group_id].filter((id) => id !== null));
-    for (const id of touched) {
+    // The one they joined (a first player dropped on a brand-new team's
+    // stalker slot is still its only player) and the one they left.
+    await keepTeamsWhole(env, new Set([destination, target.group_id].filter((id) => id !== null)));
+}
+
+/**
+ * Every team keeps exactly one hider: a team that lost its hider hands the
+ * role to whoever has been on it longest. A team left with nobody on it goes
+ * away.
+ */
+async function keepTeamsWhole(env, teamIds) {
+    for (const id of teamIds) {
         const members = await teamMembers(env, id);
         if (!members.length) {
             await env.DB.batch([
@@ -435,6 +443,29 @@ export async function assignPlayer(env, now, { userId, teamId, role }) {
                 .run();
         }
     }
+}
+
+/**
+ * A player leaves the game, between rounds (never mid-round): off their team,
+ * so Play again can't pick them to hide, and marked 'left' so Make teams
+ * doesn't put them back. Logging in again clears the mark.
+ */
+export async function leaveTeam(env, userId) {
+    const me = await env.DB.prepare("SELECT id, group_id FROM users WHERE id = ? AND is_admin = 0")
+        .bind(userId)
+        .first();
+    if (!me) throw httpError("Admins do not play", 400);
+    // One statement, so a teammate pressing Start at the same moment can't
+    // slip a round in between the check and the move.
+    const res = await env.DB.prepare(
+        `UPDATE users SET group_id = NULL, role = 'left'
+         WHERE id = ? AND (group_id IS NULL
+             OR group_id NOT IN (SELECT id FROM teams WHERE status = 'playing'))`,
+    )
+        .bind(userId)
+        .run();
+    if (!res.meta.changes) throw httpError("Your round is still going: leave once it's over", 409);
+    if (me.group_id !== null) await keepTeamsWhole(env, [me.group_id]);
 }
 
 /** The admin's own buttons on one team. */
@@ -482,7 +513,10 @@ export async function adminTeamAction(env, teamId, action, now, options = {}) {
 /** Everyone back to unassigned. Finished rounds stay, so the results survive. */
 export async function disbandTeams(env) {
     await env.DB.batch([
-        env.DB.prepare("UPDATE users SET group_id = NULL, role = NULL, cards_seen_at = 0"),
+        // Whoever left the game stays out of the next Make teams.
+        env.DB.prepare(
+            "UPDATE users SET group_id = NULL, role = CASE WHEN role = 'left' THEN 'left' END, cards_seen_at = 0",
+        ),
         env.DB.prepare("DELETE FROM card_plays"),
         env.DB.prepare("DELETE FROM card_batches"),
         env.DB.prepare("DELETE FROM teams"),

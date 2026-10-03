@@ -6,8 +6,8 @@
 // own, the hiding countdown, one question per interval with no repeats,
 // unsent questions piling up and going out back to back, the locked-in pick,
 // answering and correcting an answer, catching the hider, question 7 handing
-// the win to the hider, Play again rotating the hider, pausing, the settings,
-// and that nothing leaks between teams.
+// the win to the hider, Play again rotating the hider, leaving the game
+// between rounds, pausing, the settings, and that nothing leaks between teams.
 //
 // Time is moved by editing the local database (the team clock only stores
 // when it started), so the whole run takes seconds, not 40 minutes.
@@ -408,6 +408,32 @@ check(
 );
 
 // ---------------------------------------------------------------------------
+console.log("\nLeave");
+a = await call("/state", { token: at });
+const leaver = stalkersOf(teamA)[0];
+await call("/team/start", { method: "POST", token: tok(hiderOf(teamA)) });
+r = await call("/team/leave", { method: "POST", token: tok(leaver) });
+check("no leaving mid-round", r.status === 409, r.json.error);
+await adminPost("/admin/team", { teamId: teamA, action: "reset" });
+r = await call("/team/leave", { method: "POST", token: tok(leaver) });
+check("a stalker leaves between rounds", r.status === 200, JSON.stringify(r.json));
+s = await call("/state", { token: tok(leaver) });
+check("the leaver is off the team", s.json.team === null && s.json.me.groupId === null);
+a = await call("/state", { token: at });
+check("their team still has its hider", hiderOf(teamA)?.id !== leaver.id && membersOf(teamA).filter((u) => u.role === "hider").length === 1);
+const quitter = hiderOf(teamA);
+r = await call("/team/leave", { method: "POST", token: tok(quitter) });
+a = await call("/state", { token: at });
+check("the hider leaves: someone else hides", r.status === 200 && membersOf(teamA).filter((u) => u.role === "hider").length === 1 && hiderOf(teamA).id !== quitter.id);
+await adminPost("/admin/make-teams", { size: 2 });
+a = await call("/state", { token: at });
+check("make-teams leaves those who left alone", [leaver, quitter].every((u) => a.json.users.find((x) => x.id === u.id).groupId === null));
+r = await call("/login", { method: "POST", body: { username: leaver.username, password: "pw123456" } });
+tokens[leaver.username] = r.json.token;
+check("logging back in: waiting for a team again", r.status === 200 && r.json.user.role === null && r.json.user.groupId === null);
+a = await call("/state", { token: at });
+
+// ---------------------------------------------------------------------------
 console.log("\nAdmin");
 r = await adminPost("/admin/team", { teamId: teamB, action: "reset" });
 check("reset puts a team back to ready", r.status === 200 && r.json.team.phase === "ready");
@@ -437,6 +463,14 @@ r = await adminPost("/admin/disband");
 a = await call("/state", { token: at });
 check("disband: nobody is in a team", a.json.teams.length === 0 && a.json.users.every((u) => u.groupId === null));
 check("disband keeps the results", a.json.results.length === 2);
+check("disband keeps whoever left out of the next teams", a.json.users.find((u) => u.id === quitter.id).role === "left");
+r = await adminPost("/admin/make-teams", { size: 3 });
+a = await call("/state", { token: at });
+check(
+    "make-teams again: everyone but the one who left",
+    r.status === 200 && a.json.users.find((u) => u.id === quitter.id).groupId === null && a.json.users.filter((u) => !u.isAdmin && u.id !== quitter.id).every((u) => u.groupId !== null),
+    JSON.stringify(r.json),
+);
 await adminPost("/admin/settings", { discordUrl: "", todosDone: [] });
 await adminPost("/admin/clear");
 a = await call("/state", { token: at });

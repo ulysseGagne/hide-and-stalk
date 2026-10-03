@@ -38,6 +38,9 @@ presses **Start** on their phone.
    random among the players who have hidden the fewest rounds so far (never
    the one who just hid), so everyone hides equally often.
    Every finished round goes into the results; the longest hide wins.
+5. **Leave the game**, on the same screen, takes a player off their team (so
+   Play again can't pick them to hide) and logs them out. Make teams leaves
+   them out until they log in again. Mid-round it is refused.
 
 The rules the players see before the game, most important first: hide in
 plain sight (on campus, within 20 m of a path, where people on it could see
@@ -207,6 +210,7 @@ limits).
 | POST   | `/location`   | ✓    | the position alone (older clients) |
 | POST   | `/team/start` | team | start the round: hiding countdown, then the hunt |
 | POST   | `/team/again` | team | after a round: back to ready, a new hider (whoever hid least, at random) |
+| POST   | `/team/leave` | ✓    | between rounds: off the team, marked as left (Make teams skips them until their next login); 409 mid-round |
 | POST   | `/catch`      | stalker | `{code}` from the hider's QR → `{caught, team}` |
 | POST   | `/found`      | stalker | no body — ends the own team's round without a scan |
 
@@ -235,8 +239,10 @@ Admin-only routes (all `POST`):
 | `/admin/settings`   | `{debug?, debugNoHide?, debugAllQuestions?, debugFakeLocation?, discordUrl?, todosDone?}` | debug mode and its options, the Discord invite, the to-do ticks |
 
 Every team keeps exactly one hider: making someone the hider turns the old one
-into a stalker, and taking a team's hider away hands the role to whoever has
-been on it longest. A team left empty is deleted.
+into a stalker, and taking a team's hider away (or the hider leaving the game)
+hands the role to whoever has been on it longest. A team left empty is
+deleted. Players who left the game are off the board's "Not in a team" list
+and counted in the summary instead.
 
 **Debug mode** (admin switch): teams that start while it is on get a 1-minute
 hide and a question every minute (a whole round in 7 minutes), and every

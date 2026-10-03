@@ -24,6 +24,7 @@
 // Team (any member of the team):
 //   POST /team/start          start the round: hiding countdown, then the hunt
 //   POST /team/again          after a round: back to ready, a new hider (whoever hid least, at random)
+//   POST /team/leave          between rounds: off the team, and out of Make teams until the next login
 //   POST /catch               (stalker) { code } from the hider's QR -> { caught }
 //   POST /found               (stalker) end the hunt without a scan
 //
@@ -63,6 +64,7 @@ import {
     assignPlayer,
     disbandTeams,
     endRound,
+    leaveTeam,
     loadTeam,
     loadTeams,
     makeTeams,
@@ -305,6 +307,13 @@ async function handleLogin(request, env) {
     const hash = await deriveKey(body.password, row.salt);
     if (!timingSafeEqual(hash, row.password_hash)) {
         return error("Invalid username or password", 401, request, env);
+    }
+    // Back after leaving the game: waiting for a team again, like anyone new.
+    if (row.role === "left") {
+        await env.DB.prepare("UPDATE users SET role = NULL WHERE id = ? AND role = 'left'")
+            .bind(row.id)
+            .run();
+        row.role = null;
     }
     const token = await createSession(env, row.id);
     return json({ token, user: publicUser(row) }, 200, request, env);
@@ -861,6 +870,12 @@ async function handleTeamAgain(request, env, user) {
     return json({ team: publicTeam(team, now) }, 200, request, env);
 }
 
+/** Leave the game between rounds (the client logs out right after). */
+async function handleTeamLeave(request, env, user) {
+    await leaveTeam(env, user.id);
+    return json({ ok: true }, 200, request, env);
+}
+
 /**
  * The hider's team has found them: end the round for the stalkers. Shared by
  * the QR scan and the "Hider has been found" button.
@@ -1062,6 +1077,9 @@ export default {
             }
             if (method === "POST" && pathname === "/team/again") {
                 return await handleTeamAgain(request, env, user);
+            }
+            if (method === "POST" && pathname === "/team/leave") {
+                return await handleTeamLeave(request, env, user);
             }
             if (method === "POST" && pathname === "/catch") {
                 return await handleCatch(request, env, user);
