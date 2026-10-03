@@ -28,6 +28,9 @@ LAYOUT
   ulaval-version/     OUR game. Bare-bones, one campus, on foot, questions only,
                       paced by a website. This is what we are actually building.
                         concept.txt -- the current target design.
+                        rules.md -- the official rules (Oct 3): the eight
+                          the app shows, their fine print, the organizers'
+                          rulings, and why each rule exists.
 
   brainstorming/      Raw idea seeds (ideas.txt) + Google Maps screenshots that
                       prove the "answerable with only Maps" primitives work.
