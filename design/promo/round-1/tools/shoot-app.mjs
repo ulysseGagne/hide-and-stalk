@@ -23,8 +23,9 @@ const ALL = { ...SCREENS, ...MAP_SCREENS };
 const only = process.argv[3] && process.argv[3] !== "all" ? process.argv[3].split(",") : Object.keys(ALL);
 const ORDER = ["login", "loginfilled", "permask", "permasking", "permhalf", "permdone", "permblocked", "lobby", "rules1", "rules5", "rulesdone", "ready", "hiding", "cards", "selected", "waiting", "sent", "photo", "question", "choice", "tagcode", "history", "found", "win", "cardspick"];
 // Round 2's real app: the home screen first, the map screens last.
-// The how-to-play page's walkthrough: question 1, dealt, picked, at the hider.
-const DEMO = ["demo-cards", "demo-picked", "demo-question"];
+// The how-to-play page's walkthrough: question 1, dealt, picked (one stalker
+// still on another card), agreed, at the hider.
+const DEMO = ["demo-cards", "demo-picked", "demo-agreed", "demo-question"];
 const REAL_ORDER = ["home", ...ORDER, ...DEMO, ...Object.keys(MAP_SCREENS)];
 
 // A stand-in for the hider's photo, for the mock-up only: a sculpture on
@@ -114,6 +115,16 @@ const REAL_STEPS = {
     },
 };
 
+// The how-to-play page's tap targets (src/how-to-play/, .hot): where each
+// demo screen's button is, printed in percent of the shot after it is taken.
+const HOTSPOTS = {
+    ready: "#team-start-btn",
+    "demo-cards": "#card-row .card:nth-child(1)",
+    "demo-agreed": "#send-btn",
+    "demo-question": "#hider-question-list .question-card button[type=submit]",
+    tagcode: "#hider-qr-figure",
+};
+
 async function shootReal(name) {
     const screen = ALL[name];
     const isPerm = name.startsWith("perm");
@@ -172,11 +183,12 @@ async function shootReal(name) {
     if (isMap) await screen.setup(page);
     await page.waitForTimeout(400);
     if (screen.scrollTo) {
-        await page.evaluate((sel) => {
+        // `scrollPad`: how far under the tabs it lands (120 px unless the screen says).
+        await page.evaluate(({ sel, pad }) => {
             const el = document.querySelector(sel);
             const menu = document.getElementById("view-menu");
-            menu.scrollTop = el.getBoundingClientRect().top - menu.getBoundingClientRect().top + menu.scrollTop - 120;
-        }, screen.scrollTo);
+            menu.scrollTop = el.getBoundingClientRect().top - menu.getBoundingClientRect().top + menu.scrollTop - pad;
+        }, { sel: screen.scrollTo, pad: screen.scrollPad ?? 120 });
     }
     // The receipt's map is drawn once its data has loaded.
     if (name === "found" || name === "win") await page.evaluate(() => window.HNSReceipt.ready()).catch(() => {});
@@ -185,6 +197,14 @@ async function shootReal(name) {
     const out = path.join(REAL_OUT, `R-${name}.png`);
     await page.screenshot({ path: out });
     console.log("wrote", path.relative(ROUND, out));
+    if (HOTSPOTS[name]) {
+        const at = await page.evaluate((sel) => {
+            const r = document.querySelector(sel)?.getBoundingClientRect();
+            const pct = (v, of) => Math.round((v / of) * 1000) / 10;
+            return r && { x: pct(r.left, innerWidth), y: pct(r.top, innerHeight), w: pct(r.width, innerWidth), h: pct(r.height, innerHeight) };
+        }, HOTSPOTS[name]);
+        console.log(`  hotspot ${name}: --x: ${at?.x}; --y: ${at?.y}; --w: ${at?.w}; --h: ${at?.h}`);
+    }
     // The receipt runs past the fold: a second shot, scrolled to its end.
     if (name === "found" || name === "win") {
         await page.evaluate(() => {

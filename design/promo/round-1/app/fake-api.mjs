@@ -365,19 +365,42 @@ export const SCREENS = {
 // For the how-to-play page's walkthrough (src/how-to-play/): question 1 from
 // the start, on a clock that agrees with itself. The screens above share one
 // NOW late in the round, so their question 1 was "asked 16m ago".
+// Three stalkers have a say (jules, noah, camille: theo is away), so every
+// question waits until all three have picked the same card.
 const q1Batch = (ago) => ({ id: 201, question: 1, cardIds: ROUND[0].cardIds, dealtAt: NOW - ago, playedCardId: null, playedBy: null, playedAt: null });
-const q1Cards = (ago) => ({
+const q1Cards = (ago, picks = []) => ({
     serverNow: NOW,
     settings,
     me: me("jules"),
     team: team("hunting", { question: 1, nextQuestionInMs: 5 * MIN - ago, huntMs: ago }),
     users: users("jules"),
-    cards: { role: "stalker", batch: q1Batch(ago), currentPlay: null, pending: [], historyCount: 0, unread: 0, hints: [] },
+    cards: { role: "stalker", batch: q1Batch(ago), picks, voterIds: [12, 13, 14], currentPlay: null, pending: [], historyCount: 0, unread: 0, hints: [] },
 });
 // Dealt: three cards, nothing picked.
 SCREENS["demo-cards"] = { position: POS.jules, state: q1Cards(29_000) };
-// The first card picked (tools/shoot-app.mjs taps it): Send in black.
-SCREENS["demo-picked"] = { position: POS.jules, scrollTo: "#card-row .card:nth-child(1)", state: q1Cards(36_000) };
+// The first card picked (tools/shoot-app.mjs taps it), as noah did; camille
+// went for the 500 m one: Send waits for camille.
+SCREENS["demo-picked"] = {
+    position: POS.jules,
+    // Far enough that the timer's digits are all under the tabs.
+    scrollTo: "#card-row .card:nth-child(1)",
+    scrollPad: 100,
+    state: q1Cards(36_000, [
+        { userId: 13, cardId: "ns" },
+        { userId: 14, cardId: "radius_500" },
+    ]),
+};
+// Talked over in the call: all three on north or south. Send in black.
+SCREENS["demo-agreed"] = {
+    position: POS.jules,
+    scrollTo: "#card-row .card:nth-child(1)",
+    scrollPad: 100,
+    state: q1Cards(52_000, [
+        { userId: 12, cardId: "ns" },
+        { userId: 13, cardId: "ns" },
+        { userId: 14, cardId: "ns" },
+    ]),
+};
 // The hider, a few seconds later: north or south, North ticked, not sent yet.
 SCREENS["demo-question"] = {
     position: HIDER,
@@ -508,6 +531,24 @@ export const MAP_SCREENS = {
     "N10.2": { you: LAB["N10.2"].you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB["N10.2"].you }, ...stalkersAt(LAB["N10.2"].pins)], question: 4, clock: 48_000, answered: greenhouseHints(3), pending: [waiting(4, "closer_greenhouses", "noah", POS.noah)] }), setup: mapSetup(LAB["N10.2"]) },
     // S66: east or west of camille.
     N12: { you: LAB.N12.you, state: mapState({ users: [{ name: "maelle", role: "hider", at: LAB.N12.you }, { name: "jules", role: "stalker", at: POS.jules }, { name: "noah", role: "stalker", at: POS.noah }, { name: "camille", role: "stalker", at: POS.camille }, { name: "theo", role: "stalker", at: POS.theo }], question: 5, clock: 2 * MIN + 40_000, answered: greenhouseHints(4), pending: [waiting(5, "ew", "camille", POS.camille)] }), setup: mapSetup(LAB.N12) },
+    // The how-to-play page's call: late in the round, the hider's map up
+    // close, noah walking past 14 m away (scribbled in the box), camille near.
+    "demo-close": {
+        you: HIDER,
+        state: mapState({
+            users: [
+                { name: "maelle", role: "hider", at: HIDER },
+                { name: "jules", role: "stalker" },
+                { name: "noah", role: "stalker", at: { lat: 46.78062, lng: -71.27872 } },
+                { name: "camille", role: "stalker", at: { lat: 46.7811, lng: -71.2797 } },
+                { name: "theo", role: "stalker" },
+            ],
+            question: 5,
+            clock: MIN + 52_000,
+            answered: greenhouseHints(4),
+        }),
+        setup: mapSetup({ view: { lat: 46.78075, lng: -71.27885, zoom: 17.3 }, deg: 300 }),
+    },
     // S67: within 200 m of lea (the Pub U game).
     N14: { you: LAB.N14.you, state: mapState({ me: "olivier", users: [{ name: "olivier", role: "hider", at: LAB.N14.you }, ...Object.entries(PUBU.pos).map(([name, at]) => ({ name, role: "stalker", at: ll(at) }))], question: 4, clock: 4 * MIN + 5_000, answered: pubuPlays(), pending: [waiting(4, "radius_200", "lea", ll(PUBU.pos.lea))] }), setup: mapSetup(LAB.N14) },
 };
