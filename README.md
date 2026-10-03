@@ -43,15 +43,18 @@ presses **Start** on their phone.
    them out until they log in again. Mid-round it is refused.
 
 The rules the players see before the game, most important first: hide in
-plain sight (on campus, within 20 m of a path, where people on it could see
-you); walk, then freeze once the hunt starts; stalkers can run, but indoors
-everyone walks; nothing underground (no tunnels, no basements); touch nothing
-(don't open, move or climb anything); answer truthfully, right away; found?
-show your code, stalkers win; stay in the Discord call all game, the hider on
-mute. Each one's fine print, the organizers' rulings and why each rule exists:
-`design/game-design/ulaval-version/rules.md`. The players' version, with a
-walkthrough of one round: `src/how-to-play/` (the app's rules card links to
-it).
+plain sight (in public, where anyone walking by can see you: a stalker never
+has to open, move or climb anything to find you); no running while you hide
+(stalkers can run); freeze once the hunt starts (a few steps to answer is
+fine); nothing underground (no tunnels, no basements); answer truthfully, the
+way a stalker next to you would; answer fast; found? show your code, stalkers
+win; everyone talks, in one Discord call per team, the hider included. Under
+them, the rule behind the rules: when in doubt, would the other team call it
+clever, or annoying? Why each rule exists, its fine print and the organizers'
+rulings: `design/game-design/ulaval-version/rules.md`; how players could break
+the game and what stops them: `red-team.md` next to it. The players' version,
+with the team's call and a walkthrough of one round: `src/how-to-play/` (the
+app's rules card links to it).
 
 ## Frontend (`src/`)
 

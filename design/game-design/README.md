@@ -29,8 +29,10 @@ LAYOUT
                       paced by a website. This is what we are actually building.
                         concept.txt -- the current target design.
                         rules.md -- the official rules (Oct 3): the eight
-                          the app shows, their fine print, the organizers'
-                          rulings, and why each rule exists.
+                          the app shows, why each exists, their fine print,
+                          and the organizers' rulings.
+                        red-team.md -- how players could break the game,
+                          and which rule (or app change) stops each way.
 
   brainstorming/      Raw idea seeds (ideas.txt) + Google Maps screenshots that
                       prove the "answerable with only Maps" primitives work.
