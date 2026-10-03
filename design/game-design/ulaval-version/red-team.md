@@ -62,8 +62,8 @@ round, not written in the rules), **Watch** (it waits for a playtest), **Open**
 | Technically true ("a covered walkway is inside") | Annoying; the map lies a little | Rule 5: the way a stalker next to you would. Inside is defined on the inside-or-outside question |
 | Taking three minutes to answer | Eats the stalkers' 5 minutes | Rule 6 |
 | Changing an answer late to throw them off | The map lies | Rule 5: Change is for mistakes, right away |
-| A blurry photo, a 2 cm crop, an old photo | Useless answer | The questions on the page: taken now, from your spot; a door has to look like a door |
-| A bluff in the call ("I'm in a café") | Banter | Allowed: only the app's answers count (rule 8) |
+| A blurry photo, a 2 cm crop, an old photo | Useless answer | The questions on the page: taken now, from your spot; a sculpture has to look like a sculpture |
+| A bluff in the call ("I'm in a café") | Banter | Allowed: only the app's answers count (the page's "A social game") |
 | Answering "…than me?" from where the stalker is now | The wrong answer, honestly given | Rule 5 and the questions: from where they were when they sent it |
 | Using the stalkers' pins to answer "…than me?" | That's how those questions work | Allowed |
 
@@ -92,7 +92,7 @@ round, not written in the rules), **Watch** (it waits for a playtest), **Open**
 | The hider mutes to hide the noise around them | A quieter game | Allowed: nobody has to stay unmuted. Clever or annoying decides |
 | The café, the wind, an announcement behind the hider | A clue | Allowed |
 | Several stalkers' phones on speaker next to each other | Echo, feedback | The team's call: one open mic among the stalkers is enough |
-| A hider who doesn't talk | A quieter game, nothing worse | Nothing to stop: rule 8 can only invite |
+| A hider who doesn't talk | A quieter game, nothing worse | Nothing to stop: "A social game" can only invite |
 
 ## The round itself
 

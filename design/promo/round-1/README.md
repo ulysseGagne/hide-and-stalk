@@ -13,7 +13,8 @@ redesign itself, and `node tools/shoot-app.mjs real` shoots it instead.
 stroke goes through `humanize()` in `lab/ink.js` (slow seeded wobble, more on
 long lines); string, pins and red fills are drawn, never CSS shapes. In round
 2 this includes the map: the hider-to-stalker tethers, the north/south line,
-radius circles and the Hints border all get drawn the same way.
+radius circles and the Hints border all get drawn the same way. In any dark
+version of a screen, the shine on the map pins and arrows stays white.
 
 **Handwriting band:** H1 (calm) is 0% and H3 (unhinged) is 100% of one
 scale; app text lives between 30% and 70% of it. Every line has a score

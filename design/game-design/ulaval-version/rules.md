@@ -5,8 +5,8 @@ Three places show these rules, and they have to say the same thing:
 
 | Where | What it shows |
 | --- | --- |
-| The app's rules card (`src/index.html`, `#rules-card`) | The goal line, the line behind the rules, the eight one-liners |
-| The how-to-play page (`src/how-to-play/`) | The same, each rule with why it exists and its fine print, plus a demo of one round and the questions |
+| The app's rules card (`src/index.html`, `#rules-card`) | The goal line, the line behind the rules, the seven one-liners |
+| The how-to-play page (`src/how-to-play/`) | The same, each rule with why it exists and its fine print, plus "A social game", a demo of one round and the questions |
 | This file | All of it, plus the organizers' rulings and what is still open |
 
 The page says only what a player needs. The edge cases the organizers have
@@ -17,7 +17,7 @@ How players could break the game, and which rule stops each way, is in
 
 ## The rule behind the rules
 
-It comes first, before the eight rules, in the app and on the page:
+It comes first, before the seven rules, in the app and on the page:
 
 > **When in doubt: would the other team call it clever, or annoying?**
 > The rules are there to make the game fun for your opponents.
@@ -40,11 +40,11 @@ The hider chooses the right spot: one the questions won't reveal much about.
 | Every 5 min | A new question: three cards. All stalkers pick the same one, one of them sends it, the hider answers |
 | Up to 40:00 | Question 7 would come: the hider wins. A scan of the hider's code before that: the stalkers win |
 
-A round is **40 minutes at most**: 10 to hide, 30 to find. Everyone takes a
+A round is **40 minutes at most**: 10 min to hide, 30 min to find. Everyone takes a
 turn hiding (Play again picks whoever has hidden least); the longest hide of
 the day wins.
 
-## The eight rules, as the app shows them
+## The seven rules, as the app shows them
 
 **Stalkers win if they find the hider within 30 minutes.**
 
@@ -58,9 +58,23 @@ are there to make the game fun for your opponents.*
 5. **Answer truthfully.** The way a stalker next to you would.
 6. **Answer fast.** As fast as you reasonably can.
 7. **Found?** Show your code. Stalkers win.
-8. **Everyone on the Discord call.** One call per team, hider included.
 
 Most important first. The two the app underlines in red: 1 and 3.
+
+## A social game
+
+Not a rule any more: the page says it in its own section, right after the
+facts and before the demo, word for word:
+
+> **Everyone is on the Discord call, the hider too.** Talk all you want:
+> tease, bluff, trash-talk. Only the app's answers count.
+>
+> Each team has its own voice channel. Join it before pressing Start, and
+> stay the whole round.
+
+Rulings: nobody has to stay unmuted; a team may find one open mic among the
+stalkers is enough. No rule on outside help (Snap Map, calling the hider):
+clever or annoying decides, and it's worth a word at the briefing.
 
 ## Each rule: the page, then the rulings
 
@@ -129,15 +143,21 @@ On the page:
 - Not sure? Say so in the call, and give your best honest answer. Got one wrong? Fix it with Change, right away; never later, to throw them off.
 - "…of me?" and "…than I am?": go by what your map draws. It's drawn from where the stalker was **when they sent the question**.
 
-The questions carousel on the page adds, one per question:
+The questions carousel on the page shows thirteen of them, each with a line:
 
-- North or south of me? The line goes through where the stalker was when they sent it.
-- Within 200 m of me? The circle is around where they were when they sent it.
-- Closer to the church than I am? Closer than they were when they sent it, as the crow flies.
-- Which café are you closest to? As the crow flies. The app lists the nearest first.
-- Inside a building or outside? Inside means inside a building's walls. A covered walkway or a bus shelter is outside.
+- East or west of me? The line goes through where the stalker was when they sent it.
 - What floor are you on? Late in the hunt: the floor, then the room number.
-- A photo of the nearest door: taken now, from your spot. Show as little as you like, but a door has to look like a door.
+- Within 200 m of me? The circle is around where they were when they sent it.
+- The heatmap around you: your phone draws the heat around you; the stalkers find the match on their map.
+- Closer to the church than I am? Closer than they were when they sent it, as the crow flies.
+- How far is the nearest road open to cars? Judging by eye is fine.
+- Which àVélo station are you closest to? As the crow flies. The app lists the nearest first.
+- Inside a building or outside? Inside means inside a building's walls. A covered walkway or a bus shelter is outside.
+- In what part of Vachon are you? The stalkers name the building; your map splits it into parts.
+- What kind of path are you closest to? The rules keep you within 20 m of one.
+- Minutes of walk, on Google Maps? From where they asked: the app gives you their position.
+- A photo of the nearest sculpture: taken now, from your spot. Show as little as you like, but a sculpture has to look like a sculpture. (The sculpture is the mock-up's card, not one of the 41; the deck asks for the nearest door, seat, window, sign…)
+- Your exact coordinates: only ever the last question; it pins you to within 30 m.
 
 Rulings: nothing of the kind to photograph? Answer N/A. The hider owes
 nothing in the call: only the app's answers have to be true.
@@ -161,17 +181,6 @@ the scan won't work, the stalker presses "Hider has been found" in the
 scanner, standing next to the hider. Another team's hider: walk on and say
 nothing.
 
-### 8. Everyone on the Discord call
-
-On the page:
-
-- Each team has its own voice channel. Everyone joins it before pressing Start and stays the whole round, the hider too.
-- Talk all you want: tease, bluff, trash-talk. Only the app's answers count.
-
-Rulings: nobody has to stay unmuted; a team may find one open mic among the
-stalkers is enough. No rule on outside help (Snap Map, calling the hider):
-clever or annoying decides, and it's worth a word at the briefing.
-
 ## Rulings, for the organizers
 
 - **Clever or annoying.** A player asks whether something is allowed and the rules don't say: ask them which the other team would call it. Still unclear? The organizer's call, and the call holds for everyone the rest of the day. Note it here afterwards.
@@ -189,9 +198,9 @@ clever or annoying decides, and it's worth a word at the briefing.
 - Rule 1's test: seen from where people walk, without opening anything. Rooms with an open door, libraries, stores, stairwells and trees are allowed when they pass it. The "40 minutes without anyone finding it odd" test and the no-disguise line are gone.
 - Rule 3 says who: "Hider: freeze."
 - Rule 4 is for the hider only: stalkers may use the tunnels.
-- Rule 8 is "Everyone on the Discord call". Gone: unmuted, earbuds, what you hear is fair game, no outside help.
+- Rule 8 ("Everyone on the Discord call") left the rules: the page's "A social game" says it, before the demo, so seven rules remain. Gone: unmuted, earbuds, what you hear is fair game, no outside help.
 - Gone from the page, kept here as rulings: walking means no bike, pausing to move, no signal, how a catch works.
-- The photo, inside/outside and "which … closest to?" fine print moved to the page's questions carousel.
+- The photo, inside/outside and "which … closest to?" fine print moved to the page's questions carousel, thirteen questions now, the heatmap among them.
 
 ## Still open
 

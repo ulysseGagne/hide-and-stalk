@@ -25,7 +25,7 @@ const ORDER = ["login", "loginfilled", "permask", "permasking", "permhalf", "per
 // Round 2's real app: the home screen first, the map screens last.
 // The how-to-play page's walkthrough: question 1, dealt, picked (one stalker
 // still on another card), agreed, at the hider.
-const DEMO = ["demo-cards", "demo-picked", "demo-agreed", "demo-question", "q-inside", "q-floor", "q-door"];
+const DEMO = ["demo-cards", "demo-picked", "demo-agreed", "demo-question", "q-floor", "q-heat", "q-road", "q-inside", "q-path", "q-walk", "q-photo", "q-coords"];
 const REAL_ORDER = ["home", ...ORDER, ...DEMO, ...Object.keys(MAP_SCREENS)];
 
 // A stand-in for the hider's photo, for the mock-up only: a sculpture on
@@ -109,26 +109,15 @@ const REAL_STEPS = {
     "demo-picked": async (page) => {
         await page.click("#card-row .card:nth-child(1)");
     },
+    // The heatmap question: the hider's square, drawn.
+    "q-heat": async (page) => {
+        await page.click("#hider-question-list button.admin-btn");
+        await page.waitForSelector("#hider-question-list .answer-preview:not([hidden])", { timeout: 30000 });
+    },
     // Every answer so far: under the stalker's cards (the RESULTS tab is gone).
     history: async (page) => {
         await page.evaluate(() => document.getElementById("stalker-answers")?.scrollIntoView({ block: "start" }));
     },
-};
-
-// The how-to-play page's tap targets (src/how-to-play/, .hot): where each
-// demo screen's button is, printed in percent of the shot after it is taken.
-// Where nothing is to be tapped in the app, what the page circles to skip ahead.
-const HOTSPOTS = {
-    ready: "#team-start-btn",
-    hiding: "#status-timer",
-    "demo-cards": "#card-row .card:nth-child(1)",
-    "demo-picked": "#send-btn",
-    "demo-agreed": "#send-btn",
-    "demo-question": "#hider-question-list .question-card button[type=submit]",
-    g9a: "#map-box",
-    sent: "#scan-open",
-    tagcode: "#hider-qr-figure",
-    found: ".rc-hero",
 };
 
 async function shootReal(name) {
@@ -203,14 +192,6 @@ async function shootReal(name) {
     const out = path.join(REAL_OUT, `R-${name}.png`);
     await page.screenshot({ path: out });
     console.log("wrote", path.relative(ROUND, out));
-    if (HOTSPOTS[name]) {
-        const at = await page.evaluate((sel) => {
-            const r = document.querySelector(sel)?.getBoundingClientRect();
-            const pct = (v, of) => Math.round((v / of) * 1000) / 10;
-            return r && { x: pct(r.left, innerWidth), y: pct(r.top, innerHeight), w: pct(r.width, innerWidth), h: pct(r.height, innerHeight) };
-        }, HOTSPOTS[name]);
-        console.log(`  hotspot ${name}: --x: ${at?.x}; --y: ${at?.y}; --w: ${at?.w}; --h: ${at?.h}`);
-    }
     // The receipt runs past the fold: a second shot, scrolled to its end.
     if (name === "found" || name === "win") {
         await page.evaluate(() => {

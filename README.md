@@ -47,19 +47,19 @@ presses **Start** on their phone.
 
 The rules the players see before the game open with the rule behind the
 rules: when in doubt, would the other team call it clever, or annoying? (The
-rules are there to make the game fun for your opponents.) Then the eight, most
+rules are there to make the game fun for your opponents.) Then the seven, most
 important first: hide in plain sight (in public, where anyone walking by can
 see you: a stalker standing where people can walk could see you, without
 opening anything); no running while you hide (stalkers can run); hider:
 freeze once the hunt starts (a few steps to answer is fine); don't hide
 underground (no tunnels, no basements); answer truthfully, the way a stalker
-next to you would; answer fast; found? show your code, stalkers win; everyone
-on the Discord call, one call per team, the hider included. Why each rule
-exists, its fine print and the organizers' rulings:
-`design/game-design/ulaval-version/rules.md`; how players could break the game
-and what stops them: `red-team.md` next to it. The players' version, with a
-demo of one round and the questions: `src/how-to-play/` (the app's rules card
-links to it).
+next to you would; answer fast; found? show your code, stalkers win. Everyone
+is on the team's Discord call, the hider too: the how-to-play page says so in
+its own section, before the demo. Why each rule exists, its fine print and the
+organizers' rulings: `design/game-design/ulaval-version/rules.md`; how players
+could break the game and what stops them: `red-team.md` next to it. The
+players' version, with a demo of one round and the questions:
+`src/how-to-play/` (the app's rules card links to it).
 
 ## Frontend (`src/`)
 
@@ -108,10 +108,11 @@ typeface (Arimo, self-hosted in `fonts/`), and red only ever drawn by hand.
 - `config.js` – **set `apiBase` to your deployed Worker URL**
 - `how-to-play/` – the page to send people before the event
   (`https://ulyssegagne.github.io/hide-and-stalk/how-to-play/`): the goal,
-  how long a round takes, the team's call, a demo of one round on the real
-  app's screens, how to win, a few of the questions as the hider gets them,
-  the eight rules with their fine print, and a short FAQ. The rules card links
-  to it. How its screens are re-shot is in the comment at its top
+  how long a round takes, why it's a social game (one Discord call per
+  team), a demo of one round on the real app's screens, how to win, the
+  seven rules with their fine print, thirteen of the questions, and a short
+  FAQ. The rules card links to it. How its screens are re-shot is in the
+  comment at its top
 
 Run locally with any static server, e.g.:
 
