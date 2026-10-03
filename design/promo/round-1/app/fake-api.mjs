@@ -362,6 +362,42 @@ export const SCREENS = {
             }).reverse(),
     },
 };
+// For the how-to-play page's walkthrough (src/how-to-play/): question 1 from
+// the start, on a clock that agrees with itself. The screens above share one
+// NOW late in the round, so their question 1 was "asked 16m ago".
+const q1Batch = (ago) => ({ id: 201, question: 1, cardIds: ROUND[0].cardIds, dealtAt: NOW - ago, playedCardId: null, playedBy: null, playedAt: null });
+const q1Cards = (ago) => ({
+    serverNow: NOW,
+    settings,
+    me: me("jules"),
+    team: team("hunting", { question: 1, nextQuestionInMs: 5 * MIN - ago, huntMs: ago }),
+    users: users("jules"),
+    cards: { role: "stalker", batch: q1Batch(ago), currentPlay: null, pending: [], historyCount: 0, unread: 0, hints: [] },
+});
+// Dealt: three cards, nothing picked.
+SCREENS["demo-cards"] = { position: POS.jules, state: q1Cards(29_000) };
+// The first card picked (tools/shoot-app.mjs taps it): Send in black.
+SCREENS["demo-picked"] = { position: POS.jules, scrollTo: "#card-row .card:nth-child(1)", state: q1Cards(36_000) };
+// The hider, a few seconds later: north or south, North ticked, not sent yet.
+SCREENS["demo-question"] = {
+    position: HIDER,
+    state: {
+        serverNow: NOW,
+        settings,
+        me: { ...me("maelle"), catchCode: "HNS1:7f3a9c2e41" },
+        team: team("hunting", { question: 1, nextQuestionInMs: 4 * MIN + 12_000, huntMs: 48_000 }),
+        users: users("maelle"),
+        cards: {
+            role: "hider",
+            pending: [{ id: 101, cardId: "ns", batchId: 201, question: 1, askedByName: "jules", askedAt: NOW - 8_000, askLat: POS.jules.lat, askLng: POS.jules.lng, answer: null, hasPhoto: false, answeredAt: null, editedAt: null }],
+            answered: [],
+            answeredCount: 0,
+            unread: 1,
+            hints: [],
+        },
+    },
+    select: "North",
+};
 // For the post: the three cards as dealt (S51's layout), one of them circled.
 SCREENS.cardspick = SCREENS.cards;
 // The home screen (W54.1b4): the app as it opens, before any tap.

@@ -179,12 +179,13 @@ button:disabled { cursor: default; }
 }
 .big-btn.cta { background: var(--ink); color: var(--paper); }
 .big-btn:disabled { opacity: .7; }
-.discord-btn {
+/* The rules card's link to the how-to-play page wears the same look. */
+.discord-btn, .rules-more {
     display: block; margin-top: 16px; padding: 13px; text-align: center; text-decoration: none;
     background: var(--paper); color: var(--ink); border: var(--rule) solid var(--ink); font-weight: 700; font-size: 18px;
 }
 /* The arrow drawn, not typeset: the font has no arrow, and every phone's fallback draws a different one. */
-.discord-btn::before {
+.discord-btn::before, .rules-more::before {
     content: ""; display: inline-block; width: 20px; height: 12px; margin-right: 13px; vertical-align: 1px;
     background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='12' viewBox='0 0 20 12'%3E%3Cpath d='M1 6.2H18.2M12.6 1.2L18.6 6.2L12.6 11.2' fill='none' stroke='%23000' stroke-width='2.1' stroke-linejoin='miter'/%3E%3C/svg%3E") no-repeat center / contain;
 }

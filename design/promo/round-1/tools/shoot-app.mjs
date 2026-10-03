@@ -23,7 +23,9 @@ const ALL = { ...SCREENS, ...MAP_SCREENS };
 const only = process.argv[3] && process.argv[3] !== "all" ? process.argv[3].split(",") : Object.keys(ALL);
 const ORDER = ["login", "loginfilled", "permask", "permasking", "permhalf", "permdone", "permblocked", "lobby", "rules1", "rules5", "rulesdone", "ready", "hiding", "cards", "selected", "waiting", "sent", "photo", "question", "choice", "tagcode", "history", "found", "win", "cardspick"];
 // Round 2's real app: the home screen first, the map screens last.
-const REAL_ORDER = ["home", ...ORDER, ...Object.keys(MAP_SCREENS)];
+// The how-to-play page's walkthrough: question 1, dealt, picked, at the hider.
+const DEMO = ["demo-cards", "demo-picked", "demo-question"];
+const REAL_ORDER = ["home", ...ORDER, ...DEMO, ...Object.keys(MAP_SCREENS)];
 
 // A stand-in for the hider's photo, for the mock-up only: a sculpture on
 // campus, xeroxed to pure black and white by tools/xerox-photo.mjs.
@@ -102,6 +104,9 @@ const REAL_STEPS = {
     },
     selected: async (page) => {
         await page.click("#card-row .card:nth-child(2)");
+    },
+    "demo-picked": async (page) => {
+        await page.click("#card-row .card:nth-child(1)");
     },
     // Every answer so far: under the stalker's cards (the RESULTS tab is gone).
     history: async (page) => {

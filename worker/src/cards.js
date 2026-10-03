@@ -341,7 +341,7 @@ const CONTEXT_CARDS = [
         tiers: MID,
     },
     {
-        // The rules keep the hider within 10-20 m of somewhere a pedestrian
+        // The rules keep the hider within 20 m of somewhere a pedestrian
         // belongs, so there is always a right answer here. Kept to six plain
         // options on purpose: easy to answer, nothing to argue about.
         id: "terrain",

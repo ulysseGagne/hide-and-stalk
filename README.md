@@ -39,11 +39,16 @@ presses **Start** on their phone.
    the one who just hid), so everyone hides equally often.
    Every finished round goes into the results; the longest hide wins.
 
-The rules the players see before the game, most important first: hide near
-a path (within 20 m of one); the hider walks, stalkers can run; no tunnels;
-touch nothing (don't open, move or climb anything); answer truthfully;
-found? show your code, stalkers win; one hider, 10 minutes to hide, a
-question every 5 minutes; stay in the Discord call all game.
+The rules the players see before the game, most important first: hide in
+plain sight (on campus, within 20 m of a path, where people on it could see
+you); walk, then freeze once the hunt starts; stalkers can run, but indoors
+everyone walks; nothing underground (no tunnels, no basements); touch nothing
+(don't open, move or climb anything); answer truthfully, right away; found?
+show your code, stalkers win; stay in the Discord call all game, the hider on
+mute. Each one's fine print, the organizers' rulings and why each rule exists:
+`design/game-design/ulaval-version/rules.md`. The players' version, with a
+walkthrough of one round: `src/how-to-play/` (the app's rules card links to
+it).
 
 ## Frontend (`src/`)
 
@@ -90,6 +95,11 @@ typeface (Arimo, self-hosted in `fonts/`), and red only ever drawn by hand.
 - `locations.js` – **generated**; every campus place, as map data
   (see *Configuring the play area*)
 - `config.js` – **set `apiBase` to your deployed Worker URL**
+- `how-to-play/` – the page to send people before the event
+  (`https://ulyssegagne.github.io/hide-and-stalk/how-to-play/`): the goal,
+  how long a round takes, one round tap by tap on the real app's screens, the
+  eight rules with their fine print, the questions people ask. The rules card
+  links to it. How its screens are re-shot is in the comment at its top
 
 Run locally with any static server, e.g.:
 

@@ -597,7 +597,7 @@ function statusView(team, me, users) {
             text: team.paused
                 ? "The admin has paused your team."
                 : isHider
-                  ? "Walk, don't run. Stay within 10–20 m of a path, where people on it could see you. No tunnels, nothing you have to open."
+                  ? "Walk, don't run. On campus, within 20 m of a path, where people on it could see you. Nothing underground, nothing you have to open. When the timer hits zero, freeze."
                   : "Your first question arrives when the timer hits zero.",
         };
     }
