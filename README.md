@@ -166,7 +166,11 @@ Then:
 
 > **Order matters.** Pushing to `main` deploys the frontend straight away
 > (GitHub Pages). A frontend that talks to an older worker breaks, so run
-> `npm run db:migrate` and `npm run deploy` **first**, then merge to `main`.
+> `npm run db:migrate` and `npm run deploy` **first**, then merge to `main`
+> right after, outside a game: the other way round breaks too when an
+> endpoint changes meaning (stalkers agreeing on a card turned
+> `/cards/pick` into a vote, so an older page can't send questions to the
+> new worker until the merge goes out).
 
 To test the frontend from another port (e.g. 8081), give the local worker a
 `worker/.dev.vars` (git-ignored) with its own list:
