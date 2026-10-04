@@ -5,7 +5,7 @@ Three places show these rules, and they have to say the same thing:
 
 | Where | What it shows |
 | --- | --- |
-| The app's rules card (`src/index.html`, `#rules-card`, headed "Hider rules") | The goal line, the seven one-liners, then the line behind the rules |
+| The app's rules card (`src/index.html`, `#rules-card`, headed "Hider rules") | The goal line and the seven one-liners (rule 5's carries the line behind the rules) |
 | The how-to-play page (`src/how-to-play/`, "Hider rules") | The same, each rule with why it exists and its fine print, plus a demo of one round, "A social game" and the questions |
 | This file | All of it, plus the organizers' rulings and what is still open |
 
@@ -20,8 +20,9 @@ How players could break the game, and which rule stops each way, is in
 
 ## The rule behind the rules
 
-It closes the seven rules, in the app and on the page (at the top, it
-puzzled people who had never played):
+It is rule 5's own line now: on the page, where rule 5's why was; in the
+app, after "Answer truthfully." (It opened the rules, then closed them; at
+the top, it puzzled people who had never played.)
 
 > **When in doubt: would the stalkers call it clever, or annoying?**
 > The rules are there to make the game fun for your opponents.
@@ -59,12 +60,9 @@ the day wins.
 2. **No running to your hiding spot.** Stalkers can run.
 3. **Hider: freeze.** Once the hunt starts, stay put.
 4. **Don't hide underground.** No tunnels, no basements.
-5. **Answer truthfully.**
+5. **Answer truthfully.** When in doubt: would the stalkers call it clever, or annoying?
 6. **Answer fast.** As fast as you reasonably can.
 7. **Found?** Show your code. Stalkers win.
-
-*When in doubt: would the stalkers call it clever, or annoying? The rules
-are there to make the game fun for your opponents.*
 
 Most important first. What the app underlines in red: "without opening
 anything" (rule 1's main idea), and rule 3.
@@ -101,9 +99,13 @@ On the page:
 
 - **Why.** The game is about crossing campus, not about spending 15 minutes opening every locker on a floor to find the hider.
 - **Where people walk** means any public place people walk through: sidewalks, streets, bike paths, forest trails, hallways, the main areas of a library or a cafeteria.
-- **Not where people walk:** classrooms, bathrooms, offices. You can hide in a classroom, but a stalker in the hallway must see you through its open door.
-- In the woods, a stalker on the trail must be able to see you.
+- **Not where people walk:** classrooms, bathrooms, offices. You can hide in a classroom, but a stalker in the hallway must see you through its open door. The same idea applies outside. You can hide in the woods, but a stalker on the trail must be able to see you.
 - Stay on campus.
+
+The FAQ's "Can I hide inside?" says the same: yes, if a stalker can see you
+from where people walk without opening anything (a hallway, the main area of
+a library or a cafeteria; a classroom, from the hallway, through its open
+door); not underground.
 
 Rulings:
 
@@ -122,7 +124,7 @@ Rulings:
 On the page:
 
 - **Why.** So the stalkers don't spend 30 minutes walking in a straight line to catch up. That's not fun.
-- Stalkers wait at the start, and don't watch the hider leave.
+- Stalkers wait at the start, and close their eyes while the hider walks away.
 
 Rulings: walking means no bike, scooter, bus or car either (not on the page:
 it goes without saying). Stairs, escalators and elevators are fine.
@@ -131,7 +133,7 @@ it goes without saying). Stairs, escalators and elevators are fine.
 
 On the page:
 
-- **Why.** Move, and the stalkers search where you were, not where you are. The game only works if they have a fair shot.
+- **Why.** The game breaks if you move.
 - Stop moving when the 10-minute timer ends.
 - A few steps to answer a question or take a photo are fine. Then go back to your spot.
 
@@ -156,8 +158,8 @@ you would") is gone from the app and the page, and stays a ruling below.
 
 On the page:
 
-- **Why.** The answers are the whole game. An answer that is only technically true isn't clever, it's annoying. To be clever, hide where honest answers don't help them.
-- Not sure? Say so in the call, and give your best honest answer. Got one wrong? Fix it with Change, right away; never later, to throw them off.
+- **When in doubt: would the stalkers call it clever, or annoying?** The rules are there to make the game fun for your opponents. (In place of a why.)
+- Not sure? Say so in the call, and give your best honest answer. Got one wrong? Fix it with Change, right away.
 - "…of me?" and "…than I am?": go by what your map draws. It's drawn from where the stalker was **when they sent the question**.
 
 The questions carousel on the page shows thirteen of them, each with a line:
@@ -183,12 +185,10 @@ answers have to be true.
 
 ### 6. Answer fast
 
-On the page:
+Nothing to open on the page: the one-liner says it all.
 
-- **Why.** Every minute you stall comes out of the stalkers' 5. Winning by stalling isn't winning.
-- About a minute; two for a photo.
-
-Rulings: no signal? Answer the moment it's back.
+Rulings: about a minute; two for a photo. Every minute stalled comes out of
+the stalkers' 5. No signal? Answer the moment it's back.
 
 ### 7. Found? Show your code
 
@@ -216,13 +216,14 @@ nothing.
 After a first read by people who had never played:
 
 - **Only the hider starts the round.** The app shows Start to the hider alone (the stalkers read who will press it), and the server refuses Start from anyone else; the admin board still can.
-- The rules are "Hider rules", and the line behind them closes them, asking what the stalkers (not "the other team") would call it.
-- Rule 1 is now "Stay visible from where people walk": from there, a stalker must be able to see you without opening anything. Where people walk is defined, with examples; "the test" and "within 20 m of a path" are gone.
-- Rule 2 says where: no running to your hiding spot.
-- Rule 3's one-liner lost "A few steps to answer is fine": the fine print says it, photos included.
+- The rules are "Hider rules". The line behind them asks what the stalkers (not "the other team") would call it, and is rule 5's own line now, in place of its why.
+- Rule 1 is now "Stay visible from where people walk": from there, a stalker must be able to see you without opening anything. Where people walk is defined, with examples (the classroom and the woods in one line); "the test" and "within 20 m of a path" are gone. The FAQ says the same.
+- Rule 2 says where: no running to your hiding spot. The stalkers close their eyes while the hider walks away.
+- Rule 3's one-liner lost "A few steps to answer is fine": the fine print says it, photos included. Its why is just "The game breaks if you move."
 - Rule 4 lost "Not sure if it counts? Go up a floor."
-- Rule 5 lost "The way a stalker next to you would" (a ruling now).
-- On the page: "A social game" comes after the demo; "How to win" is gone (the demo shows the questions, rule 5's why says where to hide).
+- Rule 5 lost "The way a stalker next to you would" (a ruling now), and "never later, to throw them off".
+- Rule 6 has nothing to open on the page any more: its why and "about a minute" are rulings here.
+- On the page: "A social game" comes after the demo; "How to win" is gone (the demo shows the questions).
 
 ## Changed from the second draft
 

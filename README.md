@@ -50,10 +50,10 @@ The rules the players see before the game are the hider rules, seven, most
 important first: stay visible from where people walk (from there, a stalker
 must be able to see you without opening anything); no running to your hiding
 spot (stalkers can run); hider: freeze once the hunt starts; don't hide
-underground (no tunnels, no basements); answer truthfully; answer fast;
-found? show your code, stalkers win. They close with the rule behind the
-rules: when in doubt, would the stalkers call it clever, or annoying? (The
-rules are there to make the game fun for your opponents.) Everyone is in the
+underground (no tunnels, no basements); answer truthfully (when in doubt,
+would the stalkers call it clever, or annoying? The rules are there to make
+the game fun for your opponents); answer fast; found? show your code,
+stalkers win. Everyone is in the
 team's Discord call, the hider too: the how-to-play page says so in its own
 section, after the demo. Why each rule exists, its fine print and the
 organizers' rulings: `design/game-design/ulaval-version/rules.md`; how players

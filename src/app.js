@@ -601,7 +601,7 @@ function statusView(team, me, users) {
                 ? "The admin has paused your team."
                 : isHider
                   ? "Walk, don't run. Stay visible from where people walk: nothing a stalker would have to open, nothing underground. When the timer hits zero, freeze."
-                  : "Stay here, and don't watch where they go. Your first question arrives when the timer hits zero.",
+                  : `Close your eyes while ${hider} walks away. Your first question arrives when the timer hits zero.`,
         };
     }
 

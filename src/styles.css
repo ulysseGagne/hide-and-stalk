@@ -198,8 +198,6 @@ button:disabled { cursor: default; }
 .rules-list li { counter-increment: r; position: relative; padding: 12px 0 12px 34px; border-bottom: var(--rule) solid var(--ink); margin: 0; }
 .rules-list li::before { content: counter(r); position: absolute; left: 0; top: 12px; font-weight: 700; font-size: 17px; width: 22px; }
 .rules-list span[data-mark] { display: inline-block; }
-.rules-doubt { margin: 14px 0 0; font-size: 17px; line-height: 1.4; font-weight: 700; }
-.rules-why { margin: 2px 0 10px; font-size: 17px; line-height: 1.4; }
 
 /* Stalker: the three cards ----------------------------------------------- */
 .cards-panel { margin: 20px 0 0; position: relative; }

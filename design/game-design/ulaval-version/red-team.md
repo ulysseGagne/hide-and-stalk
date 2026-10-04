@@ -6,7 +6,7 @@ it refers to are in [`rules.md`](rules.md) (third draft).
 
 ## The short version
 
-1. **One test stops almost every bad hiding spot.** "A stalker standing where people can walk could see you, without opening anything." Lockers, stalls, closed rooms, elevators and roofs fail it; a room with its door open, a bush on a lawn or a tree seen from the path pass. Nobody has to remember a list.
+1. **One rule stops almost every bad hiding spot.** "Stay visible from where people walk: from there, a stalker must be able to see you without opening anything." Lockers, stalls, closed rooms, elevators and roofs fail it; a room with its door open, a bush or a tree seen from the path pass. Nobody has to remember a list.
 2. **Freezing is what makes one shared call work.** In Dream's Manhunt the runner can use what he overhears. Here the hider can't move, so hearing every plan gives them nothing but the tension. The call costs the stalkers nothing, and costs the hider only the noise around them.
 3. **The hider is most tempted to move exactly when the game is best.** They watch the stalkers' pins close in on their map. Rule 3 says who freezes and why.
 4. **Making every stalker agree on a question forces them to talk,** and the hider hears every argument. The risk is a stalker whose phone is locked or dead blocking the team, so the app only waits for stalkers who have had it open in the last 2 minutes.
@@ -59,7 +59,7 @@ round, not written in the rules), **Watch** (it waits for a playtest), **Open**
 
 | What a hider tries | What it does to the game | What stops it |
 | --- | --- | --- |
-| Technically true ("a covered walkway is inside") | Annoying; the map lies a little | Rule 5 and its why (a ruling: the way a stalker next to you would). Inside is defined on the inside-or-outside question |
+| Technically true ("a covered walkway is inside") | Annoying; the map lies a little | Rule 5: clever or annoying? (A ruling: the way a stalker next to you would.) Inside is defined on the inside-or-outside question |
 | Taking three minutes to answer | Eats the stalkers' 5 minutes | Rule 6 |
 | Changing an answer late to throw them off | The map lies | Rule 5: Change is for mistakes, right away |
 | A blurry photo, a 2 cm crop, an old photo | Useless answer | The questions on the page: taken now, from your spot; a sculpture has to look like a sculpture |
@@ -73,7 +73,7 @@ round, not written in the rules), **Watch** (it waits for a playtest), **Open**
 | --- | --- | --- |
 | Watching where the hider walks off | Skips the game | Rule 2 (fine print) |
 | Moving somewhere central during the 10 minutes | Breaks "they could walk there in 10 minutes" | Rule 2: wait at the start |
-| Snap Map, Find My, friends, other teams, people nearby | Skips the game | No rule: annoying, by the line behind the rules. Briefing |
+| Snap Map, Find My, friends, other teams, people nearby | Skips the game | No rule: annoying, by the line behind the rules (rule 5's "when in doubt"). Briefing |
 | Calling the hider's phone to make it ring | Cuts the hider out of the call; skips the app | No rule: annoying. Briefing |
 | Shouting, then listening for their own voice in the hider's mic | Works only within earshot, so only at the very end | Allowed: no rule against it |
 | Taking the tunnels | Fast and warm; GPS is wrong down there | Allowed: rule 4 is the hider's. A question sent from a tunnel uses a bad position, which is their problem |
