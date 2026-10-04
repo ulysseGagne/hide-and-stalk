@@ -24,7 +24,9 @@ const only = process.argv[3] && process.argv[3] !== "all" ? process.argv[3].spli
 const ORDER = ["login", "loginfilled", "permask", "permasking", "permhalf", "permdone", "permblocked", "lobby", "rules1", "rules5", "rulesdone", "ready", "hiding", "cards", "selected", "waiting", "sent", "photo", "question", "choice", "tagcode", "history", "found", "win", "cardspick"];
 // Round 2's real app: the home screen first, the map screens last.
 // The how-to-play page's demo (HIDER and one STALKER: hiding, question 1
-// dealt, picked, answered; the café's answer; the code) and its questions.
+// dealt, picked, answered; question 2's answer, the café; the code) and its
+// questions. Its map screens (the line, both stalker's maps, the cafés) are
+// in MAP_SCREENS.
 const DEMO = ["demo-hiding", "demo-cards", "demo-picked", "demo-question", "demo-sent", "demo-code", "q-room", "q-road", "q-cafe", "q-inside", "q-path", "q-walk", "q-photo"];
 const REAL_ORDER = ["home", ...ORDER, ...DEMO, ...Object.keys(MAP_SCREENS)];
 

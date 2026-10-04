@@ -388,6 +388,10 @@ const htpMe = (name) => ({ ...HTP.find((u) => u.username === name), isAdmin: fal
 const htpTeam = (phase, o = {}) => team(phase, { hiderName: "HIDER", ...o });
 /** Question q, card `cardId`, asked by STALKER, waiting for its answer. */
 const htpAsked = (q, cardId, askedAt) => ({ id: 100 + q, cardId, batchId: 200 + q, question: q, askedByName: "STALKER", askedAt, askLat: POS.STALKER.lat, askLng: POS.STALKER.lng, answer: null, hasPhoto: false, answeredAt: null, editedAt: null });
+/** The same, answered as an honest hider at HIDER would. */
+const htpAnswered = (q, cardId, askedAt) => ({ ...htpAsked(q, cardId, askedAt), answer: truth(cardId, POS.STALKER), answeredAt: askedAt + 40_000 });
+/** The demo's round by question 2's end: north or south (North), then which café (P'tit Caaf). */
+const htpRound = (q2At) => [htpAnswered(1, "ns", q2At - 5 * MIN), htpAnswered(2, "nearest_cafe", q2At)];
 
 // The demo, in the page's order. 1: HIDER pressed Start, 10 minutes to hide.
 SCREENS["demo-hiding"] = {
@@ -429,37 +433,38 @@ SCREENS["demo-question"] = {
     select: "North",
 };
 // 6 is STALKER's map once North is in (MAP_SCREENS["demo-north"]); 7, HIDER's
-// map at question 3, every café pinned (MAP_SCREENS["demo-cafes"]).
-// 8: the café's answer, on STALKER's phone.
+// map at question 2, every café pinned, the nearest tapped (MAP_SCREENS["demo-cafes"]).
+// 8: the café's answer, on STALKER's phone (question 2 of 6).
 SCREENS["demo-sent"] = {
     position: POS.STALKER,
     state: (() => {
-        const p = plays(3, { by: "STALKER" });
+        const p = htpRound(NOW - 2 * MIN - 50_000);
         return {
             serverNow: NOW,
             settings,
             me: htpMe("STALKER"),
-            team: htpTeam("hunting", { question: 3, nextQuestionInMs: 2 * MIN + 3_000, huntMs: 12 * MIN + 57_000 }),
+            team: htpTeam("hunting", { question: 2, nextQuestionInMs: 2 * MIN + 3_000, huntMs: 7 * MIN + 57_000 }),
             users: htpUsers("STALKER"),
-            cards: { role: "stalker", batch: { id: 203, question: 3, cardIds: ROUND[2].cardIds, dealtAt: NOW - 3 * MIN, playedCardId: "nearest_cafe", playedBy: 12, playedAt: NOW - 2 * MIN }, currentPlay: p[2], pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
+            cards: { role: "stalker", batch: { id: 202, question: 2, cardIds: ROUND[2].cardIds, dealtAt: NOW - 3 * MIN, playedCardId: "nearest_cafe", playedBy: 12, playedAt: NOW - 2 * MIN - 50_000 }, currentPlay: p[1], pending: [], historyCount: p.length, unread: 0, hints: hinted(p) },
         };
     })(),
 };
-// 9: found: HIDER's code, to show STALKER.
+// 9 is STALKER's map with both answers in (MAP_SCREENS["demo-zone"]).
+// 10: found: HIDER's code, to show STALKER, under both answers (North, P'tit Caaf).
 SCREENS["demo-code"] = {
     position: HIDER,
-    // Question 1's answer whole above the code, not cut in half by the tabs.
+    // Both answers whole above the code, YOUR ANSWERS just out of sight.
     scrollTo: "#hider-qr",
-    scrollPad: 196,
+    scrollPad: 292,
     state: (() => {
-        const p = plays(4, { by: "STALKER" });
+        const p = htpRound(NOW - 3 * MIN - 20_000);
         return {
             serverNow: NOW,
             settings,
             me: htpMe("HIDER"),
-            team: htpTeam("hunting", { question: 4, nextQuestionInMs: 2 * MIN + 40_000, huntMs: 17 * MIN + 20_000 }),
+            team: htpTeam("hunting", { question: 2, nextQuestionInMs: 1 * MIN + 20_000, huntMs: 8 * MIN + 40_000 }),
             users: htpUsers("HIDER"),
-            cards: { role: "hider", pending: [], answered: p, answeredCount: 4, unread: 0, hints: hinted(p) },
+            cards: { role: "hider", pending: [], answered: p, answeredCount: 2, unread: 0, hints: hinted(p) },
         };
     })(),
 };
@@ -574,8 +579,12 @@ const stalkersAt = (pins) => [
 const VELO_63 = LANDMARK_GROUPS.velo.places.find((p) => p.id === "velo_63");
 // Where the heat around the hider varies most (by the church).
 const HEAT_SPOT = { lat: 46.7835, lng: -71.2701 };
+// The café nearest HIDER (50 m), tapped on HIDER's map: its name pops up.
+const PTIT_CAAF = LANDMARK_GROUPS.cafe.places.find((p) => p.id === "cafe_abp");
 // STALKER's map once North is in: the campus north of Vachon, YOU facing north.
 const HTP_NORTH_VIEW = { view: { lat: 46.7816, lng: -71.2747, zoom: 14.4 }, deg: 350 };
+// STALKER's map with both answers in: what's left, by the greenhouses, and YOU at Vachon.
+const HTP_ZONE_VIEW = { view: { lat: 46.7821, lng: -71.2787, zoom: 15.8 }, deg: 290 };
 
 // The Pub U game (lab/maps.js GAMES.pubu): olivier hides; three answers in.
 const PUBU = LAB.pubu;
@@ -645,8 +654,25 @@ export const MAP_SCREENS = {
     },
     "demo-cafes": {
         you: HIDER,
-        state: mapState({ me: "HIDER", users: [{ name: "HIDER", role: "hider", at: HIDER }, { name: "STALKER", role: "stalker" }], question: 3, clock: 4 * MIN + 20_000, answered: plays(2, { by: "STALKER" }), pending: [htpAsked(3, "nearest_cafe", NOW - 10_000)], unread: 0 }),
-        setup: mapSetup({ view: { lat: 46.7801, lng: -71.2783, zoom: 16 }, deg: 20 }),
+        state: mapState({ me: "HIDER", users: [{ name: "HIDER", role: "hider", at: HIDER }, { name: "STALKER", role: "stalker" }], question: 2, clock: 4 * MIN + 18_000, answered: htpRound(NOW - 12_000).slice(0, 1), pending: [htpAsked(2, "nearest_cafe", NOW - 12_000)], unread: 0 }),
+        setup: mapSetup({ view: { lat: 46.7801, lng: -71.2783, zoom: 16 }, deg: 20 }, { lat: PTIT_CAAF.lat, lng: PTIT_CAAF.lng, dy: -24 }),
+    },
+    // STALKER's map with both answers in: north of the line, and nearer P'tit
+    // Caaf than any other café.
+    "demo-zone": {
+        you: POS.STALKER,
+        state: (() => {
+            const p = htpRound(NOW - 2 * MIN - 55_000);
+            return {
+                serverNow: NOW,
+                settings,
+                me: htpMe("STALKER"),
+                team: htpTeam("hunting", { question: 2, nextQuestionInMs: 1 * MIN + 58_000, huntMs: 8 * MIN + 2_000 }),
+                users: htpUsers("STALKER"),
+                cards: { role: "stalker", batch: { id: 202, question: 2, cardIds: ROUND[2].cardIds, dealtAt: NOW - 3 * MIN, playedCardId: "nearest_cafe", playedBy: 12, playedAt: NOW - 2 * MIN - 55_000 }, currentPlay: p[1], pending: [], historyCount: 2, unread: 0, hints: hinted(p) },
+            };
+        })(),
+        setup: mapSetup(HTP_ZONE_VIEW),
     },
     // The page's questions carousel: each question waiting on HIDER's map, as
     // it draws it. Read: no NEW arrow over the question.

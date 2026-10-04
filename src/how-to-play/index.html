@@ -11,7 +11,7 @@
              questions, and the FAQ. The app's rules card links to #rules.
              The screens in img/ are the real app, shot against the fake game
              server with two players, HIDER and STALKER; in design/promo/round-1:
-               node tools/shoot-app.mjs real demo-hiding,demo-cards,demo-picked,demo-line,demo-question,demo-north,demo-cafes,demo-sent,demo-code,q-ns,q-room,q-radius,q-heat,q-closer,q-road,q-velo,q-cafe,q-inside,q-section,q-path,q-walk,q-photo
+               node tools/shoot-app.mjs real demo-hiding,demo-cards,demo-picked,demo-line,demo-question,demo-north,demo-cafes,demo-sent,demo-zone,demo-code,q-ns,q-room,q-radius,q-heat,q-closer,q-road,q-velo,q-cafe,q-inside,q-section,q-path,q-walk,q-photo
              then each shots/real/R-*.png cut to 24 colours, white, black and
              the red kept exact (ImageMagick):
                convert R-x.png -strip -dither None -colors 24 -fuzz 1.5% -fill white -opaque white -fill '#000000' -opaque '#000000' -fill '#E7191F' -opaque '#E7191F' PNG8:x.png
@@ -377,73 +377,80 @@
                 <h2 id="demo-title">Try our demo</h2>
                 <div class="demo" role="region" aria-roledescription="carousel" aria-label="One round, step by step">
                     <ol class="steps" id="steps" tabindex="0">
-                        <li class="step hider" aria-label="Step 1 of 9">
-                            <p class="caption">This is HIDER's phone. HIDER pressed Start, so the game is on! The big timer counts down the 10&nbsp;minutes HIDER has to walk to a hiding spot. Meanwhile, STALKER waits at the start. Lower down is HIDER's code: it comes in at the very end.</p>
+                        <li class="step hider" aria-label="Step 1 of 10">
+                            <p class="caption">This is the HIDER's phone. The timer counts down the 10&nbsp;minutes the hider has to find a hiding spot. Meanwhile, stalkers are waiting.</p>
                             <figure class="device hider">
                                 <figcaption class="whose">Hider's phone</figcaption>
                                 <div class="phone"><img src="img/01-hide.png" width="750" height="1624" alt="Hider's phone: Go hide! 08:40 to hide. Walk, don't run. Stay visible from where people walk: nothing a stalker would have to open, nothing underground. When the timer hits zero, freeze. Below, the tag code." /></div>
                             </figure>
                         </li>
-                        <li class="step" aria-label="Step 2 of 9">
-                            <p class="caption">Now we switch to STALKER's phone. The 10&nbsp;minutes are up: the hunt begins. STALKER gets three questions (the three boxes) and can ask HIDER one of them. Every 5&nbsp;minutes, three new ones come; the big timer counts down to the next. Six questions in all: 30&nbsp;minutes.</p>
+                        <li class="step" aria-label="Step 2 of 10">
+                            <p class="caption">Now we switch to the STALKER's phone. The 10&nbsp;minutes are up: the hunt begins. The stalker gets three questions (the three boxes) and can ask the hider one of them. Every 5&nbsp;minutes, three new questions appear; the timer counts down to the next. Six questions in total, so 30&nbsp;minutes to find the hider.</p>
                             <figure class="device stalker">
                                 <figcaption class="whose">Stalker's phone</figcaption>
                                 <div class="phone"><img src="img/02-cards.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: Question 1 of 6, 04:31 until question 2, PICK JUST ONE written above three cards: Are you north or south of me? Are you closer to the church than I am? Are you within 500 m of me?" /></div>
                             </figure>
                         </li>
-                        <li class="step" aria-label="Step 3 of 9">
-                            <p class="caption">Still on STALKER's phone. STALKER taps “Are you north or south of me?” to pick it: it's now boxed in red. Then STALKER taps Send this question, and it goes to HIDER's phone.</p>
+                        <li class="step" aria-label="Step 3 of 10">
+                            <p class="caption">Still on the STALKER's phone. The stalker taps “Are you north or south of me?” to pick the question: it's now boxed in red. Then the stalker taps “Send this question”, and it is sent to the hider's phone.</p>
                             <figure class="device stalker">
                                 <figcaption class="whose">Stalker's phone</figcaption>
                                 <div class="phone"><img src="img/03-pick.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: the first card, Are you north or south of me?, boxed in red. A black Send this question button, NOT SENT YET written under it." /></div>
                             </figure>
                         </li>
-                        <li class="step hider" aria-label="Step 4 of 9">
-                            <p class="caption">Now we switch to HIDER's phone. To answer the question (in the box at the top), HIDER looks at the map. The red arrow is HIDER. The dashed red line runs through where STALKER is when the question is sent: above it is north, below it is south. HIDER is above the line, so the answer is North.</p>
+                        <li class="step hider" aria-label="Step 4 of 10">
+                            <p class="caption">Now we switch to the HIDER's phone. To answer the question (in the box at the top), the hider looks at the map. The red arrow is the hider's position. The dashed red line runs through where the stalker was when the question was sent: above it is north, below it is south. The hider is above the line, so the answer is “North”.</p>
                             <figure class="device hider">
                                 <figcaption class="whose">Hider's phone</figcaption>
                                 <div class="phone"><img src="img/04-line.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 1 from STALKER, Are you north or south of me? A red dashed line across the map, NORTH above it, SOUTH below, the hider's red arrow just above it." /></div>
                             </figure>
                         </li>
-                        <li class="step hider" aria-label="Step 5 of 9">
-                            <p class="caption">Still on HIDER's phone, back on the question. HIDER ticks North, then taps Send answer. The hider must answer right away, and truthfully.</p>
+                        <li class="step hider" aria-label="Step 5 of 10">
+                            <p class="caption">Still on the HIDER's phone, back on the question. The hider taps “North”, then taps “Send answer”. The hider must answer right away, and truthfully.</p>
                             <figure class="device hider">
                                 <figcaption class="whose">Hider's phone</figcaption>
                                 <div class="phone"><img src="img/05-answer.png" width="750" height="1624" loading="lazy" alt="Hider's phone: Question 1 from STALKER, 8 seconds ago: Are you north or south of me? North is ticked. A Send answer button." /></div>
                             </figure>
                         </li>
-                        <li class="step" aria-label="Step 6 of 9">
-                            <p class="caption">Back to STALKER's phone, on the map: the whole campus. The answer is North, so everything south of the line is ruled out, and the app blacks it out. The red line goes around what's left: HIDER is somewhere in there. The red arrow is STALKER. The hider never shows up on the stalkers' map.</p>
+                        <li class="step" aria-label="Step 6 of 10">
+                            <p class="caption">Back to the STALKER's phone. On the map, we see the whole campus. The answer was “North”, so everything south of the line is ruled out, and the app blacks it out. The red line goes around what's left: the hider is somewhere in there. Here, the red arrow is the stalker: on every phone, the red arrow is you, the person holding it. Obviously, the hider is not shown on the stalkers' map.</p>
                             <figure class="device stalker">
                                 <figcaption class="whose">Stalker's phone</figcaption>
                                 <div class="phone"><img src="img/06-north.png" width="750" height="1624" loading="lazy" alt="Stalker's map: Question 2 in 4:00. The hider is inside the red line. The whole campus, its southern part blacked out, a red line around the northern part, the stalker's red arrow on the line." /></div>
                             </figure>
                         </li>
-                        <li class="step hider" aria-label="Step 7 of 9">
-                            <p class="caption">We skip ahead to question 3: STALKER sends “Which café are you closest to?” Here we're on HIDER's phone, on the map. Every café is a red pin, and the red arrow is HIDER. The closest pin is the answer.</p>
+                        <li class="step hider" aria-label="Step 7 of 10">
+                            <p class="caption">We skip ahead to question 2. We are on the HIDER's phone. The stalker has sent the question “Which café are you closest to?” On the map, every café is a red pin, and the red arrow is the hider (remember: the red arrow is always you). To answer the question, the hider taps the pin closest to the red arrow, and its name pops up: that café is the answer.</p>
                             <figure class="device hider">
                                 <figcaption class="whose">Hider's phone</figcaption>
-                                <div class="phone"><img src="img/07-cafes.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 3 from STALKER, Which café are you closest to? Every café pinned in red around the hider's red arrow." /></div>
+                                <div class="phone"><img src="img/07-cafes.png" width="750" height="1624" loading="lazy" alt="Hider's map: Question 2 from STALKER, Which café are you closest to? Every café pinned in red; the pin by the hider's red arrow tapped, its name popped up: P'tit CAAF (ABP), Pavillon Abitibi-Price." /></div>
                             </figure>
                         </li>
-                        <li class="step" aria-label="Step 8 of 9">
-                            <p class="caption">Back to STALKER's phone. HIDER's answer is in, written in red: P'tit Caaf. Now STALKER knows two things: HIDER is north of the line, and closer to P'tit Caaf than to any other café. Time to go and look!</p>
+                        <li class="step" aria-label="Step 8 of 10">
+                            <p class="caption">Back to the STALKER's phone. The hider's answer is in, written in red: “P'tit Caaf”. Now the stalker knows two things: the hider is north of the line, and closer to P'tit Caaf than to any other café.</p>
                             <figure class="device stalker">
                                 <figcaption class="whose">Stalker's phone</figcaption>
-                                <div class="phone"><img src="img/08-cafe.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: Question 3 of 6, 02:03 until question 4. Which café are you closest to? P'TIT CAAF, signed HIDER. The map has been updated with this answer." /></div>
+                                <div class="phone"><img src="img/08-cafe.png" width="750" height="1624" loading="lazy" alt="Stalker's phone: Question 2 of 6, 02:03 until question 3. Which café are you closest to? P'TIT CAAF, signed HIDER. The map has been updated with this answer." /></div>
                             </figure>
                         </li>
-                        <li class="step hider" aria-label="Step 9 of 9">
-                            <p class="caption">Found! This is HIDER's phone again. When STALKER finds HIDER, HIDER shows this code: the black and white square. STALKER scans it with the “Found them? Scan their code” button. The round is over: STALKER wins!</p>
+                        <li class="step" aria-label="Step 9 of 10">
+                            <p class="caption">Still on the STALKER's phone, back on the map. The map updates to display this new information: everything closer to another café than to P'tit Caaf is blacked out too. Only a small zone is left inside the red line: the hider is somewhere in there. The red arrow is the stalker, very close now!</p>
+                            <figure class="device stalker">
+                                <figcaption class="whose">Stalker's phone</figcaption>
+                                <div class="phone"><img src="img/09-zone.png" width="750" height="1624" loading="lazy" alt="Stalker's map: Question 3 in 1:56. The hider is inside the red line. Everything blacked out but a small zone outlined in red, south of the stadium, the stalker's red arrow just beside it." /></div>
+                            </figure>
+                        </li>
+                        <li class="step hider" aria-label="Step 10 of 10">
+                            <p class="caption">This is the HIDER's phone again. When the stalker finds the hider, the hider shows this QR code. The stalker scans it, ending the round. The stalker wins!</p>
                             <figure class="device hider">
                                 <figcaption class="whose">Hider's phone</figcaption>
-                                <div class="phone"><img src="img/09-code.png" width="750" height="1624" loading="lazy" alt="Hider's phone: question 1's answer, North, then the tag code, a QR code. Show this to the stalker." /></div>
+                                <div class="phone"><img src="img/10-code.png" width="750" height="1624" loading="lazy" alt="Hider's phone: the answers so far, question 2 P'TIT CAAF and question 1 NORTH, then the tag code, a QR code." /></div>
                             </figure>
                         </li>
                     </ol>
                     <div class="demo-nav">
                         <button type="button" class="btn" id="demo-back">Back</button>
-                        <span class="where" id="demo-where" aria-live="polite">1 / 9</span>
+                        <span class="where" id="demo-where" aria-live="polite">1 / 10</span>
                         <button type="button" class="btn now" id="demo-next">Next <span class="go" aria-hidden="true"></span></button>
                     </div>
                 </div>
