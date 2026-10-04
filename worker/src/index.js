@@ -22,7 +22,7 @@
 //                             is over). Only admins get accuracy / rttMs / lastSeenAt.
 //
 // Team (any member of the team):
-//   POST /team/start          start the round: hiding countdown, then the hunt
+//   POST /team/start          (hider) start the round: hiding countdown, then the hunt
 //   POST /team/again          after a round: back to ready, a new hider (whoever hid least, at random)
 //   POST /team/leave          between rounds: off the team, and out of Make teams until the next login
 //   POST /catch               (stalker) { code } from the hider's QR -> { caught }
@@ -955,6 +955,9 @@ async function handleCardPhoto(request, env, user) {
 async function handleTeamStart(request, env, user) {
     const now = Date.now();
     if (!user.group_id) return error("You are not in a team yet", 409, request, env);
+    // The hider starts the round, once they're ready to go (an admin can too,
+    // from the board).
+    if (user.role !== "hider") return error("Only the hider can start the game", 403, request, env);
     const settings = await getSettings(env);
     const team = await startTeam(env, user.group_id, now, startOptions(settings));
     return json({ team: publicTeam(team, now) }, 200, request, env);

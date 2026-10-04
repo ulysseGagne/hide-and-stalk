@@ -3,12 +3,13 @@
 //   HNS_ADMIN_PASSWORD=... node smoke-teams.mjs
 //
 // Covers: making and editing teams (online or not), a team starting on its
-// own, the hiding countdown, one question per interval with no repeats,
-// unsent questions piling up and going out back to back, every stalker picking
-// the same card before it can go out (the absent ones excepted), the locked-in
-// pick, answering and correcting an answer, catching the hider, question 7 handing
-// the win to the hider, Play again rotating the hider, leaving the game
-// between rounds, pausing, the settings, and that nothing leaks between teams.
+// own (its hider presses Start; a stalker can't), the hiding countdown, one
+// question per interval with no repeats, unsent questions piling up and going
+// out back to back, every stalker picking the same card before it can go out
+// (the absent ones excepted), the locked-in pick, answering and correcting an
+// answer, catching the hider, question 7 handing the win to the hider, Play
+// again rotating the hider, leaving the game between rounds, pausing, the
+// settings, and that nothing leaks between teams.
 //
 // Time is moved by editing the local database (the team clock only stores
 // when it started), so the whole run takes seconds, not 40 minutes.
@@ -213,7 +214,9 @@ check("no picking before the team starts", r.status === 409);
 r = await send(sA[0], { cardId: "ns" });
 check("no sending before the team starts", r.status === 409);
 r = await call("/team/start", { method: "POST", token: tok(sA[0]) });
-check("a stalker starts the team", r.status === 200 && r.json.team.phase === "hiding", JSON.stringify(r.json));
+check("a stalker can't start the team", r.status === 403, JSON.stringify(r.json));
+r = await call("/team/start", { method: "POST", token: tok(hA) });
+check("the hider starts the team", r.status === 200 && r.json.team.phase === "hiding", JSON.stringify(r.json));
 check("real timers when debug is off", r.json.team?.hideMs === 600000 && r.json.team?.intervalMs === 300000);
 r = await call("/team/start", { method: "POST", token: tok(hA) });
 check("pressing Start twice is harmless", r.status === 200 && r.json.team.phase === "hiding");

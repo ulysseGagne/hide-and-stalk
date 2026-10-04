@@ -26,18 +26,18 @@ round, not written in the rules), **Watch** (it waits for a playtest), **Open**
 | --- | --- | --- |
 | A locker, a closet, a washroom stall, a classroom with its door shut | The end of the round becomes opening doors one by one | Rule 1: nothing to open |
 | A room with its door open, seen from the hallway | Visible from where people walk | Allowed. Ruling: if the door closes, the stalkers may open it |
-| Behind a pillar or a bush, under a table | Visible from where people walk, if you walk around | Allowed when a stalker on walkable ground could see you (a bush on a lawn: yes) |
-| Up a tree | Seen from the ground, or not | Allowed if seen from the ground |
-| On a roof, on a ledge | Nobody sees you from the ground; unsafe | Rule 1: the test, and "open to the public" |
+| Behind a pillar or a bush, under a table | Visible from where people walk, if you walk around | Allowed when a stalker where people walk could see you |
+| Up a tree | Seen from where people walk, or not | Allowed if seen from where people walk |
+| On a roof, on a ledge | Nobody sees you from where people walk; unsafe | Rule 1: not where people walk, and not public |
 | A hood up, other clothes, face behind a book | The last metres get harder | No rule: clever or annoying decides |
 | A crowded cafeteria at 13h | Visible and recognizable, hard to spot | Allowed: clever |
 | A seat right between two cafés, under an overhang, on the seam of two pavilions | Every honest answer stays vague | Allowed: this is the hider's whole game |
 | The 4th floor of a big pavilion | The map is flat: a building can take a long search, floor by floor | Watch. The deck has floor and room-number cards. Fallback: "indoors, only on a floor with a door to the outside" |
-| A stairwell landing | Out of the way, but open | Allowed if it passes the test |
-| An elevator | The doors close; it moves | Rule 1: the test (and rule 3) |
+| A stairwell landing | Out of the way, but open | Allowed if seen from where people walk (people walk up stairs) |
+| An elevator | The doors close; it moves | Rule 1: without opening anything (and rule 3) |
 | A library | Quiet: the hider talks low; stalkers run past people working | Allowed. Briefing: walk in libraries |
 | A store's aisles | Shelves hide you from most angles | Allowed if a stalker in the aisle could see you |
-| The woods off a trail | Seen from the trail, or not | Allowed within 20 m of a path, and seen from it |
+| The woods off a trail | Seen from the trail, or not | Allowed if a stalker on the trail can see you (no set distance) |
 | A residence | Mostly private | Rule 1: only the parts open to the public |
 | A parked car, a bus at the terminal | Inside something; it can leave | Rule 1 and rule 3 |
 | A tunnel, a basement, underground parking | GPS is wrong there, so the map is wrong | Rule 4 |
@@ -51,7 +51,7 @@ round, not written in the rules), **Watch** (it waits for a playtest), **Open**
 | Running to the far end of campus | The hunt becomes a commute | Rule 2 |
 | A bike, a scooter, a bus | Same | Rule 2. Ruling: walking means none of these |
 | Sliding away when the pins on their map get close | The stalkers search where the hider was | Rule 3 |
-| A few steps per question, never coming back | A slow drift | Rule 3: after a few steps to answer, back to your spot |
+| A few steps per question, never coming back | A slow drift | Rule 3: a few steps to answer or take a photo, then back to your spot |
 | Standing in a line that moves | Moving without meaning to | Rule 3 |
 | Has to move: washroom, cold, security asks | — | Ruling: tell the call, an organizer pauses the team |
 
@@ -59,7 +59,7 @@ round, not written in the rules), **Watch** (it waits for a playtest), **Open**
 
 | What a hider tries | What it does to the game | What stops it |
 | --- | --- | --- |
-| Technically true ("a covered walkway is inside") | Annoying; the map lies a little | Rule 5: the way a stalker next to you would. Inside is defined on the inside-or-outside question |
+| Technically true ("a covered walkway is inside") | Annoying; the map lies a little | Rule 5 and its why (a ruling: the way a stalker next to you would). Inside is defined on the inside-or-outside question |
 | Taking three minutes to answer | Eats the stalkers' 5 minutes | Rule 6 |
 | Changing an answer late to throw them off | The map lies | Rule 5: Change is for mistakes, right away |
 | A blurry photo, a 2 cm crop, an old photo | Useless answer | The questions on the page: taken now, from your spot; a sculpture has to look like a sculpture |

@@ -21,8 +21,9 @@ locations.
 ## How a game works
 
 The admin puts the players into teams ahead of time (one hider each). After
-that every team is on its own: whenever the team is ready, anyone on it
-presses **Start** on their phone.
+that every team is on its own: whenever the hider is ready, they press
+**Start** on their phone (only the hider has the button; the admin board can
+start a team too).
 
 1. The hider has **10 minutes** to hide. Everyone on the team sees the same
    countdown.
@@ -45,17 +46,16 @@ presses **Start** on their phone.
    Play again can't pick them to hide) and logs them out. Make teams leaves
    them out until they log in again. Mid-round it is refused.
 
-The rules the players see before the game open with the rule behind the
-rules: when in doubt, would the other team call it clever, or annoying? (The
-rules are there to make the game fun for your opponents.) Then the seven, most
-important first: hide in plain sight (in public, where anyone walking by can
-see you: a stalker standing where people can walk could see you, without
-opening anything); no running while you hide (stalkers can run); hider:
-freeze once the hunt starts (a few steps to answer is fine); don't hide
-underground (no tunnels, no basements); answer truthfully, the way a stalker
-next to you would; answer fast; found? show your code, stalkers win. Everyone
-is on the team's Discord call, the hider too: the how-to-play page says so in
-its own section, before the demo. Why each rule exists, its fine print and the
+The rules the players see before the game are the hider rules, seven, most
+important first: stay visible from where people walk (from there, a stalker
+must be able to see you without opening anything); no running to your hiding
+spot (stalkers can run); hider: freeze once the hunt starts; don't hide
+underground (no tunnels, no basements); answer truthfully; answer fast;
+found? show your code, stalkers win. They close with the rule behind the
+rules: when in doubt, would the stalkers call it clever, or annoying? (The
+rules are there to make the game fun for your opponents.) Everyone is in the
+team's Discord call, the hider too: the how-to-play page says so in its own
+section, after the demo. Why each rule exists, its fine print and the
 organizers' rulings: `design/game-design/ulaval-version/rules.md`; how players
 could break the game and what stops them: `red-team.md` next to it. The
 players' version, with a demo of one round and the questions:
@@ -108,11 +108,12 @@ typeface (Arimo, self-hosted in `fonts/`), and red only ever drawn by hand.
 - `config.js` – **set `apiBase` to your deployed Worker URL**
 - `how-to-play/` – the page to send people before the event
   (`https://ulyssegagne.github.io/hide-and-stalk/how-to-play/`): the goal,
-  how long a round takes, why it's a social game (one Discord call per
-  team), a demo of one round on the real app's screens, how to win, the
-  seven rules with their fine print, thirteen of the questions, and a short
-  FAQ. The rules card links to it. How its screens are re-shot is in the
-  comment at its top
+  how long a round takes, a demo of one round on the real app's screens
+  (two players, HIDER and STALKER, each screen in a phone saying whose it
+  is), why it's a social game (one Discord call per team), the seven hider
+  rules with their fine print, thirteen of the questions, and a short FAQ.
+  The rules card links to it. How its screens are re-shot is in the comment
+  at its top
 
 Run locally with any static server, e.g.:
 

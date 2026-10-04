@@ -187,7 +187,7 @@
     /** One line on how a team is doing, kept short enough for a column header. */
     function describeTeam(team) {
         const t = liveTeam(team);
-        if (t.phase === "ready") return "Ready — waiting for them to press Start";
+        if (t.phase === "ready") return "Ready — waiting for the hider to press Start";
         if (t.phase === "ended") {
             return t.outcome === "seekers"
                 ? `Stalkers won — ${t.caughtByName ?? "?"} found ${t.hiderName ?? "the hider"} after ${formatMs(t.huntMs ?? 0)}`

@@ -23,9 +23,9 @@ const ALL = { ...SCREENS, ...MAP_SCREENS };
 const only = process.argv[3] && process.argv[3] !== "all" ? process.argv[3].split(",") : Object.keys(ALL);
 const ORDER = ["login", "loginfilled", "permask", "permasking", "permhalf", "permdone", "permblocked", "lobby", "rules1", "rules5", "rulesdone", "ready", "hiding", "cards", "selected", "waiting", "sent", "photo", "question", "choice", "tagcode", "history", "found", "win", "cardspick"];
 // Round 2's real app: the home screen first, the map screens last.
-// The how-to-play page's walkthrough: question 1, dealt, picked (one stalker
-// still on another card), agreed, at the hider.
-const DEMO = ["demo-cards", "demo-picked", "demo-agreed", "demo-question", "q-room", "q-road", "q-cafe", "q-inside", "q-path", "q-walk", "q-photo"];
+// The how-to-play page's demo (HIDER and one STALKER: hiding, question 1
+// dealt, picked, answered; the café's answer; the code) and its questions.
+const DEMO = ["demo-hiding", "demo-cards", "demo-picked", "demo-question", "demo-sent", "demo-code", "q-room", "q-road", "q-cafe", "q-inside", "q-path", "q-walk", "q-photo"];
 const REAL_ORDER = ["home", ...ORDER, ...DEMO, ...Object.keys(MAP_SCREENS)];
 
 // A stand-in for the hider's photo, for the mock-up only: a sculpture on

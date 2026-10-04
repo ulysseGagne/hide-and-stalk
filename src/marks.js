@@ -180,17 +180,31 @@
                 const b = rectIn(view, last);
                 specs.push({ t: "underline", x: b.x, y: b.y + b.h + 5, w: Math.min(b.w, 250), seed: "tu", weight: 4 });
             }
-            // READ THESE, under the Discord button (or, without one, the rules' heading).
+            // READ THESE, under the Discord button (or, without one, the rules'
+            // heading), on the heading's line: shrunk to fit right of its
+            // words (HIDER RULES), so it never writes over them.
             const d = $("#discord-btn");
+            const head = $(".rules-head");
             const anchor = visible(d) ? box(d) : (() => {
-                const h = box($(".rules-head"));
+                const h = box(head);
                 return { x: h.x, y: h.y - 70, w: h.w, h: 50 };
             })();
-            specs.push({ t: "note", text: "READ THESE ↓", x: anchor.x + anchor.w - 262, y: anchor.y + anchor.h + 46, o: { size: 30, tilt: -6, maxWidth: 270, importance: "key", weight: 6.2 } });
-            // The two rules that matter most, underlined.
-            for (const strong of $$('.rules-list strong[data-mark="underline"]').filter(visible)) {
-                const b = box(strong);
-                specs.push({ t: "underline", x: b.x, y: b.y + b.h + 2, w: b.w, seed: `ru${strong.textContent.trim()}`, weight: 3.4 });
+            const words = document.createRange();
+            words.selectNodeContents(head);
+            const said = rectIn(view, words.getBoundingClientRect());
+            const room = anchor.x + anchor.w - (said.x + said.w + 16);
+            const read = { size: 30, tilt: -6, maxWidth: 270, importance: "key", weight: 6.2 };
+            let readW = Ink.write("READ THESE ↓", { x: 0, y: 0, ...read }).width;
+            if (readW > room) {
+                read.size = Math.max(18, Math.floor((read.size * room) / readW));
+                read.weight = r1(read.size * 0.21);
+                readW = Ink.write("READ THESE ↓", { x: 0, y: 0, ...read }).width;
+            }
+            specs.push({ t: "note", text: "READ THESE ↓", x: r1(anchor.x + anchor.w - readW), y: anchor.y + anchor.h + 46, o: read });
+            // What matters most in the rules, underlined: nothing to open, and freeze.
+            for (const words of $$('.rules-list [data-mark="underline"]').filter(visible)) {
+                const b = box(words);
+                specs.push({ t: "underline", x: b.x, y: b.y + b.h + 2, w: b.w, seed: `ru${words.textContent.trim()}`, weight: 3.4 });
             }
         }
 

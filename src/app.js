@@ -578,15 +578,16 @@ function statusView(team, me, users) {
         };
     }
 
+    // Only the hider starts the round: they know when they're ready to go.
     if (team.phase === "ready") {
         const hideFor = minutes(team.hideMs);
         return {
             ...view,
             title: isHider ? "You're the hider" : "You're a stalker",
             text: isHider
-                ? `When your whole team is in the Discord call, press Start. You'll get ${hideFor} to hide.`
-                : `When your whole team is in the Discord call, press Start. ${hider} gets ${hideFor} to hide, then you hunt.`,
-            start: true,
+                ? `When your whole team is in the Discord call and you're ready, press Start. You'll get ${hideFor} to hide.`
+                : `When your whole team is in the Discord call, ${hider} presses Start and gets ${hideFor} to hide. Then you hunt.`,
+            start: isHider,
         };
     }
 
@@ -599,7 +600,7 @@ function statusView(team, me, users) {
             text: team.paused
                 ? "The admin has paused your team."
                 : isHider
-                  ? "Walk, don't run. Somewhere public, where anyone walking by can see you: nothing they'd have to open, nothing underground. When the timer hits zero, freeze."
+                  ? "Walk, don't run. Stay visible from where people walk: nothing a stalker would have to open, nothing underground. When the timer hits zero, freeze."
                   : "Stay here, and don't watch where they go. Your first question arrives when the timer hits zero.",
         };
     }
@@ -713,10 +714,9 @@ function renderTabs() {
 
 teamStartBtn.addEventListener("click", async () => {
     const team = gameState?.team;
-    const hider = gameState?.users.find((u) => u.role === "hider")?.username ?? "The hider";
     if (
         !confirm(
-            `Start now? Everyone on your team should be in the Discord call. ${hider} gets ${minutes(team?.hideMs ?? 600000)} to hide.`,
+            `Start now? Everyone on your team should be in the Discord call. You'll get ${minutes(team?.hideMs ?? 600000)} to hide.`,
         )
     ) {
         return;

@@ -676,10 +676,10 @@ async function adminLoop() {
 const phones = players.map(phone);
 const admins = [adminLoop(), watchMaps()];
 
-// Each team presses Start on its own schedule: asynchronous play.
+// Each team's hider presses Start on its own schedule: asynchronous play.
 for (const team of teams) {
     setTimeout(async () => {
-        const r = await call("/team/start", { method: "POST", token: team.stalkers[0].token });
+        const r = await call("/team/start", { method: "POST", token: team.hider.token });
         check("a team starts on its own", r.status === 200 && r.json.team.phase === "hiding", `${r.status}`);
         check("debug mode gives the short timers", r.json.team?.hideMs === 60000 && r.json.team?.intervalMs === 60000);
         team.startedAt = Date.now();
