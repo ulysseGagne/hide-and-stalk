@@ -76,8 +76,7 @@ for word:
 > **Everyone is in a Discord call, the hider too.** Talk all you want:
 > tease, bluff, trash-talk. Only the app's answers count. Teams are made on
 > the day of the event, before the game starts. Each team has its own voice
-> channel: join yours before the hider starts the game, and stay the whole
-> round.
+> channel: join yours before the hider starts the game.
 
 Rulings: nobody has to stay unmuted; a team may find one open mic among the
 stalkers is enough. No rule on outside help (Snap Map, calling the hider):
