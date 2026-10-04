@@ -155,6 +155,12 @@
             .go::after { content: ""; position: absolute; right: 1px; top: 50%; width: 12px; height: 12px; border-top: 3px solid; border-right: 3px solid; transform: translateY(-50%) rotate(45deg); }
             .go.back { transform: scaleX(-1); }
             .signup { margin-top: 22px; }
+            /* The red arrow at Count me in, as the app draws one at the
+               button to press now: up from below, so leave it room */
+            [data-ink="cta"] { position: relative; }
+            .cta-arrow { position: absolute; left: calc(-1 * var(--rule)); top: calc(-1 * var(--rule)); overflow: visible; pointer-events: none; }
+            .signup,
+            .end .btn { margin-bottom: 64px; }
 
             /* The demo and the questions: one slide per screen, swiped or stepped */
             .demo,
@@ -273,7 +279,7 @@
             .ul { position: absolute; left: 0; bottom: -9px; height: 14px; overflow: visible; pointer-events: none; }
 
             .end .when { margin: 0 0 14px; font-size: 21px; font-weight: 700; }
-            .credit { margin: 22px 0 0; font-size: 15px; }
+            .credit { margin: 0; font-size: 15px; }
 
             @media (min-width: 760px) {
                 body { font-size: 18px; }
@@ -321,7 +327,7 @@
                     </div>
                 </dl>
                 <div class="signup">
-                    <a class="btn now" href="https://discord.gg/Hh3SaS32j" target="_blank" rel="noopener">Count me in</a>
+                    <a class="btn now" href="https://discord.gg/Hh3SaS32j" target="_blank" rel="noopener" data-ink="cta">Count me in</a>
                 </div>
             </section>
 
@@ -591,7 +597,7 @@
 
             <section class="end" aria-label="Sign up">
                 <p class="when">Monday, October 5 · 13h · Grand&nbsp;Axe</p>
-                <a class="btn now" href="https://discord.gg/Hh3SaS32j" target="_blank" rel="noopener">Count me in</a>
+                <a class="btn now" href="https://discord.gg/Hh3SaS32j" target="_blank" rel="noopener" data-ink="cta">Count me in</a>
                 <p class="credit">Inspired by Jet Lag: The Game's Hide + Seek.</p>
             </section>
         </main>
@@ -645,7 +651,8 @@
 
             // The red: drawn by hand, like on the app's own screens. Under
             // the round's length, the two rules that matter most, clever or
-            // annoying, 41 questions, and when they sent it.
+            // annoying, 41 questions, and when they sent it; an arrow at
+            // each Count me in.
             (() => {
                 if (!window.Ink) return;
                 const W3 = "http://www.w3.org/2000/svg";
@@ -664,15 +671,36 @@
                         el.appendChild(svg);
                     }
                 };
+                // The arrow the app points at the button to press now
+                // (marks.js, ctaArrow): up from below, its point on the
+                // button's bottom edge.
+                const arrows = () => {
+                    document.querySelectorAll('[data-ink="cta"]').forEach((el, i) => {
+                        el.querySelector(":scope > svg.cta-arrow")?.remove();
+                        const { width: w, height: h } = el.getBoundingClientRect();
+                        if (!w) return;
+                        const svg = document.createElementNS(W3, "svg");
+                        svg.setAttribute("class", "cta-arrow");
+                        svg.setAttribute("aria-hidden", "true");
+                        svg.setAttribute("width", Math.round(w));
+                        svg.setAttribute("height", Math.round(h + 72));
+                        svg.innerHTML = Ink.stubArrow(w - 34, h + 64, w - 70, h - 8, { seed: `cta${i}`, weight: 11 });
+                        el.appendChild(svg);
+                    });
+                };
+                const draw = () => {
+                    underline();
+                    arrows();
+                };
                 const ready = document.fonts?.ready ?? Promise.resolve();
-                ready.then(underline);
+                ready.then(draw);
                 // A rule opened: its fine print's underlines now have a width.
                 for (const d of document.querySelectorAll("details")) d.addEventListener("toggle", underline);
                 let last = innerWidth;
                 addEventListener("resize", () => {
                     if (innerWidth === last) return;
                     last = innerWidth;
-                    underline();
+                    draw();
                 });
             })();
         </script>
