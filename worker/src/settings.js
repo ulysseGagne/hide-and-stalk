@@ -13,7 +13,7 @@ const httpError = (message, status) => Object.assign(new Error(message), { statu
 // sets another, anywhere from MIN to MAX.
 export const DEFAULT_DEBUG_QUESTION_INTERVAL_S = 60;
 export const MIN_DEBUG_QUESTION_INTERVAL_S = 10;
-export const MAX_DEBUG_QUESTION_INTERVAL_S = 15 * 60;
+export const MAX_DEBUG_QUESTION_INTERVAL_S = 5 * 60; // the real game's interval
 
 // Debug mode's own switches, each only in force while debug mode is on:
 //   debugNoHide         a round that starts skips the hiding time

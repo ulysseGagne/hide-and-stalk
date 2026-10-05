@@ -509,6 +509,10 @@ await adminPost("/admin/team", { teamId: teamB, action: "reset" });
 // Debug mode's time between questions.
 r = await adminPost("/admin/settings", { debugQuestionIntervalS: 5 });
 check("too short a debug interval is refused", r.status === 400);
+r = await adminPost("/admin/settings", { debugQuestionIntervalS: 301 });
+check("more than 5 minutes between questions is refused", r.status === 400);
+r = await adminPost("/admin/settings", { debugQuestionIntervalS: 300 });
+check("5 minutes between questions is allowed", r.status === 200 && r.json.settings.debugQuestionIntervalS === 300);
 r = await adminPost("/admin/settings", { debugQuestionIntervalS: 30 });
 check("debug interval saved", r.status === 200 && r.json.settings.debugQuestionIntervalS === 30);
 r = await adminPost("/admin/settings", { debug: true });
