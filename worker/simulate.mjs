@@ -289,7 +289,7 @@ const AT = admin.json.token;
 const adminPost = (path, body) => call(path, { method: "POST", token: AT, body });
 
 await adminPost("/admin/clear");
-await adminPost("/admin/settings", { debug: true, discordUrl: "", todosDone: [] });
+await adminPost("/admin/settings", { debug: true, debugHideS: 60, debugQuestionIntervalS: 60, discordUrl: "", todosDone: [] });
 
 const players = [];
 for (let i = 1; i <= TEAMS * SIZE; i++) {

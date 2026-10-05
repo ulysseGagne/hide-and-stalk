@@ -290,10 +290,10 @@
                             <span>Debug mode</span>
                         </label>
                         <p class="muted">
-                            For testing. Teams that start while it is on get a
-                            1-minute hide and a question every minute (or the
-                            time set below), and every phone shows its GPS and
-                            connection details.
+                            For testing. Teams that start while it is on get
+                            the hiding time and time between questions set
+                            below (a minute each unless changed), and every
+                            phone shows its GPS and connection details.
                         </p>
                         <!-- Debug mode's own options: only in force while it is on. -->
                         <fieldset id="debug-options" class="debug-options">
@@ -310,6 +310,18 @@
                                 <input type="checkbox" id="debug-fake-location" />
                                 <span>Fake position: long-press the map (right-click on a computer) to stand there</span>
                             </label>
+                            <label class="switch-row">
+                                <input type="checkbox" id="debug-hide-strip" />
+                                <span>Hide the debug strip on players&rsquo; phones (yours still shows it)</span>
+                            </label>
+                            <div class="admin-field">
+                                <label for="debug-hide">Hiding time</label>
+                                <input type="number" id="debug-hide" class="admin-input"
+                                       min="10" max="1200" step="1" inputmode="numeric" />
+                                <span>seconds</span>
+                                <button type="button" id="debug-hide-save" class="admin-btn">Save</button>
+                            </div>
+                            <p id="debug-hide-error" class="auth-error" role="alert"></p>
                             <div class="admin-field">
                                 <label for="debug-interval">Time between questions</label>
                                 <input type="number" id="debug-interval" class="admin-input"
@@ -318,6 +330,10 @@
                                 <button type="button" id="debug-interval-save" class="admin-btn">Save</button>
                             </div>
                             <p id="debug-interval-error" class="auth-error" role="alert"></p>
+                            <p class="muted">
+                                The real game: 600 seconds to hide, 300 between
+                                questions. A team keeps the times it had at Start.
+                            </p>
                         </fieldset>
                         <div class="admin-field">
                             <label for="discord-url">Discord invite link</label>

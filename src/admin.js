@@ -461,8 +461,10 @@
             box.checked = Boolean(settings[name]);
             box.disabled = !settings.debug;
         }
-        el.debugInterval.disabled = el.debugIntervalSave.disabled = !settings.debug;
-        if (document.activeElement !== el.debugInterval) el.debugInterval.value = settings.debugQuestionIntervalS ?? 60;
+        for (const timer of el.debugTimers) {
+            timer.input.disabled = timer.save.disabled = !settings.debug;
+            if (document.activeElement !== timer.input) timer.input.value = settings[timer.name] ?? 60;
+        }
         // Never under the admin's fingers: a 2-second poll would eat the typing.
         if (document.activeElement !== el.discordUrl) el.discordUrl.value = settings.discordUrl ?? "";
         const done = new Set(settings.todosDone ?? []);
@@ -519,10 +521,19 @@
                 debugNoHide: $("debug-no-hide"),
                 debugAllQuestions: $("debug-all-questions"),
                 debugFakeLocation: $("debug-fake-location"),
+                debugHideStrip: $("debug-hide-strip"),
             };
-            el.debugInterval = $("debug-interval");
-            el.debugIntervalSave = $("debug-interval-save");
-            el.debugIntervalError = $("debug-interval-error");
+            // Debug mode's timers, in seconds: one number field and Save each.
+            const timer = (id, name, max, range) => ({
+                name, max, range,
+                input: $(id),
+                save: $(`${id}-save`),
+                error: $(`${id}-error`),
+            });
+            el.debugTimers = [
+                timer("debug-hide", "debugHideS", 1200, "10 to 1200 (20 minutes)"),
+                timer("debug-interval", "debugQuestionIntervalS", 300, "10 to 300 (5 minutes)"),
+            ];
             el.discordUrl = $("discord-url");
             el.discordSave = $("discord-save");
             el.todos = $("todo-list");
@@ -553,27 +564,29 @@
             }
             // Said next to the field: an error at the top of the dashboard is
             // off screen down here, and the field just snapping back says nothing.
-            const saveInterval = async () => {
-                const seconds = Number(el.debugInterval.value);
-                el.debugIntervalError.textContent = "";
-                if (!Number.isInteger(seconds) || seconds < 10 || seconds > 300) {
-                    el.debugIntervalError.textContent = "Pick a whole number of seconds from 10 to 300 (5 minutes).";
-                    return;
-                }
-                el.debugInterval.blur(); // let the next poll write the server's value back
-                const data = await adminAction("/admin/settings", { debugQuestionIntervalS: seconds });
-                if (!data) {
-                    el.debugIntervalError.textContent = `Not saved: ${el.error.textContent}`;
-                } else if (data.settings?.debugQuestionIntervalS === undefined) {
-                    // A worker from before this setting takes the save and drops it.
-                    el.debugIntervalError.textContent =
-                        "Not saved: the server is out of date. Deploy the worker (npm run deploy in worker/), then save again.";
-                }
-            };
-            el.debugIntervalSave.addEventListener("click", saveInterval);
-            el.debugInterval.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") saveInterval();
-            });
+            for (const { name, max, range, input, save, error } of el.debugTimers) {
+                const saveTimer = async () => {
+                    const seconds = Number(input.value);
+                    error.textContent = "";
+                    if (!Number.isInteger(seconds) || seconds < 10 || seconds > max) {
+                        error.textContent = `Pick a whole number of seconds from ${range}.`;
+                        return;
+                    }
+                    input.blur(); // let the next poll write the server's value back
+                    const data = await adminAction("/admin/settings", { [name]: seconds });
+                    if (!data) {
+                        error.textContent = `Not saved: ${el.error.textContent}`;
+                    } else if (data.settings?.[name] === undefined) {
+                        // A worker from before this setting takes the save and drops it.
+                        error.textContent =
+                            "Not saved: the server is out of date. Deploy the worker (npm run deploy in worker/), then save again.";
+                    }
+                };
+                save.addEventListener("click", saveTimer);
+                input.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") saveTimer();
+                });
+            }
             const saveDiscord = () => {
                 el.discordUrl.blur(); // let the next poll write the server's value back
                 adminAction("/admin/settings", { discordUrl: el.discordUrl.value.trim() });

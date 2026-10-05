@@ -852,7 +852,9 @@ function cue(message) {
 const debugStrip = document.getElementById("debug-strip");
 
 function renderDebugStrip() {
-    const on = Boolean(gameState?.settings?.debug) && Boolean(currentUser);
+    // The admin can hide it from players (debugStrip); their own always shows.
+    const settings = gameState?.settings;
+    const on = Boolean(currentUser) && Boolean(currentUser.isAdmin ? settings?.debug : (settings?.debugStrip ?? settings?.debug));
     const changed = debugStrip.hidden === on;
     debugStrip.hidden = !on;
     if (changed) HNSMap.invalidateSize();

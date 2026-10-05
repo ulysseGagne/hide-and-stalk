@@ -252,7 +252,7 @@ Admin-only routes (all `POST`):
 | `/admin/team`       | `{teamId, action}` | `start`, `pause`, `resume` or `reset` one team |
 | `/admin/disband`    | – | everyone back to no team (results are kept) |
 | `/admin/clear`      | – | deletes every non-admin account, team and result |
-| `/admin/settings`   | `{debug?, debugNoHide?, debugAllQuestions?, debugFakeLocation?, debugQuestionIntervalS?, discordUrl?, todosDone?}` | debug mode and its options, the Discord invite (saved empty: `DISCORD_URL` from `wrangler.toml`), the to-do ticks |
+| `/admin/settings`   | `{debug?, debugNoHide?, debugAllQuestions?, debugFakeLocation?, debugHideStrip?, debugHideS?, debugQuestionIntervalS?, discordUrl?, todosDone?}` | debug mode and its options (its hiding time and time between questions in seconds, and whether players see the debug strip), the Discord invite (saved empty: `DISCORD_URL` from `wrangler.toml`), the to-do ticks |
 
 Every team keeps exactly one hider: making someone the hider turns the old one
 into a stalker, and taking a team's hider away (or the hider leaving the game)
@@ -261,7 +261,7 @@ deleted. Players who left the game are off the board's "Not in a team" list
 and counted in the summary instead.
 
 **Debug mode** (admin switch): teams that start while it is on get a 1-minute
-hide and a question every minute (a whole round in 7 minutes), and every
+hide and a question every minute by default (a whole round in 7 minutes), and every
 phone shows a strip with its GPS accuracy, the age of its fix, its heading and
 its connection. A team keeps the timers it started with. Its own options, each
 only in force while it is on:
@@ -270,8 +270,12 @@ only in force while it is on:
   Start, like the timers).
 - **All six questions at once:** the stalkers have every question in hand
   from the start of the hunt and send them back to back.
+- **Hiding time:** 10 to 1200 seconds (20 minutes), 60 by default (frozen at
+  Start). Set to 600, with 300 between questions, a debug round runs on the
+  real game's timers.
 - **Time between questions:** 10 to 300 seconds (5 minutes), 60 by default
   (frozen at Start, like the other timers).
+- **Hide the debug strip on players' phones:** the admin's still shows it.
 - **Fake position:** a long-press on the map (right-click on a computer)
   offers "Put me here", which stands YOU there in place of the GPS until
   "Back to my GPS".
