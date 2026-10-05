@@ -688,12 +688,14 @@ function renderHome() {
     hiderPanel.hidden = !(team && me.role === "hider" && (phase === "hiding" || phase === "hunting"));
     stalkerPanel.hidden = !(team && me.role === "stalker" && (phase === "hunting" || phase === "hiding"));
 
-    // Before the game only: the Discord call and the rules.
+    // Before the game only: the Discord call. The rules stay at the bottom
+    // until the hunt, so the hider can check them while picking a spot and
+    // the stalkers can read them while they wait.
     const before = phase === "none" || phase === "ready";
     const discordUrl = gameState.settings?.discordUrl;
     discordBtn.hidden = !(discordUrl && before);
     if (discordUrl) discordBtn.href = discordUrl;
-    rulesCard.hidden = !before;
+    rulesCard.hidden = !(before || phase === "hiding");
 
     HNSReceipt.render(phase === "ended" ? { team, me, users } : null);
     renderTabs();
