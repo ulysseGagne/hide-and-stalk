@@ -17,6 +17,7 @@ export const HIDE_MS = 10 * 60 * 1000;
 export const QUESTION_INTERVAL_MS = 5 * 60 * 1000;
 export const MAX_QUESTIONS = 6;
 // Debug mode: a whole round in seven minutes, so a test game fits in a break.
+// The admin can set another time between questions (see settings.js).
 export const DEBUG_HIDE_MS = 60 * 1000;
 export const DEBUG_QUESTION_INTERVAL_MS = 60 * 1000;
 // "Make teams" aims for this many players per team by default: one hider,
@@ -49,6 +50,9 @@ const hideMsOf = (team) => team.hide_ms ?? HIDE_MS;
 /** The hiding time a round starting now gets: debug's minute, or none at all when that switch is on. */
 const hideMsFor = ({ debug = false, noHide = false } = {}) => (debug ? (noHide ? 0 : DEBUG_HIDE_MS) : HIDE_MS);
 const intervalMsOf = (team) => team.interval_ms ?? QUESTION_INTERVAL_MS;
+/** The time between questions a round starting now gets: the admin's debug interval, or the real one. */
+const intervalMsFor = ({ debug = false, debugIntervalMs = DEBUG_QUESTION_INTERVAL_MS } = {}) =>
+    debug ? debugIntervalMs : QUESTION_INTERVAL_MS;
 const huntLengthMsOf = (team) => intervalMsOf(team) * MAX_QUESTIONS;
 
 /** Ms since Start, pauses excluded. Frozen while paused and once the round ends. */
@@ -93,7 +97,7 @@ export function teamPhase(team, now) {
  * has not started yet shows the timers it would get if it started now, which
  * depends on debug mode.
  */
-export function publicTeam(team, now, { debug = false, noHide = false } = {}) {
+export function publicTeam(team, now, options = {}) {
     const state = teamPhase(team, now);
     const notStarted = team.status === "ready";
     return {
@@ -101,12 +105,8 @@ export function publicTeam(team, now, { debug = false, noHide = false } = {}) {
         status: team.status,
         phase: state.phase,
         paused: Boolean(team.paused_at) && team.status === "playing",
-        hideMs: notStarted ? hideMsFor({ debug, noHide }) : hideMsOf(team),
-        intervalMs: notStarted
-            ? debug
-                ? DEBUG_QUESTION_INTERVAL_MS
-                : QUESTION_INTERVAL_MS
-            : intervalMsOf(team),
+        hideMs: notStarted ? hideMsFor(options) : hideMsOf(team),
+        intervalMs: notStarted ? intervalMsFor(options) : intervalMsOf(team),
         maxQuestions: MAX_QUESTIONS,
         startedAt: team.started_at ?? null,
         hideRemainingMs: state.hideRemainingMs ?? null,
@@ -215,10 +215,10 @@ async function teamMembers(env, teamId) {
 
 /**
  * Start a team's round: the hider has hide_ms to hide from now. `debug` makes
- * it a seven-minute test round, and `noHide` skips the hiding (straight to the
- * hunt). Pressing Start twice is harmless.
+ * it a short test round with `debugIntervalMs` between questions, and `noHide`
+ * skips the hiding (straight to the hunt). Pressing Start twice is harmless.
  */
-export async function startTeam(env, teamId, now, { debug = false, noHide = false } = {}) {
+export async function startTeam(env, teamId, now, options = {}) {
     const team = await getTeamRow(env, teamId);
     if (!team) throw httpError("That team does not exist", 404);
     if (team.status === "playing") return team; // a teammate beat us to it
@@ -239,8 +239,8 @@ export async function startTeam(env, teamId, now, { debug = false, noHide = fals
     )
         .bind(
             now,
-            hideMsFor({ debug, noHide }),
-            debug ? DEBUG_QUESTION_INTERVAL_MS : QUESTION_INTERVAL_MS,
+            hideMsFor(options),
+            intervalMsFor(options),
             teamId,
         )
         .run();

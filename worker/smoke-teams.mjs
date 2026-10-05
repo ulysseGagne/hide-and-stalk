@@ -505,6 +505,17 @@ s = await call("/state", { token: tok(stalkersOf(teamB)[0]) });
 check("with debug off, one question at a time again", s.json.cards.inHand === 1, `in hand ${s.json.cards.inHand}`);
 await adminPost("/admin/settings", { debugNoHide: false, debugAllQuestions: false });
 await adminPost("/admin/team", { teamId: teamB, action: "reset" });
+
+// Debug mode's time between questions.
+r = await adminPost("/admin/settings", { debugQuestionIntervalS: 5 });
+check("too short a debug interval is refused", r.status === 400);
+r = await adminPost("/admin/settings", { debugQuestionIntervalS: 30 });
+check("debug interval saved", r.status === 200 && r.json.settings.debugQuestionIntervalS === 30);
+r = await adminPost("/admin/settings", { debug: true });
+r = await call("/team/start", { method: "POST", token: tok(hiderOf(teamB)) });
+check("a round started in debug mode gets the admin's interval", r.json.team?.intervalMs === 30000, JSON.stringify(r.json.team));
+await adminPost("/admin/settings", { debug: false, debugQuestionIntervalS: 60 });
+await adminPost("/admin/team", { teamId: teamB, action: "reset" });
 r = await adminPost("/admin/settings", { discordUrl: "not a link" });
 check("a non-https Discord link is refused", r.status === 400);
 r = await adminPost("/admin/settings", { discordUrl: "https://discord.gg/example", todosDone: ["discord", "poster"] });

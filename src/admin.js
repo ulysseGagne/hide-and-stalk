@@ -461,6 +461,8 @@
             box.checked = Boolean(settings[name]);
             box.disabled = !settings.debug;
         }
+        el.debugInterval.disabled = el.debugIntervalSave.disabled = !settings.debug;
+        if (document.activeElement !== el.debugInterval) el.debugInterval.value = settings.debugQuestionIntervalS ?? 60;
         // Never under the admin's fingers: a 2-second poll would eat the typing.
         if (document.activeElement !== el.discordUrl) el.discordUrl.value = settings.discordUrl ?? "";
         const done = new Set(settings.todosDone ?? []);
@@ -518,6 +520,8 @@
                 debugAllQuestions: $("debug-all-questions"),
                 debugFakeLocation: $("debug-fake-location"),
             };
+            el.debugInterval = $("debug-interval");
+            el.debugIntervalSave = $("debug-interval-save");
             el.discordUrl = $("discord-url");
             el.discordSave = $("discord-save");
             el.todos = $("todo-list");
@@ -546,6 +550,14 @@
             for (const [name, box] of Object.entries(el.debugOptions)) {
                 box.addEventListener("change", () => adminAction("/admin/settings", { [name]: box.checked }));
             }
+            const saveInterval = () => {
+                el.debugInterval.blur(); // let the next poll write the server's value back
+                adminAction("/admin/settings", { debugQuestionIntervalS: Number(el.debugInterval.value) });
+            };
+            el.debugIntervalSave.addEventListener("click", saveInterval);
+            el.debugInterval.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") saveInterval();
+            });
             const saveDiscord = () => {
                 el.discordUrl.blur(); // let the next poll write the server's value back
                 adminAction("/admin/settings", { discordUrl: el.discordUrl.value.trim() });
