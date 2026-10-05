@@ -522,6 +522,7 @@
             };
             el.debugInterval = $("debug-interval");
             el.debugIntervalSave = $("debug-interval-save");
+            el.debugIntervalError = $("debug-interval-error");
             el.discordUrl = $("discord-url");
             el.discordSave = $("discord-save");
             el.todos = $("todo-list");
@@ -550,9 +551,24 @@
             for (const [name, box] of Object.entries(el.debugOptions)) {
                 box.addEventListener("change", () => adminAction("/admin/settings", { [name]: box.checked }));
             }
-            const saveInterval = () => {
+            // Said next to the field: an error at the top of the dashboard is
+            // off screen down here, and the field just snapping back says nothing.
+            const saveInterval = async () => {
+                const seconds = Number(el.debugInterval.value);
+                el.debugIntervalError.textContent = "";
+                if (!Number.isInteger(seconds) || seconds < 10 || seconds > 300) {
+                    el.debugIntervalError.textContent = "Pick a whole number of seconds from 10 to 300 (5 minutes).";
+                    return;
+                }
                 el.debugInterval.blur(); // let the next poll write the server's value back
-                adminAction("/admin/settings", { debugQuestionIntervalS: Number(el.debugInterval.value) });
+                const data = await adminAction("/admin/settings", { debugQuestionIntervalS: seconds });
+                if (!data) {
+                    el.debugIntervalError.textContent = `Not saved: ${el.error.textContent}`;
+                } else if (data.settings?.debugQuestionIntervalS === undefined) {
+                    // A worker from before this setting takes the save and drops it.
+                    el.debugIntervalError.textContent =
+                        "Not saved: the server is out of date. Deploy the worker (npm run deploy in worker/), then save again.";
+                }
             };
             el.debugIntervalSave.addEventListener("click", saveInterval);
             el.debugInterval.addEventListener("keydown", (e) => {
