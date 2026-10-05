@@ -688,12 +688,14 @@ function renderHome() {
     hiderPanel.hidden = !(team && me.role === "hider" && (phase === "hiding" || phase === "hunting"));
     stalkerPanel.hidden = !(team && me.role === "stalker" && (phase === "hunting" || phase === "hiding"));
 
-    // Before the game only: the Discord call and the rules.
+    // Before the game only: the Discord call. The rules stay at the bottom
+    // until the hunt, so the hider can check them while picking a spot and
+    // the stalkers can read them while they wait.
     const before = phase === "none" || phase === "ready";
     const discordUrl = gameState.settings?.discordUrl;
     discordBtn.hidden = !(discordUrl && before);
     if (discordUrl) discordBtn.href = discordUrl;
-    rulesCard.hidden = !before;
+    rulesCard.hidden = !(before || phase === "hiding");
 
     HNSReceipt.render(phase === "ended" ? { team, me, users } : null);
     renderTabs();
@@ -852,7 +854,9 @@ function cue(message) {
 const debugStrip = document.getElementById("debug-strip");
 
 function renderDebugStrip() {
-    const on = Boolean(gameState?.settings?.debug) && Boolean(currentUser);
+    // The admin can hide it from players (debugStrip); their own always shows.
+    const settings = gameState?.settings;
+    const on = Boolean(currentUser) && Boolean(currentUser.isAdmin ? settings?.debug : (settings?.debugStrip ?? settings?.debug));
     const changed = debugStrip.hidden === on;
     debugStrip.hidden = !on;
     if (changed) HNSMap.invalidateSize();

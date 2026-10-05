@@ -72,15 +72,23 @@ export const LANDMARKS = LANDMARK_POINTS;
 // picks one; the hint is that landmark's Voronoi cell inside the play area.
 export const LANDMARK_GROUPS = LANDMARK_GROUP_PLACES;
 
-// Straight-line distance can never exceed walking distance, and a real walking
-// route on campus is rarely more than WALK_DETOUR_FACTOR times longer than the
-// crow flies. Together these turn "N minutes to walk to you" into a ring
-// around the stalker rather than a single circle.
-export const WALK_SPEED_M_PER_MIN = 80;
-export const WALK_DETOUR_FACTOR = 1.6;
-// Slack on both edges of the ring for rounding in whatever app the hider
-// consulted: the outer one goes out by it, the inner one comes in by it.
-export const WALK_SLACK = 1.1;
+// "N minutes to walk to you", read off Google Maps, becomes a ring around the
+// stalker. A wrong ring rules out the very spot the hider is standing on, so
+// every number here leans towards keeping too much rather than too little.
+//
+// Outer edge: the straight line is never longer than the route, and Google's
+// pace is at most WALK_FAST_M_PER_MIN.
+// Inner edge: a route is at most WALK_ROUTE_FACTOR times the straight line plus
+// WALK_ROUTE_EXTRA_M, at Google's pace of at least WALK_SLOW_M_PER_MIN. The
+// fixed part is what makes short walks so long: out of a building, around the
+// next one, to wherever Google snaps each dot onto a path. A real game had
+// Google say 7 minutes for about 180 m as the crow flies.
+// Both edges then allow for the two phones' GPS being off by WALK_GPS_ERROR_M.
+export const WALK_SLOW_M_PER_MIN = 70;
+export const WALK_FAST_M_PER_MIN = 90;
+export const WALK_ROUTE_FACTOR = 1.8;
+export const WALK_ROUTE_EXTRA_M = 200;
+export const WALK_GPS_ERROR_M = 50;
 
 const YES_NO = ["Yes", "No"];
 // A photo card's other answer, when there is nothing of the kind to photograph.
@@ -458,9 +466,16 @@ export const catalogPayload = () => ({
     // "zone" hints: per answer, the area a hider giving it can be in.
     zones: { street: STREET_ZONES },
     walk: {
-        speedMPerMin: WALK_SPEED_M_PER_MIN,
-        detourFactor: WALK_DETOUR_FACTOR,
-        slack: WALK_SLACK,
+        slowMPerMin: WALK_SLOW_M_PER_MIN,
+        fastMPerMin: WALK_FAST_M_PER_MIN,
+        routeFactor: WALK_ROUTE_FACTOR,
+        routeExtraM: WALK_ROUTE_EXTRA_M,
+        gpsErrorM: WALK_GPS_ERROR_M,
+        // The old ring's numbers, for a phone still on the page from before
+        // (it reads only these) until it reloads. Safe to drop a day after this ships.
+        speedMPerMin: 80,
+        detourFactor: 1.6,
+        slack: 1.1,
     },
 });
 

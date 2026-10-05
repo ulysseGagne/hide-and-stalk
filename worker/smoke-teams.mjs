@@ -106,7 +106,10 @@ const advance = (teamId, ms) =>
 // ---------------------------------------------------------------------------
 console.log("\nSetup");
 await adminPost("/admin/clear");
-await adminPost("/admin/settings", { debug: false, discordUrl: "", todosDone: [] });
+await adminPost("/admin/settings", {
+    debug: false, debugNoHide: false, debugAllQuestions: false, debugFakeLocation: false, debugHideStrip: false,
+    debugHideS: 60, debugQuestionIntervalS: 60, discordUrl: "", todosDone: [],
+});
 const tokens = {};
 const names = ["alice", "bob", "carol", "dave", "erin", "frank", "gina"];
 for (const name of names) {
@@ -519,6 +522,39 @@ r = await adminPost("/admin/settings", { debug: true });
 r = await call("/team/start", { method: "POST", token: tok(hiderOf(teamB)) });
 check("a round started in debug mode gets the admin's interval", r.json.team?.intervalMs === 30000, JSON.stringify(r.json.team));
 await adminPost("/admin/settings", { debug: false, debugQuestionIntervalS: 60 });
+await adminPost("/admin/team", { teamId: teamB, action: "reset" });
+
+// Debug mode's hiding time: with the real game's timers, a debug round plays like a real one.
+r = await adminPost("/admin/settings", { debugHideS: 5 });
+check("too short a debug hiding time is refused", r.status === 400);
+r = await adminPost("/admin/settings", { debugHideS: 1201 });
+check("more than 20 minutes of hiding is refused", r.status === 400);
+r = await adminPost("/admin/settings", { debugHideS: 600, debugQuestionIntervalS: 300 });
+check("debug hiding time saved", r.status === 200 && r.json.settings.debugHideS === 600 && r.json.settings.debugQuestionIntervalS === 300);
+await adminPost("/admin/settings", { debug: true });
+r = await call("/team/start", { method: "POST", token: tok(hiderOf(teamB)) });
+check("a debug round on the real game's timers", r.json.team?.hideMs === 600000 && r.json.team?.intervalMs === 300000 && r.json.team.phase === "hiding", JSON.stringify(r.json.team));
+s = await call("/state", { token: tok(sB[0]) });
+check("still hiding before the 10 minutes are up", s.json.team.phase === "hiding" && s.json.team.hideRemainingMs > 590000, `${s.json.team.hideRemainingMs}`);
+advance(teamB, 600000);
+s = await call("/state", { token: tok(sB[0]) });
+check("after 10 minutes a debug-mode stalker has three questions", s.status === 200 && s.json.team.question === 1 && s.json.cards.batch?.cardIds?.length === 3, JSON.stringify(s.json.team));
+advance(teamB, 300000);
+s = await call("/state", { token: tok(sB[0]) });
+check("5 minutes later, question 2 (two in hand, none sent yet)", s.json.team.question === 2 && s.json.cards.inHand === 2 && s.json.cards.batch?.cardIds?.length === 3, JSON.stringify(s.json.team));
+
+// Debug mode's strip, hidden from players.
+check("players see the debug strip by default", s.json.settings.debug === true && s.json.settings.debugStrip === true);
+r = await adminPost("/admin/settings", { debugHideStrip: true });
+check("hiding the strip is saved", r.status === 200 && r.json.settings.debugHideStrip === true);
+s = await call("/state", { token: tok(sB[0]) });
+check("players no longer get the strip", s.json.settings.debugStrip === false);
+a = await call("/state", { token: at });
+check("the admin still knows debug mode is on", a.json.settings.debug === true);
+await adminPost("/admin/settings", { debug: false });
+s = await call("/state", { token: tok(sB[0]) });
+check("no strip with debug off", s.json.settings.debugStrip === false);
+await adminPost("/admin/settings", { debugHideStrip: false, debugHideS: 60, debugQuestionIntervalS: 60 });
 await adminPost("/admin/team", { teamId: teamB, action: "reset" });
 r = await adminPost("/admin/settings", { discordUrl: "not a link" });
 check("a non-https Discord link is refused", r.status === 400);

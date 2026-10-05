@@ -17,7 +17,7 @@ export const HIDE_MS = 10 * 60 * 1000;
 export const QUESTION_INTERVAL_MS = 5 * 60 * 1000;
 export const MAX_QUESTIONS = 6;
 // Debug mode: a whole round in seven minutes, so a test game fits in a break.
-// The admin can set another time between questions (see settings.js).
+// The admin can set another hiding time and time between questions (see settings.js).
 export const DEBUG_HIDE_MS = 60 * 1000;
 export const DEBUG_QUESTION_INTERVAL_MS = 60 * 1000;
 // "Make teams" aims for this many players per team by default: one hider,
@@ -47,8 +47,9 @@ function shuffle(arr) {
 // The clock
 // ---------------------------------------------------------------------------
 const hideMsOf = (team) => team.hide_ms ?? HIDE_MS;
-/** The hiding time a round starting now gets: debug's minute, or none at all when that switch is on. */
-const hideMsFor = ({ debug = false, noHide = false } = {}) => (debug ? (noHide ? 0 : DEBUG_HIDE_MS) : HIDE_MS);
+/** The hiding time a round starting now gets: the admin's debug hiding time, none at all when that switch is on, or the real one. */
+const hideMsFor = ({ debug = false, noHide = false, debugHideMs = DEBUG_HIDE_MS } = {}) =>
+    debug ? (noHide ? 0 : debugHideMs) : HIDE_MS;
 const intervalMsOf = (team) => team.interval_ms ?? QUESTION_INTERVAL_MS;
 /** The time between questions a round starting now gets: the admin's debug interval, or the real one. */
 const intervalMsFor = ({ debug = false, debugIntervalMs = DEBUG_QUESTION_INTERVAL_MS } = {}) =>
@@ -215,7 +216,7 @@ async function teamMembers(env, teamId) {
 
 /**
  * Start a team's round: the hider has hide_ms to hide from now. `debug` makes
- * it a short test round with `debugIntervalMs` between questions, and `noHide`
+ * it a test round with `debugHideMs` to hide and `debugIntervalMs` between questions, and `noHide`
  * skips the hiding (straight to the hunt). Pressing Start twice is harmless.
  */
 export async function startTeam(env, teamId, now, options = {}) {

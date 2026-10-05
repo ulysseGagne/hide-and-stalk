@@ -180,7 +180,7 @@ function truthfulAnswer(card, play, hider) {
             return metres(hider, ask) <= card.hint.meters ? "Yes" : "No";
         case "walkTime":
             // No real routes here: walking is taken as 1.25x the straight line.
-            return Math.min(90, Math.round((metres(hider, ask) * 1.25) / catalog.walk.speedMPerMin));
+            return Math.min(90, Math.round((metres(hider, ask) * 1.25) / 80)); // Google's pace, about 80 m a minute
         case "closerThan": {
             const place = catalog.landmarks[card.hint.landmark];
             return metres(hider, place) < metres(ask, place) ? "Yes" : "No";
@@ -289,7 +289,7 @@ const AT = admin.json.token;
 const adminPost = (path, body) => call(path, { method: "POST", token: AT, body });
 
 await adminPost("/admin/clear");
-await adminPost("/admin/settings", { debug: true, discordUrl: "", todosDone: [] });
+await adminPost("/admin/settings", { debug: true, debugHideS: 60, debugQuestionIntervalS: 60, discordUrl: "", todosDone: [] });
 
 const players = [];
 for (let i = 1; i <= TEAMS * SIZE; i++) {

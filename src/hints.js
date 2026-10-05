@@ -155,19 +155,18 @@ function constraintFor(play) {
             };
         }
         case "walkTime": {
-            const { speedMPerMin, detourFactor, slack } = hintsCatalog.walk;
-            // The card asks for whole minutes, so the honest answer is already
-            // up to half a minute - about 40 m - out either way. Bound the walk
-            // by that band before anything else, or the ring can exclude the
-            // very hider it was built from.
+            // Leans wide on purpose (see the WALK_ numbers in worker/src/cards.js):
+            // a ring too tight puts the hider's own spot in the black.
+            const { slowMPerMin, fastMPerMin, routeFactor, routeExtraM, gpsErrorM } = hintsCatalog.walk;
+            // Google shows whole minutes: the real walk is up to half a
+            // minute either side.
             const minutes = Number(play.answer);
-            const shortestWalk = Math.max(0, (minutes - 0.5) * speedMPerMin);
-            const longestWalk = (minutes + 0.5) * speedMPerMin;
-            // Straight-line distance is never more than the walking distance,
-            // and a real route is rarely more than detourFactor times longer.
-            // The slack goes on both edges.
-            const outer = Math.max(longestWalk * slack, MIN_WALK_RADIUS_M);
-            const inner = shortestWalk / (detourFactor * slack);
+            const shortestRoute = Math.max(0, (minutes - 0.5) * slowMPerMin);
+            const longestRoute = (minutes + 0.5) * fastMPerMin;
+            // Straight-line distance is never more than the route; and the
+            // route is at most routeFactor times it plus routeExtraM.
+            const outer = Math.max(longestRoute + gpsErrorM, MIN_WALK_RADIUS_M);
+            const inner = (shortestRoute - routeExtraM) / routeFactor - gpsErrorM;
             const disc = circleM(askLng, askLat, outer);
             if (inner <= MIN_WALK_RADIUS_M) return { shape: disc, mode: "keep" };
             const ring = turf.difference(
