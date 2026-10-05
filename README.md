@@ -252,7 +252,7 @@ Admin-only routes (all `POST`):
 | `/admin/team`       | `{teamId, action}` | `start`, `pause`, `resume` or `reset` one team |
 | `/admin/disband`    | – | everyone back to no team (results are kept) |
 | `/admin/clear`      | – | deletes every non-admin account, team and result |
-| `/admin/settings`   | `{debug?, debugNoHide?, debugAllQuestions?, debugFakeLocation?, discordUrl?, todosDone?}` | debug mode and its options, the Discord invite (saved empty: `DISCORD_URL` from `wrangler.toml`), the to-do ticks |
+| `/admin/settings`   | `{debug?, debugNoHide?, debugAllQuestions?, debugFakeLocation?, debugQuestionIntervalS?, discordUrl?, todosDone?}` | debug mode and its options, the Discord invite (saved empty: `DISCORD_URL` from `wrangler.toml`), the to-do ticks |
 
 Every team keeps exactly one hider: making someone the hider turns the old one
 into a stalker, and taking a team's hider away (or the hider leaving the game)
@@ -270,6 +270,8 @@ only in force while it is on:
   Start, like the timers).
 - **All six questions at once:** the stalkers have every question in hand
   from the start of the hunt and send them back to back.
+- **Time between questions:** 10 to 900 seconds, 60 by default (frozen at
+  Start, like the other timers).
 - **Fake position:** a long-press on the map (right-click on a computer)
   offers "Put me here", which stands YOU there in place of the GPS until
   "Back to my GPS".

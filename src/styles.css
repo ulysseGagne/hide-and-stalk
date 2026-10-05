@@ -508,6 +508,8 @@ button:disabled { cursor: default; }
 .debug-options .switch-row { font-weight: 400; align-items: flex-start; }
 .debug-options .switch-row input { flex: 0 0 auto; margin-top: 1px; }
 .debug-options .switch-row:has(input:disabled) { opacity: .45; cursor: default; }
+.debug-options .admin-field { margin-bottom: 0; }
+.debug-options .admin-field:has(input:disabled) { opacity: .45; }
 .todo-list { list-style: none; margin: 0; padding: 0; }
 .todo-item { margin-bottom: 8px; font-size: 15px; line-height: 1.4; }
 .todo-item label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }

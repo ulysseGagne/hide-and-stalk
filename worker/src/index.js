@@ -35,7 +35,7 @@
 //   POST /admin/disband       every team back to unassigned (results are kept)
 //   POST /admin/clear         delete every non-admin account and everything else
 //   POST /admin/settings      { debug?, debugNoHide?, debugAllQuestions?, debugFakeLocation?,
-//                               discordUrl?, todosDone? }
+//                               debugQuestionIntervalS?, discordUrl?, todosDone? }
 //
 // Cards:
 //   GET  /cards/catalog       the deck + landmarks + play area (see cards.js)

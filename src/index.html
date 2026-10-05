@@ -291,8 +291,9 @@
                         </label>
                         <p class="muted">
                             For testing. Teams that start while it is on get a
-                            1-minute hide and a question every minute, and every
-                            phone shows its GPS and connection details.
+                            1-minute hide and a question every minute (or the
+                            time set below), and every phone shows its GPS and
+                            connection details.
                         </p>
                         <!-- Debug mode's own options: only in force while it is on. -->
                         <fieldset id="debug-options" class="debug-options">
@@ -309,6 +310,13 @@
                                 <input type="checkbox" id="debug-fake-location" />
                                 <span>Fake position: long-press the map (right-click on a computer) to stand there</span>
                             </label>
+                            <div class="admin-field">
+                                <label for="debug-interval">Time between questions</label>
+                                <input type="number" id="debug-interval" class="admin-input"
+                                       min="10" max="900" step="1" inputmode="numeric" />
+                                <span>seconds</span>
+                                <button type="button" id="debug-interval-save" class="admin-btn">Save</button>
+                            </div>
                         </fieldset>
                         <div class="admin-field">
                             <label for="discord-url">Discord invite link</label>

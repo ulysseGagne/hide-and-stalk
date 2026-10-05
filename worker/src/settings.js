@@ -9,10 +9,17 @@ const MAX_TODOS = 50;
 
 const httpError = (message, status) => Object.assign(new Error(message), { status });
 
+// Debug mode's time between questions, in seconds: a minute unless the admin
+// sets another, anywhere from MIN to MAX.
+export const DEFAULT_DEBUG_QUESTION_INTERVAL_S = 60;
+export const MIN_DEBUG_QUESTION_INTERVAL_S = 10;
+export const MAX_DEBUG_QUESTION_INTERVAL_S = 15 * 60;
+
 // Debug mode's own switches, each only in force while debug mode is on:
 //   debugNoHide         a round that starts skips the hiding time
 //   debugAllQuestions   the stalkers have all six questions in hand at once
 //   debugFakeLocation   a player can put themselves anywhere on the map
+// (plus debugQuestionIntervalS, the time between questions, below)
 const DEBUG_OPTIONS = {
     debugNoHide: "debug_no_hide",
     debugAllQuestions: "debug_all_questions",
@@ -29,9 +36,11 @@ export async function getSettings(env) {
     } catch {
         /* a mangled value just means nothing is ticked */
     }
+    const intervalS = Number(raw.debug_question_interval_s);
     return {
         debug: raw.debug === "1",
         ...Object.fromEntries(Object.entries(DEBUG_OPTIONS).map(([name, key]) => [name, raw[key] === "1"])),
+        debugQuestionIntervalS: Number.isInteger(intervalS) && intervalS > 0 ? intervalS : DEFAULT_DEBUG_QUESTION_INTERVAL_S,
         discordUrl: raw.discord_url || env.DISCORD_URL || null,
         todosDone,
     };
@@ -44,15 +53,22 @@ export const publicSettings = (settings) => ({
     discordUrl: settings.discordUrl,
 });
 
-/** What a team that starts now gets: debug timers, and no hiding time if that switch is on. Frozen at Start. */
-export const startOptions = (settings) => ({ debug: settings.debug, noHide: settings.debug && settings.debugNoHide });
+/**
+ * What a team that starts now gets: debug timers (with the admin's time between
+ * questions), and no hiding time if that switch is on. Frozen at Start.
+ */
+export const startOptions = (settings) => ({
+    debug: settings.debug,
+    noHide: settings.debug && settings.debugNoHide,
+    debugIntervalMs: settings.debugQuestionIntervalS * 1000,
+});
 
 /** Whether the stalkers have all six questions in hand at once (debug), not one per interval. */
 export const allQuestionsAtOnce = (settings) => settings.debug && settings.debugAllQuestions;
 
 /**
  * Apply whichever of { debug, debugNoHide, debugAllQuestions, debugFakeLocation,
- * discordUrl, todosDone } the body carries and
+ * debugQuestionIntervalS, discordUrl, todosDone } the body carries and
  * return the full set afterwards.
  */
 export async function updateSettings(env, body) {
@@ -70,6 +86,16 @@ export async function updateSettings(env, body) {
         if (body[name] === undefined) continue;
         if (typeof body[name] !== "boolean") throw httpError(`${name} must be true or false`, 400);
         writes.push(put(key, body[name] ? "1" : "0"));
+    }
+    if (body.debugQuestionIntervalS !== undefined) {
+        const s = body.debugQuestionIntervalS;
+        if (!Number.isInteger(s) || s < MIN_DEBUG_QUESTION_INTERVAL_S || s > MAX_DEBUG_QUESTION_INTERVAL_S) {
+            throw httpError(
+                `Time between questions must be a whole number of seconds from ${MIN_DEBUG_QUESTION_INTERVAL_S} to ${MAX_DEBUG_QUESTION_INTERVAL_S}`,
+                400,
+            );
+        }
+        writes.push(put("debug_question_interval_s", String(s)));
     }
     if (body.discordUrl !== undefined) {
         const url = typeof body.discordUrl === "string" ? body.discordUrl.trim() : "";
