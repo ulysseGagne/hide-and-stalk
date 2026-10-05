@@ -270,8 +270,8 @@ only in force while it is on:
   Start, like the timers).
 - **All six questions at once:** the stalkers have every question in hand
   from the start of the hunt and send them back to back.
-- **Time between questions:** 10 to 900 seconds, 60 by default (frozen at
-  Start, like the other timers).
+- **Time between questions:** 10 to 300 seconds (5 minutes), 60 by default
+  (frozen at Start, like the other timers).
 - **Fake position:** a long-press on the map (right-click on a computer)
   offers "Put me here", which stands YOU there in place of the GPS until
   "Back to my GPS".
